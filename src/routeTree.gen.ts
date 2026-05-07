@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as DashboardLiveRouteImport } from './routes/dashboard-live'
 import { Route as CaptainsRouteImport } from './routes/captains'
+import { Route as ArchiveGalleryRouteImport } from './routes/archive-gallery'
 import { Route as IndexRouteImport } from './routes/index'
 
 const EventsRoute = EventsRouteImport.update({
@@ -18,9 +20,19 @@ const EventsRoute = EventsRouteImport.update({
   path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardLiveRoute = DashboardLiveRouteImport.update({
+  id: '/dashboard-live',
+  path: '/dashboard-live',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaptainsRoute = CaptainsRouteImport.update({
   id: '/captains',
   path: '/captains',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveGalleryRoute = ArchiveGalleryRouteImport.update({
+  id: '/archive-gallery',
+  path: '/archive-gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,31 +43,50 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive-gallery': typeof ArchiveGalleryRoute
   '/captains': typeof CaptainsRoute
+  '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive-gallery': typeof ArchiveGalleryRoute
   '/captains': typeof CaptainsRoute
+  '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/archive-gallery': typeof ArchiveGalleryRoute
   '/captains': typeof CaptainsRoute
+  '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/captains' | '/events'
+  fullPaths:
+    | '/'
+    | '/archive-gallery'
+    | '/captains'
+    | '/dashboard-live'
+    | '/events'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/captains' | '/events'
-  id: '__root__' | '/' | '/captains' | '/events'
+  to: '/' | '/archive-gallery' | '/captains' | '/dashboard-live' | '/events'
+  id:
+    | '__root__'
+    | '/'
+    | '/archive-gallery'
+    | '/captains'
+    | '/dashboard-live'
+    | '/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchiveGalleryRoute: typeof ArchiveGalleryRoute
   CaptainsRoute: typeof CaptainsRoute
+  DashboardLiveRoute: typeof DashboardLiveRoute
   EventsRoute: typeof EventsRoute
 }
 
@@ -68,11 +99,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard-live': {
+      id: '/dashboard-live'
+      path: '/dashboard-live'
+      fullPath: '/dashboard-live'
+      preLoaderRoute: typeof DashboardLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/captains': {
       id: '/captains'
       path: '/captains'
       fullPath: '/captains'
       preLoaderRoute: typeof CaptainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive-gallery': {
+      id: '/archive-gallery'
+      path: '/archive-gallery'
+      fullPath: '/archive-gallery'
+      preLoaderRoute: typeof ArchiveGalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,7 +132,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchiveGalleryRoute: ArchiveGalleryRoute,
   CaptainsRoute: CaptainsRoute,
+  DashboardLiveRoute: DashboardLiveRoute,
   EventsRoute: EventsRoute,
 }
 export const routeTree = rootRouteImport

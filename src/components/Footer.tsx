@@ -1,4 +1,4 @@
-import { Facebook, Globe, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import { Facebook, Globe, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react";
 import { LionEmblem } from "./LionEmblem";
 
 export function Footer() {
@@ -45,6 +45,15 @@ export function Footer() {
                 <Facebook className="w-4 h-4" />
               </a>
               <a
+                href="https://www.youtube.com/@simatsschoolofengineering"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="YouTube"
+                className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
+              <a
                 href="https://simatsengineering.com/culturals"
                 target="_blank"
                 rel="noreferrer"
@@ -65,13 +74,17 @@ export function Footer() {
           <div>
             <h4 className="font-display text-sm tracking-[0.3em] text-gold/80 mb-4">QUICK LINKS</h4>
             <ul className="space-y-2 text-sm text-foreground/70">
-              {["Home", "Teams", "Events", "Gallery", "Live Scores", "Faculty"].map((l) => (
-                <li key={l}>
-                  <a
-                    href={l === "Events" ? "/events" : `#${l.toLowerCase().replace(" ", "")}`}
-                    className="hover:text-gold transition"
-                  >
-                    {l}
+              {[
+                { label: "Home", href: "/#home" },
+                { label: "Teams", href: "/#teams" },
+                { label: "Events", href: "/events" },
+                { label: "Archive", href: "/archive" },
+                { label: "Dashboard + Live", href: "/dashboard-live" },
+                { label: "Faculty", href: "/#faculty" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="hover:text-gold transition">
+                    {link.label}
                   </a>
                 </li>
               ))}

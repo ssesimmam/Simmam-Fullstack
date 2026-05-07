@@ -1,4 +1,5 @@
-import { Calendar, Sparkles, Trophy, Zap } from "lucide-react";
+import { Calendar, Trophy, Zap } from "lucide-react";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { Countdown } from "./Countdown";
 import { LionEmblem } from "./LionEmblem";
 import { Particles } from "./Particles";
@@ -47,13 +48,41 @@ export function Hero() {
       <Particles count={40} />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-8 animate-rise-in">
-          <Sparkles className="w-3.5 h-3.5 text-gold" />
-          <span className="text-xs tracking-[0.3em] text-gold/90">
-            SIMATS ENGINEERING CULTURALS
-          </span>
-          <Sparkles className="w-3.5 h-3.5 text-gold" />
+        {/* Badge & Social Floaters */}
+        <div className="flex flex-row items-center justify-center gap-6 mb-8 animate-rise-in mx-auto w-fit max-w-full">
+          <svg width="0" height="0" className="absolute">
+            <linearGradient id="instagram-gradient" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop stopColor="#f09433" offset="0%" />
+              <stop stopColor="#e6683c" offset="25%" />
+              <stop stopColor="#dc2743" offset="50%" />
+              <stop stopColor="#cc2366" offset="75%" />
+              <stop stopColor="#bc1888" offset="100%" />
+            </linearGradient>
+          </svg>
+
+          <a
+            href="[Insert Link]"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:scale-110 transition-transform duration-300 drop-shadow-md hover:drop-shadow-lg"
+          >
+            <FaInstagram style={{ fill: "url(#instagram-gradient)" }} className="w-8 h-8" />
+          </a>
+
+          <div className="inline-flex items-center justify-center glass rounded-full px-5 py-2">
+            <span className="text-xs md:text-sm tracking-[0.3em] text-white text-center">
+              SIMATS ENGINEERING CULTURALS
+            </span>
+          </div>
+
+          <a
+            href="[Insert Link]"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#25D366] hover:scale-110 transition-transform duration-300 drop-shadow-md hover:drop-shadow-lg"
+          >
+            <FaWhatsapp className="w-8 h-8" />
+          </a>
         </div>
 
         {/* Lion - large hero crest */}
@@ -63,7 +92,7 @@ export function Hero() {
 
         {/* Title */}
         <h1
-          className="font-display text-[clamp(3.5rem,12vw,9rem)] leading-[0.95] font-black text-gradient-fire animate-rise-in"
+          className="font-display text-[clamp(3.5rem,12vw,9rem)] leading-[0.95] font-black text-gradient-fire animate-rise-in -mt-6 md:-mt-10 relative z-10"
           style={{ animationDelay: ".2s" }}
         >
           SIMMAM

@@ -8,17 +8,15 @@ import { LionEmblem } from "./LionEmblem";
 ───────────────────────────────────────────── */
 const leftLinks = [
   { href: "/#home",        label: "Home" },
-  { href: "/#dashboard",   label: "Dashboard" },
+  { href: "/dashboard-live",   label: "Dashboard" },
   { href: "/#teams",       label: "Houses" },
   { href: "/#leaderboard", label: "2025 Results" },
-  { href: "/#archive",     label: "Archive" },
 ];
 
 const rightLinks = [
   { href: "/events",    label: "Events" },
+  { href: "/archive-gallery#gallery", label: "Gallery" },
   { href: "/captains",  label: "Captains" },
-  { href: "/#gallery",  label: "Gallery" },
-  { href: "/#live",     label: "Live Scores" },
   { href: "/#contact",  label: "Contact" },
 ];
 

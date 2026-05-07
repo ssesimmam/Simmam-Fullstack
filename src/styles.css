@@ -229,6 +229,7 @@
 }
 @keyframes count-up { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 @keyframes draw-bar { from { width: 0; } }
+@keyframes float-subtle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
 
 .animate-spin-slow { animation: spin-slow 24s linear infinite; }
 .animate-spin-reverse { animation: spin-reverse 18s linear infinite; }
@@ -238,6 +239,7 @@
 .animate-rise-in { animation: rise-in .8s cubic-bezier(.2,.8,.2,1) both; }
 .animate-spotlight-sweep { animation: spotlight-sweep 8s ease-in-out infinite; }
 .animate-gradient { background-size: 200% 200%; animation: gradient-shift 6s ease infinite; }
+.animate-float-subtle { animation: float-subtle 3s ease-in-out infinite; }
 
 .shimmer-text {
   background: linear-gradient(90deg, oklch(0.78 0.16 82) 0%, oklch(0.98 0.06 90) 50%, oklch(0.78 0.16 82) 100%);

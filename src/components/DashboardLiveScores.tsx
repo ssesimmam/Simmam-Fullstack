@@ -39,9 +39,12 @@ type HouseScore = {
   short: string;
   element: string;
   points: number;
+  delta: number;
   color: string;
   accent: string;
 };
+
+const livePhases = ["Qualifiers", "Semi Finals", "Final Sprint"];
 
 export function DashboardLiveScores() {
   const [houseScores, setHouseScores] = useState<HouseScore[]>(() => 
@@ -51,24 +54,41 @@ export function DashboardLiveScores() {
         short: h.short,
         element: h.element,
         points: h.points2025,
+        delta: 0,
         color: h.accent,
         accent: h.accent,
       }))
       .sort((a, b) => b.points - a.points)
   );
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date>(new Date());
+  const [phaseIdx, setPhaseIdx] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
       setHouseScores((prev) =>
         [...prev]
-          .map((s) => ({ ...s, points: s.points + Math.floor(Math.random() * 8) }))
+          .map((s) => {
+            const gain = Math.floor(Math.random() * 12) + 1;
+            return { ...s, delta: gain, points: s.points + gain };
+          })
           .sort((a, b) => b.points - a.points)
       );
-    }, 2200);
+      setLastUpdatedAt(new Date());
+    }, 1800);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPhaseIdx((prev) => (prev + 1) % livePhases.length);
+    }, 6000);
     return () => clearInterval(id);
   }, []);
 
   const max = Math.max(...houseScores.map((s) => s.points));
+  const totalLivePoints = houseScores.reduce((sum, house) => sum + house.points, 0);
+  const leaderGap =
+    houseScores.length > 1 ? houseScores[0].points - houseScores[1].points : 0;
 
   return (
     <section id="dashboard" className="relative py-24 md:py-32">
@@ -155,12 +175,33 @@ export function DashboardLiveScores() {
               <span className="text-xs tracking-[0.3em] text-gold/80">LIVE • HOUSE RANKINGS</span>
             </div>
             <div className="flex items-center gap-4 text-xs text-foreground/60">
+              <span className="inline-flex items-center gap-1 text-gold/90">
+                <Sparkles className="w-3.5 h-3.5" /> {livePhases[phaseIdx]}
+              </span>
               <span className="inline-flex items-center gap-1">
                 <Activity className="w-3.5 h-3.5 text-gold" /> Auto-sync
               </span>
               <span className="inline-flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5 text-gold" /> Rising
               </span>
+              <span className="hidden md:inline text-foreground/45">
+                Updated {lastUpdatedAt.toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-6">
+            <div className="glass rounded-2xl p-4">
+              <div className="text-[10px] tracking-[0.3em] text-foreground/60">TOTAL LIVE POINTS</div>
+              <div className="font-display text-2xl text-gradient-gold mt-1 tabular-nums">
+                {totalLivePoints.toLocaleString()}
+              </div>
+            </div>
+            <div className="glass rounded-2xl p-4">
+              <div className="text-[10px] tracking-[0.3em] text-foreground/60">LEADER GAP</div>
+              <div className="font-display text-2xl text-gradient-gold mt-1 tabular-nums">
+                +{leaderGap}
+              </div>
             </div>
           </div>
 
@@ -197,15 +238,20 @@ export function DashboardLiveScores() {
                       </div>
                     )}
                   </div>
-                  <span className="font-display text-xl tabular-nums text-gradient-gold">
-                    {house.points}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-400/15 text-emerald-300 border border-emerald-400/25 tabular-nums">
+                      +{house.delta}
+                    </span>
+                    <span className="font-display text-xl tabular-nums text-gradient-gold">
+                      {house.points}
+                    </span>
+                  </div>
                 </div>
                 <div className="h-3 rounded-full bg-white/5 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700 relative"
                     style={{
-                      width: `${(house.points / max) * 100}%`,
+                      width: `${Math.max((house.points / max) * 100, 8)}%`,
                       background: `linear-gradient(90deg, ${house.accent}, var(--gold))`,
                       boxShadow: `0 0 20px ${house.accent}`,
                     }}
