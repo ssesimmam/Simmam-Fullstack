@@ -2,10 +2,13 @@ import React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
+import { DashboardLiveScores } from "@/components/DashboardLiveScores";
 import { Leaderboard } from "@/components/Leaderboard";
 import { Teams } from "@/components/Teams";
+import { Gallery } from "@/components/Gallery";
 import { Showcase3D } from "@/components/Showcase3D";
 import { Faculty } from "@/components/Faculty";
+import { PastYears } from "@/components/PastYears";
 import { Footer } from "@/components/Footer";
 import { Loader } from "@/components/Loader";
 import { Particles } from "@/components/Particles";
@@ -50,9 +53,12 @@ function Index() {
       <main className="relative">
         <Particles count={20} className="!fixed inset-0 -z-10" />
         <Hero />
+        <DashboardLiveScores />
         <Teams />
         <Showcase3D />
         <Leaderboard />
+        <PastYears />
+        <Gallery />
         <Faculty />
       </main>
       <Footer />

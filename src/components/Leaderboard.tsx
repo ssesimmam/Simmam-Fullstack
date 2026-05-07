@@ -12,7 +12,7 @@ export function Leaderboard() {
         <SectionHeader
           eyebrow="SIMMAM 2025 Final Standings"
           title="The Champions Wall"
-          subtitle="The houses that lit up SIMMAM 2025. Rudras took the crown — 2026 raises the bar."
+          subtitle="The houses that lit up SIMMAM 2025. Agniyas took the crown — 2026 raises the bar."
         />
 
         {/* Podium */}
@@ -22,7 +22,7 @@ export function Leaderboard() {
             return (
               <div
                 key={t.short}
-                className={`relative glass-strong rounded-2xl p-6 text-center hover-lift overflow-hidden ${
+                className={`relative bg-black/60 border border-white/10 rounded-2xl p-6 text-center hover-lift overflow-hidden ${
                   i === 0 ? "sm:-translate-y-4" : ""
                 }`}
               >
@@ -60,7 +60,7 @@ export function Leaderboard() {
         </div>
 
         {/* Table */}
-        <div className="glass rounded-2xl overflow-hidden">
+        <div className="bg-black/60 border border-white/10 rounded-2xl overflow-hidden">
           <div className="grid grid-cols-12 px-5 py-3 text-[10px] tracking-[0.3em] text-gold/70 border-b border-[var(--glass-border)]">
             <div className="col-span-1">RANK</div>
             <div className="col-span-4">HOUSE</div>

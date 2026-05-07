@@ -16,19 +16,22 @@ export function Teams() {
           subtitle="Six legendary houses. One arena. Every point earned belongs to one of these six."
         />
 
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="columns-1 md:columns-2 gap-5 space-y-5">
           {houses.map((t, i) => {
             const isOpen = open === i;
             return (
-              <Tilt3D key={t.short} max={6}>
-                <div
-                  className="group relative glass rounded-2xl overflow-hidden hover-lift h-full"
-                  style={{ borderColor: t.accent.replace(")", " / 0.4)") }}
-                >
+              <div key={t.short} className="break-inside-avoid">
+                <Tilt3D max={6}>
                   <div
-                    className="absolute -top-20 -right-10 w-72 h-72 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition"
-                    style={{ background: t.glow }}
-                  />
+                    className="group relative glass rounded-2xl overflow-hidden hover-lift h-full"
+                    style={{ borderColor: t.accent.replace(")", " / 0.4)") }}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-30 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle at right top, ${t.glow}, transparent 70%)`,
+                      }}
+                    />
                   <button
                     onClick={() => setOpen(isOpen ? null : i)}
                     className="relative w-full text-left p-6"
@@ -77,24 +80,30 @@ export function Teams() {
                     <div className="overflow-hidden">
                       <div className="px-6 pb-6 space-y-3 text-sm">
                         <p className="text-foreground/70 leading-relaxed">{t.about}</p>
-                        <Row icon={User} label="Captain" name={t.captain.name} phone={t.captain.phone} />
                         <Row
                           icon={UserCog}
-                          label="Vice Captain"
-                          name={t.vice.name}
-                          phone={t.vice.phone}
+                          label="Faculty Captain"
+                          name={t.faculty.name}
+                          phone={t.faculty.phone}
+                        />
+                        <Row
+                          icon={User}
+                          label="Student Captain"
+                          name={t.captain.name}
+                          phone={t.captain.phone}
                         />
                         <Row
                           icon={UserCog}
-                          label="Faculty Coordinator"
-                          name={t.faculty.name}
-                          phone={t.faculty.phone}
+                          label="Student Vice Captain"
+                          name={t.vice.name}
+                          phone={t.vice.phone}
                         />
                       </div>
                     </div>
                   </div>
-                </div>
-              </Tilt3D>
+                  </div>
+                </Tilt3D>
+              </div>
             );
           })}
         </div>

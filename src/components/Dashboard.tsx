@@ -17,8 +17,8 @@ const stats: Stat[] = [
   { icon: Flame, label: "Total Participants", value: 4280, hint: "Across all events", accent: "red" },
   { icon: Trophy, label: "Total Events", value: 48, hint: "Cultural & technical", accent: "gold" },
   { icon: Building2, label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
-  { icon: Crown, label: "2025 Champion", value: 1, suffix: " — Rudras", hint: "Last year's overall winners", accent: "gold" },
-  { icon: Award, label: "Highest Score", value: 1845, hint: "Rudras — SIMMAM 2025", accent: "red" },
+  { icon: Crown, label: "2025 Champion", value: 1, suffix: " — Agniyas", hint: "Last year's overall winners", accent: "gold" },
+  { icon: Award, label: "Highest Score", value: 1845, hint: "Agniyas — SIMMAM 2025", accent: "red" },
 ];
 
 export function Dashboard() {

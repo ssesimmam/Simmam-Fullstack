@@ -18,7 +18,7 @@ const editions: Edition[] = [
   {
     year: "2025",
     title: "SIMMAM 2025 — Legends of Music",
-    champion: "Rudras",
+    champion: "Agniyas",
     headliner: 'Vijay Antony  •  "Rock Star DSP"',
     days: 3,
     participants: 4200,
