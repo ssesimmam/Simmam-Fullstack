@@ -1,0 +1,1055 @@
+import {
+  Camera,
+  Code2,
+  Drama,
+  Gamepad2,
+  Mic2,
+  Mic,
+  Music,
+  Shirt,
+  Sparkles,
+  Trophy,
+  Wrench,
+  Palette
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+export type Event = {
+  name: string;
+  category: string;
+  mainCategory: "Tech" | "Non-Tech" | "Sports";
+  icon: LucideIcon;
+  rules: string[];
+};
+
+export const allEvents: Event[] = [
+  {
+    name: "Debugging Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Fix all errors within time", "No internet/help allowed", "Judging based on correctness"]
+  },
+  {
+    name: "Blind Coding",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["No compiling/running code", "Write complete logic", "Judging on accuracy"]
+  },
+  {
+    name: "Tech Treasure Hunt",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Follow clue sequence", "No skipping levels", "First to finish wins"]
+  },
+  {
+    name: "Rapid Fire Tech Talk",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["2-minute time limit", "Topic given instantly", "Judging on clarity"]
+  },
+  {
+    name: "Paper Presentation",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Time limit must be followed", "PPT is mandatory", "Q&A included"]
+  },
+  {
+    name: "Tech Talk by Students",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Stick to topic", "Follow time limit", "Judging on delivery"]
+  },
+  {
+    name: "Speed Typing Competition",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Fixed time duration", "No external tools", "Accuracy matters"]
+  },
+  {
+    name: "Tech Crossword",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Solve within time", "No external help", "Max correct wins"]
+  },
+  {
+    name: "Guess the Technology",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Identify from clues/images", "No shouting answers", "Most correct wins"]
+  },
+  {
+    name: "Escape Room (Mini)",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Solve all clues", "No external help", "Time-based ranking"]
+  },
+  {
+    name: "AI Prompt Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Create original prompts", "Use allowed AI tools", "Judging on output"]
+  },
+  {
+    name: "Tech Crime Scene",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Analyze given data", "Work as a team", "Correct solution wins"]
+  },
+  {
+    name: "Explain Like I\u2019m 5",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Use simple language", "Avoid technical terms", "Judging on clarity"]
+  },
+  {
+    name: "Tech Mythbusters",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Present facts clearly", "Avoid misinformation", "Judging on explanation"]
+  },
+  {
+    name: "AI Art Battle",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Palette,
+    rules: ["Use AI tools only", "No pre-made content", "Creativity wins"]
+  },
+  {
+    name: "Design Your Dream Gadget",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Draw and explain idea", "Focus on innovation", "Judging on creativity"]
+  },
+  {
+    name: "One-Minute Innovation",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["60-second pitch", "Clear problem-solution", "Judging on idea"]
+  },
+  {
+    name: "Create a Tech Ad",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Be creative", "Time limit applies", "Clear message required"]
+  },
+  {
+    name: "Competitive Coding",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Solve within time", "No plagiarism", "Correct solutions win"]
+  },
+  {
+    name: "App Idea Competition",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Clear concept required", "Explain use case", "Judging on innovation"]
+  },
+  {
+    name: "Code Refactor Relay",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Improve given code", "Follow sequence", "Maintain logic"]
+  },
+  {
+    name: "Bug Bounty Hunt (Offline)",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Find vulnerabilities", "No external tools", "Max bugs wins"]
+  },
+  {
+    name: "No-Code App Builder Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Use no-code tools only", "Build within time", "Present final output"]
+  },
+  {
+    name: "Reverse Engineering Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Analyze given program", "No source code access", "Correct logic wins"]
+  },
+  {
+    name: "Tech Pictionary",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Draw given term", "No words allowed", "Team guesses"]
+  },
+  {
+    name: "Algorithm Auction",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Bid wisely", "Solve chosen problems", "Max score wins"]
+  },
+  {
+    name: "Digital Logic Puzzle Race",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Solve logic questions", "No external help", "Fastest correct wins"]
+  },
+  {
+    name: "Startup Pitch Roleplay",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Gamepad2,
+    rules: ["Present idea clearly", "Time limit applies", "Judges decide"]
+  },
+  {
+    name: "Cloud Architecture Design",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Design given system", "Explain components", "Judging on clarity"]
+  },
+  {
+    name: "Tech Debate Showdown",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Speak for/against topic", "Follow time rules", "Respect opponents"]
+  },
+  {
+    name: "Keyboard Shortcut Race",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Use shortcuts only", "Complete tasks fast", "Accuracy matters"]
+  },
+  {
+    name: "Data Visualization Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Use given data", "Create clear visuals", "Judging on clarity"]
+  },
+  {
+    name: "Cybersecurity Quiz Escape",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Answer sequentially", "No skipping", "Reach final level"]
+  },
+  {
+    name: "API Design Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Define endpoints", "Explain usage", "Judging on design"]
+  },
+  {
+    name: "Hardware Disassembly Race",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Handle carefully", "Reassemble correctly", "Fastest wins"]
+  },
+  {
+    name: "Tech Charades",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Drama,
+    rules: ["Act without words", "Team guesses", "Time-based"]
+  },
+  {
+    name: "Mini Hack Scenario",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Solve given problem", "Think practically", "Present solution"]
+  },
+  {
+    name: "Binary Code Breaker",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Decode correctly", "No tools allowed", "Fastest wins"]
+  },
+  {
+    name: "Product Teardown Analysis",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Analyze features", "Explain technology", "Judging on depth"]
+  },
+  {
+    name: "AI Ethics Case Study",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Understand scenario", "Provide solution", "Justify ethically"]
+  },
+  {
+    name: "Tech Timeline Builder",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Wrench,
+    rules: ["Arrange correctly", "Follow time limit", "Accuracy wins"]
+  },
+  {
+    name: "Innovation Under Constraints",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Sparkles,
+    rules: ["Follow restrictions", "Be creative", "Judging on idea"]
+  },
+  {
+    name: "Code Translation Challenge",
+    category: "Technical",
+    mainCategory: "Tech",
+    icon: Code2,
+    rules: ["Convert correctly", "Maintain logic", "No syntax errors"]
+  },
+  {
+    name: "Handprint",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use only provided materials", "Complete within time", "Creativity matters"]
+  },
+  {
+    name: "Blind Make-Up",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["One participant blindfolded", "No guidance allowed", "Best result wins"]
+  },
+  {
+    name: "Treasure Hunt",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Follow clues in order", "No skipping levels", "First team wins"]
+  },
+  {
+    name: "Bottle Flip",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Flip within given attempts", "Must land upright", "Max successful flips wins"]
+  },
+  {
+    name: "Sketching",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Follow given theme", "No copying", "Judging on creativity"]
+  },
+  {
+    name: "Doodle",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Complete within time", "Stick to theme", "Creativity matters"]
+  },
+  {
+    name: "Rangoli",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Use allowed materials", "Finish within time", "Judging on design"]
+  },
+  {
+    name: "Tongue Twister",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Speak clearly", "No mistakes allowed", "Fastest correct wins"]
+  },
+  {
+    name: "Draw on My Back",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["No talking allowed", "Draw based on touch", "Accuracy wins"]
+  },
+  {
+    name: "Bee Buzz",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Follow number rules", "No mistakes allowed", "Last standing wins"]
+  },
+  {
+    name: "Memory Game",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Gamepad2,
+    rules: ["Observe carefully", "Recall correctly", "Max correct wins"]
+  },
+  {
+    name: "Vocabulary",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use valid words only", "No repetition", "Highest score wins"]
+  },
+  {
+    name: "Dumb Charades",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["No speaking", "Act clearly", "Team guesses"]
+  },
+  {
+    name: "Repeat the Dialogue",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Repeat exactly", "No changes allowed", "Accuracy wins"]
+  },
+  {
+    name: "Prop Story Challenge",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use given props", "Create story quickly", "Creativity wins"]
+  },
+  {
+    name: "Connection Hunt",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Find logical links", "Complete within time", "Accuracy wins"]
+  },
+  {
+    name: "Crack the Story",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Arrange correctly", "Logical sequence", "Fastest wins"]
+  },
+  {
+    name: "Meme",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Follow theme", "Original content only", "Creativity wins"]
+  },
+  {
+    name: "Photography",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Camera,
+    rules: ["Capture within theme", "No heavy editing", "Best shot wins"]
+  },
+  {
+    name: "Guess the Hook Step",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Identify dance step", "No shouting answers", "Max correct wins"]
+  },
+  {
+    name: "Stand-Up Comedy",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Original content", "No offensive jokes", "Audience response counts"]
+  },
+  {
+    name: "Script Writing",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Follow given theme", "Complete within time", "Creativity matters"]
+  },
+  {
+    name: "Debate",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Speak for/against", "Follow time limit", "Respect opponents"]
+  },
+  {
+    name: "Duplicate the Design",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Copy given design", "Accuracy matters", "Time-based"]
+  },
+  {
+    name: "Laugh Aloud",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Make others laugh", "Within time limit", "Best performance wins"]
+  },
+  {
+    name: "Don\u2019t Laugh",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Maintain straight face", "No reaction allowed", "Last standing wins"]
+  },
+  {
+    name: "Kim\u2019s Game",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Gamepad2,
+    rules: ["Observe items", "Recall correctly", "Max correct wins"]
+  },
+  {
+    name: "Lemon Spoon",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Balance while walking", "No dropping", "Fastest wins"]
+  },
+  {
+    name: "Ad Mad Live",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Create ad instantly", "Use creativity", "Time limit applies"]
+  },
+  {
+    name: "Freeze & Act",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Freeze on command", "No movement", "Best act wins"]
+  },
+  {
+    name: "Pass the Ball",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Pass continuously", "Stop on signal", "Eliminations apply"]
+  },
+  {
+    name: "Pyramid Building",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use given materials", "Build within time", "Stability matters"]
+  },
+  {
+    name: "Anthakshari",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Follow song chain", "No repetition", "Team play"]
+  },
+  {
+    name: "Musical Chairs",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Walk around chairs", "Sit on stop", "Elimination rounds"]
+  },
+  {
+    name: "Arm Wrestling",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Trophy,
+    rules: ["Follow fair rules", "No sudden moves", "Strength decides"]
+  },
+  {
+    name: "Hand Cricket",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Trophy,
+    rules: ["Use finger signals", "Follow rules", "Score-based win"]
+  },
+  {
+    name: "Push-Up",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Trophy,
+    rules: ["Proper form required", "Count valid reps", "Max wins"]
+  },
+  {
+    name: "Weight Lifting",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Trophy,
+    rules: ["Follow safety rules", "Proper technique", "Highest lift wins"]
+  },
+  {
+    name: "Theme Performance",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Follow given theme", "Time limit applies", "Creativity wins"]
+  },
+  {
+    name: "Identify the Animal",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Guess correctly", "No shouting", "Max correct wins"]
+  },
+  {
+    name: "Guess the Flag",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Identify country", "No hints", "Most correct wins"]
+  },
+  {
+    name: "Mehendi",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Use allowed designs", "Complete within time", "Neatness matters"]
+  },
+  {
+    name: "Pen Tattoo",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Draw within time", "Safe designs only", "Creativity wins"]
+  },
+  {
+    name: "JAM (Just-A-Minute)",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Speak continuously", "No pause/repeat", "Clarity matters"]
+  },
+  {
+    name: "Balloon Blast",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Burst within time", "Follow rules", "Fastest wins"]
+  },
+  {
+    name: "Sell Me This",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Pitch product", "Be convincing", "Creativity counts"]
+  },
+  {
+    name: "Adapt Tune",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Modify given song", "Stay on theme", "Creativity wins"]
+  },
+  {
+    name: "Nail Art",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Design creatively", "Within time", "Neatness matters"]
+  },
+  {
+    name: "Chinese Whisper",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Pass message quietly", "No repetition", "Accuracy wins"]
+  },
+  {
+    name: "Pani Puri Challenge",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Eat within time", "No waste", "Max count wins"]
+  },
+  {
+    name: "Beatboxing",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Perform live", "No backing track", "Rhythm matters"]
+  },
+  {
+    name: "Brush Painting",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Follow theme", "Complete in time", "Creativity wins"]
+  },
+  {
+    name: "Glass Printing",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use provided materials", "Follow design rules", "Neatness matters"]
+  },
+  {
+    name: "Face Painting",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Palette,
+    rules: ["Follow theme", "Complete within time", "Creativity matters"]
+  },
+  {
+    name: "IPL Auctions",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Use given budget", "Bid strategically", "Best team wins"]
+  },
+  {
+    name: "Short Films",
+    category: "Fun",
+    mainCategory: "Non-Tech",
+    icon: Camera,
+    rules: ["Follow theme,Time duration limit,Creativity and story win"]
+  },
+  {
+    name: "Solo Dance",
+    category: "Dance",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Individual performance only", "Time limit must be followed", "Judging on expression and coordination"]
+  },
+  {
+    name: "Duo Dance",
+    category: "Dance",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Two participants only", "Time limit strictly followed", "Judging on synchronization"]
+  },
+  {
+    name: "Group Dance",
+    category: "Dance",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Team size as specified", "Props must be safe", "Judging on coordination and creativity"]
+  },
+  {
+    name: "Classical Dance",
+    category: "Dance",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Classical style only", "Time limit applies", "Judging on expression and technique"]
+  },
+  {
+    name: "Street Dance / Hip-Hop",
+    category: "Dance",
+    mainCategory: "Non-Tech",
+    icon: Music,
+    rules: ["Street style only", "No unsafe stunts", "Judging on energy and originality"]
+  },
+  {
+    name: "Solo Singing",
+    category: "Music",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Individual participation only", "Time limit must be followed", "Judging on pitch and clarity"]
+  },
+  {
+    name: "Duet Singing",
+    category: "Music",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Two participants only", "Maintain coordination", "Judging on harmony"]
+  },
+  {
+    name: "Battle of Bands",
+    category: "Music",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Team performance only", "Follow time limit", "Judging on overall performance"]
+  },
+  {
+    name: "Instrumental Music",
+    category: "Music",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Instruments allowed only", "Time limit applies", "Judging on skill and rhythm"]
+  },
+  {
+    name: "Rap Battle / Beatboxing",
+    category: "Music",
+    mainCategory: "Non-Tech",
+    icon: Mic2,
+    rules: ["Original performance preferred", "No offensive language", "Judging on flow and creativity"]
+  },
+  {
+    name: "Skit (Social Awareness)",
+    category: "Theatre",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Theme must be relevant", "Time limit strictly followed", "Judging on message and acting"]
+  },
+  {
+    name: "Mime",
+    category: "Theatre",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["No spoken words allowed", "Use expressions clearly", "Judging on presentation"]
+  },
+  {
+    name: "Mono Acting",
+    category: "Theatre",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Individual performance only", "Stay within time limit", "Judging on expression"]
+  },
+  {
+    name: "Improv Acting",
+    category: "Theatre",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Topic given on the spot", "No preparation time", "Judging on spontaneity"]
+  },
+  {
+    name: "Ad Zap",
+    category: "Theatre",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Create short ad performance", "Keep it creative", "Judging on originality"]
+  },
+  {
+    name: "Stand-up Comedy",
+    category: "Speaking",
+    mainCategory: "Non-Tech",
+    icon: Drama,
+    rules: ["Original content preferred", "No offensive jokes", "Judging on delivery and humor"]
+  },
+  {
+    name: "Open Mic (Poetry/Storytelling)",
+    category: "Speaking",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Individual performance only", "Stick to time limit", "Judging on expression and content"]
+  },
+  {
+    name: "Talent Show",
+    category: "Speaking",
+    mainCategory: "Non-Tech",
+    icon: Sparkles,
+    rules: ["Any talent is allowed", "Time limit must be followed", "Judging on uniqueness and performance"]
+  },
+  {
+    name: "Kho Kho",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Kabaddi",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Cricket",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Volleyball",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Football",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Basketball",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Handball",
+    category: "OUTDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Carroms",
+    category: "INDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Gamepad2,
+    rules: []
+  },
+  {
+    name: "Chess",
+    category: "INDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Gamepad2,
+    rules: []
+  },
+  {
+    name: "Table Tennis",
+    category: "INDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Badminton",
+    category: "INDOOR GAMES (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Track Events (100m, 200m, 400m, 800m, 1500m, 3K)",
+    category: "ATHLETICS (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Relay (4\u00d7100, 4\u00d7400)",
+    category: "ATHLETICS (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Shot Put",
+    category: "ATHLETICS (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Discus Throw",
+    category: "ATHLETICS (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Javelin Throw",
+    category: "ATHLETICS (BOYS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Kho Kho",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Kabaddi",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Cricket",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Volleyball",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Throwball",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Basketball",
+    category: "OUTDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Chess",
+    category: "INDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Gamepad2,
+    rules: []
+  },
+  {
+    name: "Table Tennis",
+    category: "INDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Badminton",
+    category: "INDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Carroms",
+    category: "INDOOR GAMES (GIRLS)",
+    mainCategory: "Sports",
+    icon: Gamepad2,
+    rules: []
+  },
+  {
+    name: "Track Events (100m, 200m, 400m, 800m)",
+    category: "ATHLETICS (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Relay (4\u00d7100, 4\u00d7400)",
+    category: "ATHLETICS (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Shot Put",
+    category: "ATHLETICS (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+  {
+    name: "Discus Throw",
+    category: "ATHLETICS (GIRLS)",
+    mainCategory: "Sports",
+    icon: Trophy,
+    rules: []
+  },
+];
