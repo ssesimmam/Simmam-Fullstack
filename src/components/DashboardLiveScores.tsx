@@ -1,0 +1,238 @@
+import { useEffect, useState } from "react";
+import { Award, Building2, Crown, Flame, Trophy, Users, Activity, TrendingUp, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Counter } from "./Counter";
+import { Tilt3D } from "./Tilt3D";
+import { SectionHeader } from "./Dashboard";
+import { houses } from "../lib/houses";
+
+type Stat = {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  suffix?: string;
+  hint: string;
+  accent: "gold" | "red";
+};
+
+const stats: Stat[] = [
+  { icon: Users, label: "Total Houses", value: 6, hint: "Rudras, Suryas, Dronas, Agniyas, Marutas, Vajraas", accent: "gold" },
+  { icon: Flame, label: "Total Participants", value: 4280, hint: "Across all events", accent: "red" },
+  { icon: Trophy, label: "Total Events", value: 48, hint: "Cultural & technical", accent: "gold" },
+  { icon: Building2, label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
+  { icon: Crown, label: "2025 Champion", value: 1, suffix: " — Agniyas", hint: "Last year's overall winners", accent: "gold" },
+  { icon: Award, label: "Highest Score", value: 1845, hint: "Agniyas — SIMMAM 2025", accent: "red" },
+];
+
+// House element icons
+const houseElementIcons: { [key: string]: string } = {
+  "Storm": "⚡",
+  "Sun": "☀️",
+  "Wisdom": "📚",
+  "Fire": "🔥",
+  "Wind": "💨",
+  "Thunder": "⚡",
+};
+
+type HouseScore = {
+  name: string;
+  short: string;
+  element: string;
+  points: number;
+  color: string;
+  accent: string;
+};
+
+export function DashboardLiveScores() {
+  const [houseScores, setHouseScores] = useState<HouseScore[]>(() => 
+    houses
+      .map((h) => ({
+        name: h.name,
+        short: h.short,
+        element: h.element,
+        points: h.points2025,
+        color: h.accent,
+        accent: h.accent,
+      }))
+      .sort((a, b) => b.points - a.points)
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHouseScores((prev) =>
+        [...prev]
+          .map((s) => ({ ...s, points: s.points + Math.floor(Math.random() * 8) }))
+          .sort((a, b) => b.points - a.points)
+      );
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
+
+  const max = Math.max(...houseScores.map((s) => s.points));
+
+  return (
+    <section id="dashboard" className="relative py-24 md:py-32">
+      <div className="max-w-7xl mx-auto px-6">
+        <SectionHeader
+          eyebrow="Festival Dashboard & Live Scores"
+          title="Live by the Numbers"
+          subtitle="A real-time pulse of SIMMAM 2026 — teams, talents, total intensity, and house rankings."
+        />
+
+        {/* Stats Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-16">
+          {stats.map((s, i) => (
+            <Tilt3D key={s.label} max={9}>
+              <div
+                className="group relative bg-black/60 border border-white/10 rounded-2xl p-6 hover-lift overflow-hidden animate-rise-in h-full"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                {/* corner glow */}
+                <div
+                  className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition"
+                  style={{
+                    background:
+                      s.accent === "gold"
+                        ? "oklch(0.78 0.16 80 / 0.7)"
+                        : "oklch(0.55 0.22 27 / 0.7)",
+                  }}
+                />
+                <div className="relative flex items-start justify-between">
+                  <div
+                    className={`p-3 rounded-xl ${
+                      s.accent === "gold"
+                        ? "bg-gold/10 text-gold neon-border"
+                        : "bg-[var(--crimson)]/15 text-crimson neon-border-red"
+                    }`}
+                  >
+                    <s.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] tracking-[0.3em] text-foreground/50">
+                    LIVE
+                  </span>
+                </div>
+
+                <div className="relative mt-6">
+                  <div className="font-display text-5xl font-bold text-gradient-gold">
+                    <Counter to={s.value} suffix={s.suffix} />
+                  </div>
+                  <div className="mt-2 text-base text-foreground/90 font-medium">
+                    {s.label}
+                  </div>
+                  <div className="text-xs text-foreground/55 mt-1">{s.hint}</div>
+                </div>
+
+                {/* progress sparkline */}
+                <div className="relative mt-5 h-1 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: "78%",
+                      background:
+                        s.accent === "gold"
+                          ? "linear-gradient(90deg, var(--gold), var(--crimson))"
+                          : "linear-gradient(90deg, var(--crimson-glow), var(--gold))",
+                      boxShadow: "0 0 12px var(--gold)",
+                    }}
+                  />
+                </div>
+              </div>
+            </Tilt3D>
+          ))}
+        </div>
+
+        {/* Live Scores Section with House Logos */}
+        <div className="bg-black/60 border border-white/10 rounded-3xl p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[var(--crimson)]/30 blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[var(--gold)]/30 blur-3xl" />
+
+          <div className="relative flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+              <span className="relative flex w-2.5 h-2.5">
+                <span className="absolute inset-0 rounded-full bg-red-500 animate-ping" />
+                <span className="relative w-2.5 h-2.5 rounded-full bg-red-500" />
+              </span>
+              <span className="text-xs tracking-[0.3em] text-gold/80">LIVE • HOUSE RANKINGS</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-foreground/60">
+              <span className="inline-flex items-center gap-1">
+                <Activity className="w-3.5 h-3.5 text-gold" /> Auto-sync
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-gold" /> Rising
+              </span>
+            </div>
+          </div>
+
+          <div className="relative space-y-4">
+            {houseScores.map((house, i) => (
+              <div key={house.name} className="relative">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-3">
+                    <span className="font-display text-lg text-gold w-6">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    
+                    {/* House Logo/Element */}
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold border-2"
+                      style={{
+                        backgroundColor: `${house.accent}20`,
+                        borderColor: house.accent,
+                        color: house.accent,
+                      }}
+                    >
+                      {houseElementIcons[house.element] || "🏠"}
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-foreground">{house.name}</span>
+                      <span className="text-xs text-foreground/50">{house.element}</span>
+                    </div>
+                    
+                    {i === 0 && (
+                      <div className="flex items-center gap-1 ml-2">
+                        <Sparkles className="w-4 h-4 text-[var(--crimson-glow)] animate-pulse" />
+                        <span className="text-xs text-gold font-bold">LEADING</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-display text-xl tabular-nums text-gradient-gold">
+                    {house.points}
+                  </span>
+                </div>
+                <div className="h-3 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700 relative"
+                    style={{
+                      width: `${(house.points / max) * 100}%`,
+                      background: `linear-gradient(90deg, ${house.accent}, var(--gold))`,
+                      boxShadow: `0 0 20px ${house.accent}`,
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,oklch(1_0_0/0.4),transparent)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+              {houses.map((house) => (
+                <div key={house.name} className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: house.accent }}
+                  />
+                  <span className="text-foreground/70">{house.short}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
