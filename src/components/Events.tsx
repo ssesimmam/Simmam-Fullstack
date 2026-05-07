@@ -18,29 +18,30 @@ import { SectionHeader } from "./Dashboard";
 type Event = {
   name: string;
   category: string;
+  mainCategory: "Tech" | "Non-Tech" | "Sports";
   icon: LucideIcon;
   participants: number;
   prize: string;
 };
 
 const events: Event[] = [
-  { name: "Pulse Dance Battle", category: "Dance", icon: Music, participants: 240, prize: "₹50K" },
-  { name: "Voltage Band Wars", category: "Music", icon: Mic2, participants: 120, prize: "₹40K" },
-  { name: "Hack the Night", category: "Coding", icon: Code2, participants: 320, prize: "₹75K" },
-  { name: "Esports Arena", category: "Esports", icon: Gamepad2, participants: 280, prize: "₹60K" },
-  { name: "Lens Republic", category: "Photography", icon: Camera, participants: 180, prize: "₹30K" },
-  { name: "Stagecraft Drama", category: "Drama", icon: Drama, participants: 150, prize: "₹35K" },
-  { name: "Royal Runway", category: "Fashion", icon: Shirt, participants: 90, prize: "₹45K" },
-  { name: "Robo Forge", category: "Technical", icon: Wrench, participants: 200, prize: "₹70K" },
-  { name: "Treasure Quest", category: "Fun", icon: Sparkles, participants: 360, prize: "₹20K" },
-  { name: "Quiz Coliseum", category: "Technical", icon: Trophy, participants: 220, prize: "₹40K" },
+  { name: "Pulse Dance Battle", category: "Dance", mainCategory: "Non-Tech", icon: Music, participants: 240, prize: "₹50K" },
+  { name: "Voltage Band Wars", category: "Music", mainCategory: "Non-Tech", icon: Mic2, participants: 120, prize: "₹40K" },
+  { name: "Hack the Night", category: "Coding", mainCategory: "Tech", icon: Code2, participants: 320, prize: "₹75K" },
+  { name: "Esports Arena", category: "Esports", mainCategory: "Sports", icon: Gamepad2, participants: 280, prize: "₹60K" },
+  { name: "Lens Republic", category: "Photography", mainCategory: "Non-Tech", icon: Camera, participants: 180, prize: "₹30K" },
+  { name: "Stagecraft Drama", category: "Drama", mainCategory: "Non-Tech", icon: Drama, participants: 150, prize: "₹35K" },
+  { name: "Royal Runway", category: "Fashion", mainCategory: "Non-Tech", icon: Shirt, participants: 90, prize: "₹45K" },
+  { name: "Robo Forge", category: "Technical", mainCategory: "Tech", icon: Wrench, participants: 200, prize: "₹70K" },
+  { name: "Treasure Quest", category: "Fun", mainCategory: "Non-Tech", icon: Sparkles, participants: 360, prize: "₹20K" },
+  { name: "Quiz Coliseum", category: "Technical", mainCategory: "Tech", icon: Trophy, participants: 220, prize: "₹40K" },
 ];
 
-const categories = ["All", "Dance", "Music", "Coding", "Esports", "Photography", "Drama", "Fashion", "Technical", "Fun"];
+const categories = ["All", "Tech", "Non-Tech", "Sports"];
 
 export function Events() {
   const [filter, setFilter] = useState("All");
-  const list = filter === "All" ? events : events.filter((e) => e.category === filter);
+  const list = filter === "All" ? events : events.filter((e) => e.mainCategory === filter);
 
   return (
     <section id="events" className="relative py-24 md:py-32">

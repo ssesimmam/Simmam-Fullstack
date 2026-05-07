@@ -15,7 +15,7 @@ const leftLinks = [
 ];
 
 const rightLinks = [
-  { href: "/#events",   label: "Events" },
+  { href: "/events",    label: "Events" },
   { href: "/captains",  label: "Captains" },
   { href: "/#gallery",  label: "Gallery" },
   { href: "/#live",     label: "Live Scores" },

@@ -1,5 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 
+import favicon from "../assets/simmam-lion.png";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -40,6 +42,8 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: favicon, type: "image/png" },
+      { rel: "apple-touch-icon", href: favicon },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -68,5 +72,85 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    // Suppress 404 errors from tracking/external scripts (hybridaction, favicon, etc.)
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    const suppressPattern = /hybridaction|Failed to load resource|favicon/i;
+
+    console.warn = (...args) => {
+      const message = String(args[0]);
+      if (!suppressPattern.test(message)) {
+        originalWarn.apply(console, args);
+      }
+    };
+
+    console.error = (...args) => {
+      const message = String(args[0]);
+      if (!suppressPattern.test(message)) {
+        originalError.apply(console, args);
+      }
+    };
+
+    // Suppress error events from network requests
+    const handleError = (event: Event) => {
+      if (event instanceof ErrorEvent) {
+        const url = event.filename || "";
+        const msg = event.message || "";
+        if (
+          url.includes("hybridaction") ||
+          url.includes("favicon") ||
+          msg.includes("Failed to load") ||
+          msg.includes("zybTracker")
+        ) {
+          event.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener("error", handleError, true);
+
+    const cardSelector = [
+      "section",
+      ".glass",
+      ".glass-strong",
+      ".hover-lift",
+      ".rounded-2xl",
+      ".rounded-3xl",
+    ].join(", ");
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>(cardSelector)).filter(
+      (element) => !element.closest("header") && !element.closest("nav"),
+    );
+
+    cards.forEach((card) => {
+      card.dataset.scrollCard = "true";
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("scroll-card-visible");
+          }
+        });
+      },
+      {
+        rootMargin: "0px 0px -10% 0px",
+        threshold: 0.12,
+      },
+    );
+
+    cards.forEach((card) => observer.observe(card));
+
+    return () => {
+      console.warn = originalWarn;
+      console.error = originalError;
+      window.removeEventListener("error", handleError, true);
+      observer.disconnect();
+    };
+  }, []);
+
   return <Outlet />;
 }

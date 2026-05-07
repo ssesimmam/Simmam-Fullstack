@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Mail, MapPin, Phone, Twitter, Youtube } from "lucide-react";
+import { Facebook, Globe, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { LionEmblem } from "./LionEmblem";
 
 export function Footer() {
@@ -25,16 +25,40 @@ export function Footer() {
               A national-level engineering culturals festival hosted by SIMATS Engineering.
               Where every department becomes a tribe, and every stage becomes a story.
             </p>
-            <div className="flex gap-2 mt-5">
-              {[Instagram, Twitter, Facebook, Youtube].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+            <div className="flex gap-2 mt-5 flex-wrap">
+              <a
+                href="https://www.instagram.com/ssesimam/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.facebook.com/SSESaveetha/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook"
+                className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="https://simatsengineering.com/culturals"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Website"
+                className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition"
+              >
+                <Globe className="w-4 h-4" />
+              </a>
+              <span
+                aria-label="Phone"
+                className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition inline-flex items-center justify-center"
+              >
+                <Phone className="w-4 h-4" />
+              </span>
             </div>
           </div>
 
@@ -44,7 +68,7 @@ export function Footer() {
               {["Home", "Teams", "Events", "Gallery", "Live Scores", "Faculty"].map((l) => (
                 <li key={l}>
                   <a
-                    href={`#${l.toLowerCase().replace(" ", "")}`}
+                    href={l === "Events" ? "/events" : `#${l.toLowerCase().replace(" ", "")}`}
                     className="hover:text-gold transition"
                   >
                     {l}

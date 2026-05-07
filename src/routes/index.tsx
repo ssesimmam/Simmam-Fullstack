@@ -1,14 +1,13 @@
+import React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
-import { Dashboard } from "@/components/Dashboard";
+import { DashboardLiveScores } from "@/components/DashboardLiveScores";
 import { Leaderboard } from "@/components/Leaderboard";
 import { Teams } from "@/components/Teams";
-import { Events } from "@/components/Events";
 import { Gallery } from "@/components/Gallery";
 import { Showcase3D } from "@/components/Showcase3D";
 import { Faculty } from "@/components/Faculty";
-import { LiveScores } from "@/components/LiveScores";
 import { PastYears } from "@/components/PastYears";
 import { Footer } from "@/components/Footer";
 import { Loader } from "@/components/Loader";
@@ -35,6 +34,18 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  // Suppress 404 errors from tracking/external scripts
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (event.message.includes('Failed to load') || 
+          (event.filename && event.filename.includes('hybridaction'))) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('error', handleError, true);
+    return () => window.removeEventListener('error', handleError, true);
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <Loader />
@@ -42,15 +53,13 @@ function Index() {
       <main className="relative">
         <Particles count={20} className="!fixed inset-0 -z-10" />
         <Hero />
-        <Dashboard />
+        <DashboardLiveScores />
         <Showcase3D />
         <Leaderboard />
         <Teams />
-        <Events />
         <PastYears />
         <Gallery />
         <Faculty />
-        <LiveScores />
       </main>
       <Footer />
     </div>

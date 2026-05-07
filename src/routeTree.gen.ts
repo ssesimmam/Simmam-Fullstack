@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as IndexRouteImport } from './routes/index'
 
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaptainsRoute = CaptainsRouteImport.update({
   id: '/captains',
   path: '/captains',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
+  '/events': typeof EventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
+  '/events': typeof EventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
+  '/events': typeof EventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/captains'
+  fullPaths: '/' | '/captains' | '/events'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/captains'
-  id: '__root__' | '/' | '/captains'
+  to: '/' | '/captains' | '/events'
+  id: '__root__' | '/' | '/captains' | '/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CaptainsRoute: typeof CaptainsRoute
+  EventsRoute: typeof EventsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/captains': {
       id: '/captains'
       path: '/captains'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CaptainsRoute: CaptainsRoute,
+  EventsRoute: EventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
