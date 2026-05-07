@@ -1,0 +1,511 @@
+LIST OF EVENTS
+TECHNICAL EVENTS LIST:
+Debugging Challenge
+● Fix all errors within time
+● No internet/help allowed
+● Judging based on correctness
+Blind Coding
+● No compiling/running code
+● Write complete logic
+● Judging on accuracy
+Tech Treasure Hunt
+● Follow clue sequence
+● No skipping levels
+● First to finish wins
+Rapid Fire Tech Talk
+● 2-minute time limit
+● Topic given instantly
+● Judging on clarity
+Paper Presentation
+● Time limit must be followed
+● PPT is mandatory
+● Q&A included
+Tech Talk by Students
+● Stick to topic
+● Follow time limit
+● Judging on delivery
+Speed Typing Competition
+● Fixed time duration
+● No external tools
+● Accuracy matters
+Tech Crossword
+● Solve within time
+● No external help
+● Max correct wins
+Guess the Technology
+● Identify from clues/images
+● No shouting answers
+● Most correct wins
+Escape Room (Mini)
+● Solve all clues
+● No external help
+● Time-based ranking
+AI Prompt Challenge
+● Create original prompts
+● Use allowed AI tools
+● Judging on output
+Tech Crime Scene
+● Analyze given data
+● Work as a team
+● Correct solution wins
+Explain Like I’m 5
+● Use simple language
+● Avoid technical terms
+● Judging on clarity
+Tech Mythbusters
+● Present facts clearly
+● Avoid misinformation
+● Judging on explanation
+AI Art Battle
+● Use AI tools only
+● No pre-made content
+● Creativity wins
+Design Your Dream Gadget
+● Draw and explain idea
+● Focus on innovation
+● Judging on creativity
+One-Minute Innovation
+● 60-second pitch
+● Clear problem-solution
+● Judging on idea
+Create a Tech Ad
+● Be creative
+● Time limit applies
+● Clear message required
+Competitive Coding
+● Solve within time
+● No plagiarism
+● Correct solutions win
+App Idea Competition
+● Clear concept required
+● Explain use case
+● Judging on innovation
+Code Refactor Relay
+● Improve given code
+● Follow sequence
+● Maintain logic
+Bug Bounty Hunt (Offline)
+● Find vulnerabilities
+● No external tools
+● Max bugs wins
+No-Code App Builder Challenge
+● Use no-code tools only
+● Build within time
+● Present final output
+Reverse Engineering Challenge
+● Analyze given program
+● No source code access
+● Correct logic wins
+Tech Pictionary
+● Draw given term
+● No words allowed
+● Team guesses
+Algorithm Auction
+● Bid wisely
+● Solve chosen problems
+● Max score wins
+Digital Logic Puzzle Race
+● Solve logic questions
+● No external help
+● Fastest correct wins
+Startup Pitch Roleplay
+● Present idea clearly
+● Time limit applies
+● Judges decide
+Cloud Architecture Design
+● Design given system
+● Explain components
+● Judging on clarity
+Tech Debate Showdown
+● Speak for/against topic
+● Follow time rules
+● Respect opponents
+Keyboard Shortcut Race
+● Use shortcuts only
+● Complete tasks fast
+● Accuracy matters
+Data Visualization Challenge
+● Use given data
+● Create clear visuals
+● Judging on clarity
+Cybersecurity Quiz Escape
+● Answer sequentially
+● No skipping
+● Reach final level
+API Design Challenge
+● Define endpoints
+● Explain usage
+● Judging on design
+Hardware Disassembly Race
+● Handle carefully
+● Reassemble correctly
+● Fastest wins
+Tech Charades
+● Act without words
+● Team guesses
+● Time-based
+Mini Hack Scenario
+● Solve given problem
+● Think practically
+● Present solution
+Binary Code Breaker
+● Decode correctly
+● No tools allowed
+● Fastest wins
+Product Teardown Analysis
+● Analyze features
+● Explain technology
+● Judging on depth
+AI Ethics Case Study
+● Understand scenario
+● Provide solution
+● Justify ethically
+Tech Timeline Builder
+● Arrange correctly
+● Follow time limit
+● Accuracy wins
+Innovation Under Constraints
+● Follow restrictions
+● Be creative
+● Judging on idea
+Code Translation Challenge
+● Convert correctly
+● Maintain logic
+● No syntax errors
+NON-TECHNICAL EVENTS:
+Handprint
+● Use only provided materials
+● Complete within time
+● Creativity matters
+Blind Make-Up
+● One participant blindfolded
+● No guidance allowed
+● Best result wins
+Treasure Hunt
+● Follow clues in order
+● No skipping levels
+● First team wins
+Bottle Flip
+● Flip within given attempts
+● Must land upright
+● Max successful flips wins
+Sketching
+● Follow given theme
+● No copying
+● Judging on creativity
+Doodle
+● Complete within time
+● Stick to theme
+● Creativity matters
+Rangoli
+● Use allowed materials
+● Finish within time
+● Judging on design
+Tongue Twister
+● Speak clearly
+● No mistakes allowed
+● Fastest correct wins
+Draw on My Back
+● No talking allowed
+● Draw based on touch
+● Accuracy wins
+Bee Buzz
+● Follow number rules
+● No mistakes allowed
+● Last standing wins
+Memory Game
+● Observe carefully
+● Recall correctly
+● Max correct wins
+Vocabulary
+● Use valid words only
+● No repetition
+● Highest score wins
+Dumb Charades
+● No speaking
+● Act clearly
+● Team guesses
+Repeat the Dialogue
+● Repeat exactly
+● No changes allowed
+● Accuracy wins
+Prop Story Challenge
+● Use given props
+● Create story quickly
+● Creativity wins
+Connection Hunt
+● Find logical links
+● Complete within time
+● Accuracy wins
+Crack the Story
+● Arrange correctly
+● Logical sequence
+● Fastest wins
+Meme
+● Follow theme
+● Original content only
+● Creativity wins
+Photography
+● Capture within theme
+● No heavy editing
+● Best shot wins
+Guess the Hook Step
+● Identify dance step
+● No shouting answers
+● Max correct wins
+Stand-Up Comedy
+● Original content
+● No offensive jokes
+● Audience response counts
+Script Writing
+● Follow given theme
+● Complete within time
+● Creativity matters
+Debate
+● Speak for/against
+● Follow time limit
+● Respect opponents
+Duplicate the Design
+● Copy given design
+● Accuracy matters
+● Time-based
+Laugh Aloud
+● Make others laugh
+● Within time limit
+● Best performance wins
+Don’t Laugh
+● Maintain straight face
+● No reaction allowed
+● Last standing wins
+Kim’s Game
+● Observe items
+● Recall correctly
+● Max correct wins
+Lemon Spoon
+● Balance while walking
+● No dropping
+● Fastest wins
+Ad Mad Live
+● Create ad instantly
+● Use creativity
+● Time limit applies
+Freeze & Act
+● Freeze on command
+● No movement
+● Best act wins
+Pass the Ball
+● Pass continuously
+● Stop on signal
+● Eliminations apply
+Pyramid Building
+● Use given materials
+● Build within time
+● Stability matters
+Anthakshari
+● Follow song chain
+● No repetition
+● Team play
+Musical Chairs
+● Walk around chairs
+● Sit on stop
+● Elimination rounds
+Arm Wrestling
+● Follow fair rules
+● No sudden moves
+● Strength decides
+Hand Cricket
+● Use finger signals
+● Follow rules
+● Score-based win
+Push-Up
+● Proper form required
+● Count valid reps
+● Max wins
+Weight Lifting
+● Follow safety rules
+● Proper technique
+● Highest lift wins
+Theme Performance
+● Follow given theme
+● Time limit applies
+● Creativity wins
+Identify the Animal
+● Guess correctly
+● No shouting
+● Max correct wins
+Guess the Flag
+● Identify country
+● No hints
+● Most correct wins
+Mehendi
+● Use allowed designs
+● Complete within time
+● Neatness matters
+Pen Tattoo
+● Draw within time
+● Safe designs only
+● Creativity wins
+JAM (Just-A-Minute)
+● Speak continuously
+● No pause/repeat
+● Clarity matters
+Balloon Blast
+● Burst within time
+● Follow rules
+● Fastest wins
+Sell Me This
+● Pitch product
+● Be convincing
+● Creativity counts
+Adapt Tune
+● Modify given song
+● Stay on theme
+● Creativity wins
+Nail Art
+● Design creatively
+● Within time
+● Neatness matters
+Chinese Whisper
+● Pass message quietly
+● No repetition
+● Accuracy wins
+Pani Puri Challenge
+● Eat within time
+● No waste
+● Max count wins
+Beatboxing
+● Perform live
+● No backing track
+● Rhythm matters
+Brush Painting
+● Follow theme
+● Complete in time
+● Creativity wins
+Glass Printing
+● Use provided materials
+● Follow design rules
+● Neatness matters
+Face Painting
+● Follow theme
+● Complete within time
+● Creativity matters
+IPL Auctions
+● Use given budget
+● Bid strategically
+● Best team wins
+Short Films
+● Follow theme,Time duration limit,Creativity and story win
+CULTURALS EVENTS LIST:
+DANCE EVENTS:
+Solo Dance
+● Individual performance only
+● Time limit must be followed
+● Judging on expression and coordination
+Duo Dance
+● Two participants only
+● Time limit strictly followed
+● Judging on synchronization
+Group Dance
+● Team size as specified
+● Props must be safe
+● Judging on coordination and creativity
+Classical Dance
+● Classical style only
+● Time limit applies
+● Judging on expression and technique
+Street Dance / Hip-Hop
+● Street style only
+● No unsafe stunts
+● Judging on energy and originality
+MUSIC EVENTS:
+Solo Singing
+● Individual participation only
+● Time limit must be followed
+● Judging on pitch and clarity
+Duet Singing
+● Two participants only
+● Maintain coordination
+● Judging on harmony
+Battle of Bands
+● Team performance only
+● Follow time limit
+● Judging on overall performance
+Instrumental Music
+● Instruments allowed only
+● Time limit applies
+● Judging on skill and rhythm
+Rap Battle / Beatboxing
+● Original performance preferred
+● No offensive language
+● Judging on flow and creativity
+THEATRE EVENTS:
+Skit (Social Awareness)
+● Theme must be relevant
+● Time limit strictly followed
+● Judging on message and acting
+Mime
+● No spoken words allowed
+● Use expressions clearly
+● Judging on presentation
+Mono Acting
+● Individual performance only
+● Stay within time limit
+● Judging on expression
+Improv Acting
+● Topic given on the spot
+● No preparation time
+● Judging on spontaneity
+Ad Zap
+● Create short ad performance
+● Keep it creative
+● Judging on originality
+SPEAKING & FYN EVENTS:
+Stand-up Comedy
+● Original content preferred
+● No offensive jokes
+● Judging on delivery and humor
+Open Mic (Poetry/Storytelling)
+● Individual performance only
+● Stick to time limit
+● Judging on expression and content
+Talent Show
+● Any talent is allowed
+● Time limit must be followed
+● Judging on uniqueness and performance
+SPORTS EVENTS LIST:
+OUTDOOR GAMES (BOYS):
+Kho Kho
+Kabaddi
+Cricket
+Volleyball
+Football
+Basketball
+Handball
+INDOOR GAMES (BOYS):
+Carroms
+Chess
+Table Tennis
+Badminton
+ATHLETICS (BOYS):
+Track Events (100m, 200m, 400m, 800m, 1500m, 3K)
+Relay (4×100, 4×400)
+Shot Put
+Discus Throw
+Javelin Throw
+OUTDOOR GAMES (GIRLS):
+Kho Kho
+Kabaddi
+Cricket
+Volleyball
+Throwball
+Basketball
+INDOOR GAMES (GIRLS):
+Chess
+Table Tennis
+Badminton
+Carroms
+ATHLETICS (GIRLS):
+Track Events (100m, 200m, 400m, 800m)
+Relay (4×100, 4×400)
+Shot Put
+Discus Throw
