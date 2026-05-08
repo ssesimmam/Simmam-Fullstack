@@ -121,6 +121,38 @@ function CaptainsPage() {
               </Tilt3D>
             ))}
           </div>
+
+          {/* Web Development Team Section */}
+          <div className="mt-24 text-center">
+            <div className="inline-flex items-center gap-3 mb-8">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[var(--gold)]" />
+              <span className="text-[10px] md:text-xs tracking-[0.4em] text-gold/80">
+                WEB DEVELOPMENT TEAM
+              </span>
+              <span className="h-px w-10 bg-gradient-to-l from-transparent to-[var(--gold)]" />
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4">
+              {[
+                { name: "Sasvanthu", role: "Team Lead" },
+                { name: "Roshini", role: "Program Analyst" },
+                { name: "Moniga", role: "Web Architect" },
+                { name: "Suvedhan", role: "Software Developer" },
+                { name: "Sudharsan", role: "Software Developer" }
+              ].map((member) => (
+                <div key={member.name} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-auto lg:flex-1 min-w-[200px] max-w-[280px] text-left">
+                  <PersonCard
+                    role={member.role}
+                    name={member.name}
+                    year=""
+                    phone=""
+                    accent="#E0E0E0"
+                    gradient="linear-gradient(135deg, #4B4B4B, #1A1A1A)"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
 
@@ -164,15 +196,17 @@ function PersonCard({
         <div className="min-w-0">
           <div className="text-[10px] tracking-[0.15em] text-gold/80 leading-tight">{role.toUpperCase()}</div>
           <div className="font-semibold truncate">{name}</div>
-          <div className="text-xs text-foreground/55">{year}</div>
+          {year && <div className="text-xs text-foreground/55">{year}</div>}
         </div>
       </div>
-      <a
-        href={`tel:${phone.replace(/\s/g, "")}`}
-        className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold/80"
-      >
-        <Phone className="w-3 h-3" /> {phone}
-      </a>
+      {phone && (
+        <a
+          href={`tel:${phone.replace(/\s/g, "")}`}
+          className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold/80"
+        >
+          <Phone className="w-3 h-3" /> {phone}
+        </a>
+      )}
     </div>
   );
 }
