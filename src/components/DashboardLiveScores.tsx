@@ -225,11 +225,11 @@ export function DashboardLiveScores() {
                       className="h-full rounded-full transition-all duration-700 relative"
                       style={{
                         width: `${(house.points / max) * 100}%`,
-                        background: `linear-gradient(90deg, ${house.accent}, var(--gold))`,
-                        boxShadow: `0 0 20px ${house.accent}`,
+                        background: house.accent,
+                        boxShadow: `0 0 14px ${house.color}`,
                       }}
                     >
-                      <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,oklch(1_0_0/0.4),transparent)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]" />
+                      <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,oklch(1_0_0/0.25),transparent)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]" />
                     </div>
                   </div>
 

@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardLiveRouteImport } from './routes/dashboard-live'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as ArchiveGalleryRouteImport } from './routes/archive-gallery'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/captains': typeof CaptainsRoute
   '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
+  '/register': typeof RegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/captains': typeof CaptainsRoute
   '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
+  '/register': typeof RegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/captains': typeof CaptainsRoute
   '/dashboard-live': typeof DashboardLiveRoute
   '/events': typeof EventsRoute
+  '/register': typeof RegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,8 +80,15 @@ export interface FileRouteTypes {
     | '/captains'
     | '/dashboard-live'
     | '/events'
+    | '/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive-gallery' | '/captains' | '/dashboard-live' | '/events'
+  to:
+    | '/'
+    | '/archive-gallery'
+    | '/captains'
+    | '/dashboard-live'
+    | '/events'
+    | '/register'
   id:
     | '__root__'
     | '/'
@@ -80,6 +96,7 @@ export interface FileRouteTypes {
     | '/captains'
     | '/dashboard-live'
     | '/events'
+    | '/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,10 +105,18 @@ export interface RootRouteChildren {
   CaptainsRoute: typeof CaptainsRoute
   DashboardLiveRoute: typeof DashboardLiveRoute
   EventsRoute: typeof EventsRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events': {
       id: '/events'
       path: '/events'
@@ -136,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   CaptainsRoute: CaptainsRoute,
   DashboardLiveRoute: DashboardLiveRoute,
   EventsRoute: EventsRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
