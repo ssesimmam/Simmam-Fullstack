@@ -54,6 +54,26 @@ function getHouseIcon(element: string) {
   return ELEMENT_ICONS[element] ?? Flame;
 }
 
+function getHouseLogo(houseName: string) {
+  const name = houseName.toLowerCase();
+  if (name === "dhronas") return "/houses/dronas.jpg";
+  return `/houses/${name}.png`;
+}
+
+function getHouseImageStyle(houseName: string) {
+  const name = houseName.toLowerCase();
+  switch (name) {
+    case "agniyas": return "scale-[1.75] object-[center_20%]";
+    case "rudras": return "scale-[1.55] object-[center_25%]";
+    case "suryas": return "scale-[1.45] object-[center_40%]";
+    case "dhronas":
+    case "dronas": return "scale-[1.55] object-[center_30%]";
+    case "marutas": return "scale-[1.55] object-[center_25%]";
+    case "vajras": return "scale-[1.55] object-[center_30%]";
+    default: return "scale-[1.55] object-[center_25%]";
+  }
+}
+
 /* ─── Floating Ember Particles ─────────────────────────────── */
 
 function EmberParticles({ count = 20 }: { count?: number }) {
@@ -211,7 +231,6 @@ function PodiumCard({
   featured?: boolean;
 }) {
   const Icon = rank === 1 ? Crown : rank === 2 ? Trophy : Medal;
-  const ElementIcon = getHouseIcon(house.element);
 
   return (
     <div
@@ -241,36 +260,26 @@ function PodiumCard({
       />
 
       {/* Content */}
-      <div className={`relative z-10 ${featured ? "p-6 sm:p-8" : "p-6"}`}>
-        {/* Rank badge */}
-        <div className="flex items-center justify-between mb-5">
-          <div
-            className="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-[0.2em]"
-            style={{
-              background: `${C.borderSoft}40`,
-              color: C.headingGold,
-              border: `1px solid ${C.borderGold}`,
-            }}
-          >
-            <span>RANK</span>
-            <span>#{rank.toString().padStart(2, "0")}</span>
-          </div>
-          {rank === 1 && (
+      <div className={`relative z-10 h-full flex flex-col justify-between ${featured ? "p-6 sm:p-8" : "p-6"}`}>
+        
+        {/* Top Label (if any) */}
+        {rank === 1 && (
+          <div className="absolute top-5 right-5">
             <span
               className="text-[9px] tracking-[0.2em] font-semibold"
               style={{ color: C.dimText }}
             >
               DEFENDING
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Emblem */}
-        <div className="flex justify-center mb-5">
+        <div className="flex justify-center mb-5 mt-2">
           <div
             className={`
-              relative flex items-center justify-center rounded-full
-              ${featured ? "w-20 h-20" : "w-16 h-16"}
+              relative flex items-center justify-center rounded-full overflow-hidden
+              ${featured ? "w-24 h-24" : "w-20 h-20"}
               transition-transform duration-500 group-hover:scale-110
             `}
             style={{
@@ -279,20 +288,11 @@ function PodiumCard({
               border: `2px solid ${house.accent}70`,
             }}
           >
-            <Icon
-              className={featured ? "w-9 h-9" : "w-7 h-7"}
-              style={{ color: house.accent }}
+            <img 
+              src={getHouseLogo(house.name)} 
+              alt={house.name} 
+              className={`w-full h-full object-cover ${getHouseImageStyle(house.name)}`} 
             />
-            {/* Small element icon */}
-            <div
-              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-              style={{
-                background: C.bgCard,
-                border: `1px solid ${house.accent}60`,
-              }}
-            >
-              <ElementIcon className="w-3 h-3" style={{ color: house.accent }} />
-            </div>
           </div>
         </div>
 
@@ -330,6 +330,20 @@ function PodiumCard({
           </span>
         </div>
 
+        {/* Rank badge (Bottom Right) */}
+        <div className="absolute bottom-5 right-5">
+          <div
+            className="flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-bold tracking-[0.2em]"
+            style={{
+              background: `${C.borderSoft}40`,
+              color: C.headingGold,
+              border: `1px solid ${C.borderGold}`,
+            }}
+          >
+            <span>RANK</span>
+            <span>#{rank.toString().padStart(2, "0")}</span>
+          </div>
+        </div>
 
       </div>
 
@@ -349,7 +363,7 @@ function PodiumCard({
 function RankingTable() {
   return (
     <div
-      className="relative rounded-xl overflow-hidden"
+      className="relative rounded-xl overflow-hidden max-w-3xl mx-auto"
       style={{
         background: C.bgCard,
         border: `1px solid ${C.borderGold}`,
@@ -357,7 +371,7 @@ function RankingTable() {
     >
       {/* Table header */}
       <div
-        className="grid items-center px-5 md:px-7 py-2"
+        className="grid items-center px-5 md:px-8 py-3"
         style={{
           gridTemplateColumns: "48px 1fr 100px",
           borderBottom: `1px solid ${C.borderSoft}`,
@@ -378,13 +392,12 @@ function RankingTable() {
 
       {/* Table rows */}
       {ranked.map((house, i) => {
-        const ElementIcon = getHouseIcon(house.element);
         const isTop3 = i < 3;
 
         return (
           <div
             key={house.short}
-            className="group grid items-center px-5 md:px-7 py-2 transition-colors duration-300 cursor-default"
+            className="group grid items-center px-5 md:px-8 py-3 transition-colors duration-300 cursor-default"
             style={{
               gridTemplateColumns: "48px 1fr 100px",
               borderBottom:
@@ -414,13 +427,17 @@ function RankingTable() {
             {/* House */}
             <div className="flex items-center gap-3">
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                 style={{
                   background: `${house.accent}20`,
                   border: `1px solid ${house.accent}45`,
                 }}
               >
-                <ElementIcon className="w-4 h-4" style={{ color: house.accent }} />
+                <img 
+                  src={getHouseLogo(house.name)} 
+                  alt={house.name} 
+                  className={`w-full h-full object-cover ${getHouseImageStyle(house.name)}`} 
+                />
               </div>
               <span
                 className="font-semibold text-sm"

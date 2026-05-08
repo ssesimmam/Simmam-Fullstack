@@ -9,7 +9,7 @@ import {
 import StatCard from '@/components/admin/dashboard/StatCard'
 import PageHeader from '@/components/admin/shared/PageHeader'
 
-export const Route = createFileRoute('/admin/')({
+export const Route = createFileRoute('/admin/_layout/')({
   component: AdminDashboard,
 })
 
