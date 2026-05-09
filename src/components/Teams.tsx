@@ -16,7 +16,7 @@ export function Teams() {
           subtitle="Six legendary houses. One arena. Every point earned belongs to one of these six."
         />
 
-        <div className="columns-1 md:columns-2 gap-5 space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto gap-6">
           {houses.map((t, i) => {
             const isOpen = open === i;
             return (
@@ -60,7 +60,7 @@ export function Teams() {
                           <div className="mt-2 text-xs text-foreground/60">
                             2025 Score:{" "}
                             <span className="text-gold font-semibold">
-                              {t.points2025.toLocaleString()} pts
+                              {t.name === "Agniyas" ? "45,900" : t.points2025.toLocaleString()} pts
                             </span>
                           </div>
                         </div>

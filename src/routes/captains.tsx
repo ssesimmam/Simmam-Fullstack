@@ -26,6 +26,8 @@ export const Route = createFileRoute("/captains")({
 });
 
 function CaptainsPage() {
+  const formatName = (name: string) => name.startsWith("Dr. ") ? "Dr. " + name.substring(4).toUpperCase() : name.toUpperCase();
+
   return (
     <div className="relative min-h-screen">
       <Navbar />
@@ -55,6 +57,37 @@ function CaptainsPage() {
               The faces leading every house into battle. Six captains. Six right hands. One
               SIMMAM.
             </p>
+          </div>
+
+          {/* Core Team Section */}
+          <div className="mb-24 text-center">
+            <div className="inline-flex items-center gap-3 mb-8">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[var(--gold)]" />
+              <span className="text-[10px] md:text-xs tracking-[0.4em] text-gold/80">
+                CORE TEAM
+              </span>
+              <span className="h-px w-10 bg-gradient-to-l from-transparent to-[var(--gold)]" />
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4">
+              {[
+                { name: "A GOPI", role: "CULTURAL HEAD" },
+                { name: "S.VAMSIDHAR REDDY", role: "SPORTS HEAD (BOYS)" },
+                { name: "SUJITHA REDDY", role: "SPORTS HEAD (GIRLS)" },
+                { name: "M.THIRUVELAN", role: "INDOOR & ATHLETICS HEAD (BOYS)" },
+                { name: "DIVYA TEJA", role: "INDOOR & ATHLETICS HEAD (GIRLS)" },
+                { name: "MUKESH S", role: "TECH HEAD" },
+                { name: "MADHAN S", role: "NON-TECH HEAD" },
+                { name: "SARAH GLADY", role: "EXTERNAL AFFAIRS HEAD" }
+              ].map((member) => (
+                <div key={member.role} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)] min-w-[200px]">
+                  <div className="relative glass rounded-2xl p-5 flex flex-col items-center justify-center text-center h-full border border-white/5 hover:border-gold/30 transition-colors">
+                    <div className="text-[10px] tracking-[0.15em] text-gold/80 mb-2">{member.role.toUpperCase()}</div>
+                    <div className="font-semibold truncate w-full text-foreground/90">{formatName(member.name)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -95,14 +128,14 @@ function CaptainsPage() {
                       <div className="text-[10px] tracking-[0.25em] text-foreground/50">
                         FACULTY COORDINATOR
                       </div>
-                      <div className="text-foreground/90">{h.faculty.name}</div>
+                      <div className="text-foreground/90">{formatName(h.faculty.name)}</div>
                     </div>
                   </div>
 
                   <div className="relative grid sm:grid-cols-2 gap-4">
                     <PersonCard
                       role="Students Captain"
-                      name={h.captain.name}
+                      name={formatName(h.captain.name)}
                       year={h.captain.year}
                       phone={h.captain.phone}
                       accent={h.accent}
@@ -110,7 +143,7 @@ function CaptainsPage() {
                     />
                     <PersonCard
                       role="Students Vice Captain"
-                      name={h.vice.name}
+                      name={formatName(h.vice.name)}
                       year={h.vice.year}
                       phone={h.vice.phone}
                       accent={h.accent}
@@ -143,7 +176,7 @@ function CaptainsPage() {
                 <div key={member.name} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-auto lg:flex-1 min-w-[200px] max-w-[280px]">
                   <div className="relative glass rounded-2xl p-5 flex flex-col items-center justify-center text-center h-full border border-white/5 hover:border-gold/30 transition-colors">
                     <div className="text-[10px] tracking-[0.15em] text-gold/80 mb-2">{member.role.toUpperCase()}</div>
-                    <div className="font-semibold truncate w-full text-foreground/90">{member.name}</div>
+                    <div className="font-semibold truncate w-full text-foreground/90">{formatName(member.name)}</div>
                   </div>
                 </div>
               ))}

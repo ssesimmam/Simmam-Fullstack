@@ -20,10 +20,10 @@ import { allEvents } from "@/lib/eventsData";
 const stats: Stat[] = [
   { icon: Users, label: "Total Teams", value: 6, hint: "Agniyas, Dhronas, Marutas, Rudras, Suryas, Vajras", accent: "gold" },
   { icon: Flame, label: "Total Participants", value: 0, hint: "Across all events", accent: "red" },
-  { icon: Trophy, label: "Total Events", value: allEvents.length, hint: "Original baseline: 150 events", accent: "gold" },
+  { icon: Trophy, label: "Total Events", value: 150, hint: "", accent: "gold" },
   { icon: Building2, label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
   { icon: Crown, label: "2025 Champion", value: 1, suffix: " — Agniyas", hint: "Last year's overall winners", accent: "gold" },
-  { icon: Award, label: "Highest Score", value: 1845, hint: "Agniyas — SIMMAM 2025", accent: "red" },
+  { icon: Award, label: "Highest Score", value: 0, hint: "Agniyas — SIMMAM 2025", accent: "red" },
 ];
 
 // House element icons
@@ -58,11 +58,11 @@ export function DashboardLiveScores() {
         name: h.name,
         short: h.short,
         element: h.element,
-        points: h.points2025,
+        points: 0,
         color: h.accent,
         accent: h.accent,
         gradient: h.gradient,
-        breakdown: { ...h.breakdown },
+        breakdown: { winners: 0, runners: 0, participation: 0 },
         logo: h.logo,
         logoScale: h.logoScale,
       }))
@@ -192,13 +192,6 @@ export function DashboardLiveScores() {
                         <span className="font-semibold text-foreground">{house.name}</span>
                         <span className="text-xs text-foreground/50">{house.element}</span>
                       </div>
-                      
-                      {i === 0 && (
-                        <div className="flex items-center gap-1 ml-2">
-                          <Sparkles className="w-4 h-4 text-[var(--crimson-glow)] animate-pulse" />
-                          <span className="text-xs text-gold font-bold">LEADING</span>
-                        </div>
-                      )}
                     </div>
                     <span className="font-display text-xl tabular-nums text-gradient-gold">
                       {house.points}
