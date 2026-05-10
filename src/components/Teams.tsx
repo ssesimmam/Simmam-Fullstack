@@ -32,14 +32,15 @@ export function Teams() {
                 <div
                   style={{
                     position: "absolute",
-                    top: 16,
-                    right: 16,
+                    top: 19,
+                    right: 19,
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    zIndex: 100,
+                    zIndex: 9999,
                     pointerEvents: "auto",
-                    transform: "translateZ(50px)",
+                    transform: "translateZ(50px) scale(0.85)",
+                    transformOrigin: "top right",
                   }}
                 >
                   {h.instagram && (
@@ -48,7 +49,11 @@ export function Teams() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${h.name} Instagram`}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(h.instagram, "_blank", "noopener,noreferrer");
+                      }}
                       style={{
                         padding: 8,
                         borderRadius: 12,
@@ -60,7 +65,7 @@ export function Teams() {
                         cursor: "pointer",
                         pointerEvents: "auto",
                         position: "relative",
-                        zIndex: 101,
+                        zIndex: 10000,
                         boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
                         transition: "all 0.2s ease",
                       }}
@@ -94,7 +99,11 @@ export function Teams() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${h.name} WhatsApp`}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(h.whatsapp, "_blank", "noopener,noreferrer");
+                      }}
                       style={{
                         padding: 8,
                         borderRadius: 12,
@@ -106,7 +115,7 @@ export function Teams() {
                         cursor: "pointer",
                         pointerEvents: "auto",
                         position: "relative",
-                        zIndex: 101,
+                        zIndex: 10000,
                         boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
                         transition: "all 0.2s ease",
                       }}

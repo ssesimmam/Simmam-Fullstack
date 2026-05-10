@@ -281,22 +281,26 @@ function PersonCard({
   accent: string;
   gradient: string;
 }) {
+
   return (
-    <div className="relative glass rounded-2xl p-4 overflow-hidden">
-      <div className="flex items-center">
-        <div className="min-w-0">
-          <div className="text-[10px] tracking-[0.15em] text-gold/80 leading-tight mb-1">{role.toUpperCase()}</div>
-          <div className="font-semibold truncate">{name}</div>
+    <div className="relative glass rounded-2xl p-4 overflow-hidden flex flex-col justify-between">
+      <div>
+        <div className="text-[10px] tracking-[0.15em] text-gold/80 leading-tight mb-1">
+          {role.toUpperCase()}
         </div>
+        <div className="font-semibold truncate">{name}</div>
+        
+        {phone && (
+          <a
+            href={`tel:${phone.replace(/\s/g, "")}`}
+            className="mt-2 inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold/80"
+          >
+            <Phone className="w-3 h-3" /> {phone}
+          </a>
+        )}
       </div>
-      {phone && (
-        <a
-          href={`tel:${phone.replace(/\s/g, "")}`}
-          className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold/80"
-        >
-          <Phone className="w-3 h-3" /> {phone}
-        </a>
-      )}
+
+
     </div>
   );
 }

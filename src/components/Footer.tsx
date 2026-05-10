@@ -53,12 +53,13 @@ export function Footer() {
               >
                 <Globe className="w-4 h-4" />
               </a>
-              <span
+              <a
+                href="tel:+919345877019"
                 aria-label="Phone"
                 className="p-2.5 rounded-full glass text-gold hover:text-gold/80 hover:scale-110 transition inline-flex items-center justify-center"
               >
                 <Phone className="w-4 h-4" />
-              </span>
+              </a>
             </div>
           </div>
 
@@ -93,11 +94,15 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gold" />
-                +91 98765 00000
+                <a href="tel:+919345877019" className="hover:text-gold transition">
+                  +91 93458 77019
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gold" />
-                simmam@simats.edu
+                <a href="mailto:simmam2026@gmail.com" className="hover:text-gold transition">
+                  simmam2026@gmail.com
+                </a>
               </li>
             </ul>
           </div>

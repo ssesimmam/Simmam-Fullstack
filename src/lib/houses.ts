@@ -5,8 +5,8 @@ export type House = {
   element: string;
   points2025: number;
   pointsChange?: number;
-  captain: { name: string; phone: string };
-  vice: { name: string; phone: string };
+  captain: { name: string; phone: string; instagram?: string };
+  vice: { name: string; phone: string; instagram?: string };
   faculty: string[];
   about: string;
   accent: string;
@@ -41,7 +41,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/agniyas.png",
     logoScale: "scale-150",
-    instagram: "https://www.instagram.com/agniyas_2k26?igsh=MW9ybDg1NzE0aWNkOQ==",
+    instagram: "https://www.instagram.com/agniyas_2k26/",
     whatsapp: "https://chat.whatsapp.com/EctoGVgsMaCIT8iaKUvyAj",
   },
   {
@@ -65,7 +65,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/dronas.jpg",
     logoScale: "scale-125",
-    instagram: "https://www.instagram.com/dronas_simmam_2k26?igsh=Z2lqOWY0NWJyZTh0",
+    instagram: "https://www.instagram.com/dronas_simmam_2k26/",
     whatsapp: "https://chat.whatsapp.com/JsziSy6aBgPA55K2efUA30",
   },
   {
@@ -89,7 +89,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/marutas.png",
     logoScale: "scale-150",
-    instagram: "https://www.instagram.com/marutas_2026?igsh=cTQ1MTVlOGs2NDJz&utm_source=qr",
+    instagram: "https://www.instagram.com/marutas_2026/",
     whatsapp: "https://chat.whatsapp.com/BBjJjQjtefmHYjZOpxl52x",
   },
   {
@@ -113,7 +113,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/rudras.png",
     logoScale: "scale-150",
-    instagram: "https://www.instagram.com/rudras_2026?igsh=cmxrZ3lleXpkZDM%3D&utm_source=qr",
+    instagram: "https://www.instagram.com/rudras_2026/",
     whatsapp: "https://chat.whatsapp.com/EU0IKrCZLA5ChJAmSAwVsb",
   },
   {
@@ -137,7 +137,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/suryas.png",
     logoScale: "scale-150",
-    instagram: "https://www.instagram.com/suryas_2026?igsh=MXI0aTlkZHJ1dnFkeA==",
+    instagram: "https://www.instagram.com/suryas_2026/",
     whatsapp: "https://chat.whatsapp.com/JibjI54UQOK3mr1loPgy9N",
   },
   {
@@ -161,7 +161,7 @@ export const houses: House[] = [
     breakdown: { winners: 0, runners: 0, participation: 0 },
     logo: "/houses/vajras.png",
     logoScale: "scale-125",
-    instagram: "https://www.instagram.com/vajras_2026?igsh=NnV0NjFyMnU2bHE0",
+    instagram: "https://www.instagram.com/vajras_2026/",
     whatsapp: "https://chat.whatsapp.com/HtQczeqqEqdANGwnyu95oG",
   },
 ];
