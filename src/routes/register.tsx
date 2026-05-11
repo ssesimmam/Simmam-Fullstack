@@ -64,13 +64,13 @@ function RegisterPage() {
             style={{ background: "oklch(0.55 0.22 27)" }}
           />
 
-          {/* Icon */}
-          <div className="relative flex justify-center mb-6">
-            <div className="relative w-24 h-24 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
-              <Lock className="w-10 h-10 text-gold" />
-              {/* Orbiting sparkle */}
-              <Sparkles
-                className="absolute -top-1 -right-1 w-5 h-5 text-gold animate-pulse"
+          {/* Floating Logo */}
+          <div className="relative flex justify-center mb-8">
+            <div className="relative w-32 h-32 flex items-center justify-center animate-float">
+              <img 
+                src="/src/assets/simmam-lion.png" 
+                alt="SIMMAM Logo" 
+                className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
               />
             </div>
           </div>
@@ -99,22 +99,6 @@ function RegisterPage() {
             the first to know when registration goes live!
           </p>
 
-          {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          {/* Info chips */}
-          <div className="grid grid-cols-2 gap-3 mb-8">
-            <div className="flex flex-col items-center gap-1.5 p-4 rounded-2xl bg-white/5 border border-white/5">
-              <Calendar className="w-5 h-5 text-gold" />
-              <span className="text-xs text-foreground/50 tracking-widest uppercase">Event Date</span>
-              <span className="text-sm font-semibold text-foreground">TBA — 2026</span>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 p-4 rounded-2xl bg-white/5 border border-white/5">
-              <Bell className="w-5 h-5 text-gold" />
-              <span className="text-xs text-foreground/50 tracking-widest uppercase">Status</span>
-              <span className="text-sm font-semibold text-foreground">Coming Soon</span>
-            </div>
-          </div>
 
           {/* Pulse status bar */}
           <div className="flex items-center justify-center gap-3 mb-8 text-xs text-foreground/50 tracking-widest">
