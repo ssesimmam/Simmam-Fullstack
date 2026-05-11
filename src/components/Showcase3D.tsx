@@ -47,7 +47,7 @@ const orbs = [
   },
   {
     image: "/awards/best_student.png",
-    label: "Best Student Activity Team",
+    label: "Best Student Activity",
     color: "#7c3aed",
     glow: "#7c3aed",
   },
@@ -59,7 +59,7 @@ const orbs = [
   },
   {
     image: "/awards/active_dept.png",
-    label: "Most Active Department Team",
+    label: "Most Active Department",
     color: "#bef264",
     glow: "#bef264",
   },
