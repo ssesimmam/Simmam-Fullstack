@@ -2,7 +2,7 @@
 
 Welcome to the official repository of **SIMMAM 2026**, a premium web experience for the grand inter-house cultural and sports festival.
 
-![SIMMAM Banner](https://images.squarespace-cdn.com/content/v1/590ecdedc534a56c75a1aab7/1742960140095-H4HNUVWP5T7KYK2A0H9B/1Y2A9377-M.jpg?format=1500w)
+![SIMMAM Banner]
 
 ---
 
