@@ -117,9 +117,7 @@ export function Footer() {
                 <a href="tel:+916374802604" className="hover:text-gold transition pl-6">
                   +91 63748 02604 (Swetha C)
                 </a>
-                <a href="tel:+919840482978" className="hover:text-gold transition pl-6">
-                  +91 98404 82978 (Yamini C G)
-                </a>
+
               </li>
             </ul>
           </div>

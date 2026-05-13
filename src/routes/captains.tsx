@@ -103,7 +103,7 @@ function CaptainsPage() {
                 { name: "Suraj Alagupandi", role: "MEDIA SECRETARY", phone: "9843974396" },
                 { name: "Siva Visagar R", role: "EXTERNAL AFFAIRS SECRETARY", phone: "6380920806" },
                 { name: "HARIRAM J K", role: "PUBLICITY & MARKETING SECRETARY", phone: "7995421514" },
-                { name: "Likitha", role: "HOSPITALITY SECRETARY", phone: "9704200759" },
+                { name: "Likitha", role: "HOSPITALITY SECRETARY", phone: "7995421514" },
                 { name: "D Navya Sree", role: "STUDENT AFFAIRS SECRETARY", phone: "9704200759" },
                 { name: "LINGESH KUMAR V", role: "DISCIPLINARY SECRETARY", phone: "7358614501" }
               ].map((member) => (
@@ -336,7 +336,7 @@ function CaptainsPage() {
               {[
                 { name: "Deepa preya H", role: "Support Team", phone: "+91 63691 18546" },
                 { name: "Swetha C", role: "Support Team", phone: "+91 63748 02604" },
-                { name: "Yamini C G", role: "Support Team", phone: "+91 98404 82978" }
+
               ].map((member) => (
                 <div key={member.name} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-auto lg:flex-1 min-w-[200px] max-w-[280px]">
                   <div className="relative glass rounded-2xl p-5 flex flex-col items-center justify-center text-center h-full border border-white/5 hover:border-gold/30 transition-colors">
