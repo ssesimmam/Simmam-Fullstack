@@ -3,6 +3,7 @@ import { ArrowLeft, Bell, Calendar, Lock, Sparkles, Zap } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Particles } from "@/components/Particles";
+import { LionEmblem } from "@/components/LionEmblem";
 
 export const Route = createFileRoute("/register")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -66,13 +67,7 @@ function RegisterPage() {
 
           {/* Floating Logo */}
           <div className="relative flex justify-center mb-8">
-            <div className="relative w-32 h-32 flex items-center justify-center animate-float">
-              <img 
-                src="/src/assets/simmam-lion.png" 
-                alt="SIMMAM Logo" 
-                className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-              />
-            </div>
+            <LionEmblem size={160} className="animate-float" />
           </div>
 
           {/* Title */}
