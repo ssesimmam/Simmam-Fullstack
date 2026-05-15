@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { AuthProvider } from "@/lib/auth";
+import { DataProvider } from "@/lib/store";
 import favicon from "../assets/simmam-lion.png";
 import appCss from "../styles.css?url";
 
@@ -152,5 +154,11 @@ function RootComponent() {
     };
   }, []);
 
-  return <Outlet />;
+  return (
+    <AuthProvider>
+      <DataProvider>
+        <Outlet />
+      </DataProvider>
+    </AuthProvider>
+  );
 }

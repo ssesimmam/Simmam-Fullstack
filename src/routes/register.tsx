@@ -1,9 +1,9 @@
-import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Bell, Calendar, Lock, Sparkles, Zap } from "lucide-react";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowLeft } from 'lucide-react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Particles } from "@/components/Particles";
-import { LionEmblem } from "@/components/LionEmblem";
+import { EventsShowtime } from '@/components/EventsShowtime';
 
 export const Route = createFileRoute("/register")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -22,97 +22,33 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
-  const { event } = useSearch({ from: "/register" });
-
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#000]">
       <Navbar />
-      <Particles count={30} className="!fixed inset-0 -z-10" />
+      <Particles count={15} className="!fixed inset-0 -z-10" />
 
-      {/* Ambient glows */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[120px] opacity-25"
-          style={{ background: "oklch(0.55 0.22 27)" }}
+          className="absolute top-1/3 left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full blur-[140px] opacity-10"
+          style={{ background: '#D4AF37' }}
         />
         <div
-          className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20"
-          style={{ background: "oklch(0.78 0.16 80)" }}
+          className="absolute bottom-1/4 left-1/4 h-[400px] w-[400px] rounded-full blur-[120px] opacity-8"
+          style={{ background: 'oklch(0.55 0.22 27)' }}
         />
       </div>
 
-      <main className="relative flex flex-col items-center justify-center min-h-screen px-6 pt-24 pb-16">
-        {/* Back link */}
-        <div className="w-full max-w-xl mb-8">
+      <main className="relative pt-28 md:pt-32">
+        <div className="mx-auto mb-6 max-w-5xl px-4">
           <Link
             to="/events"
-            className="inline-flex items-center gap-2 text-xs tracking-[0.3em] text-gold/70 hover:text-gold transition-colors"
+            className="inline-flex items-center gap-2 text-xs tracking-[0.3em] text-[#D4AF37]/60 transition-colors hover:text-[#D4AF37]"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            BACK TO EVENTS
+            <ArrowLeft className="h-3.5 w-3.5" /> BACK TO ALL EVENTS
           </Link>
         </div>
 
-        {/* Card */}
-        <div className="relative w-full max-w-xl bg-black/60 border border-white/10 rounded-3xl p-8 md:p-12 text-center overflow-hidden shadow-2xl">
-          {/* Corner glow */}
-          <div
-            className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none"
-            style={{ background: "oklch(0.78 0.16 80)" }}
-          />
-          <div
-            className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-            style={{ background: "oklch(0.55 0.22 27)" }}
-          />
-
-          {/* Floating Logo */}
-          <div className="relative flex justify-center mb-8">
-            <LionEmblem size={160} className="animate-float" />
-          </div>
-
-          {/* Title */}
-          <div className="inline-flex items-center gap-2 mb-3">
-            <span className="h-px w-8 bg-gradient-to-r from-transparent to-[var(--gold)]" />
-            <span className="text-[10px] tracking-[0.4em] text-gold/70">SIMMAM 2026</span>
-            <span className="h-px w-8 bg-gradient-to-l from-transparent to-[var(--gold)]" />
-          </div>
-
-          <h1 className="font-display text-4xl md:text-5xl font-black text-gradient-fire leading-tight mb-3">
-            Registration
-            <span className="block text-gradient-gold">Opening Soon</span>
-          </h1>
-
-          {event && (
-            <div className="inline-flex items-center gap-2 mt-2 mb-5 px-4 py-2 rounded-full bg-gold/10 border border-gold/20">
-              <Zap className="w-3.5 h-3.5 text-gold" />
-              <span className="text-sm font-semibold text-gold">{event}</span>
-            </div>
-          )}
-
-          <p className="text-foreground/60 text-sm md:text-base max-w-sm mx-auto mt-4 leading-relaxed">
-            We're finalizing the registration portal. Seats will fill fast — be
-            the first to know when registration goes live!
-          </p>
-
-
-          {/* Pulse status bar */}
-          <div className="flex items-center justify-center gap-3 mb-8 text-xs text-foreground/50 tracking-widest">
-            <span className="relative flex w-2 h-2">
-              <span className="absolute inset-0 rounded-full bg-[var(--gold)] animate-ping opacity-75" />
-              <span className="relative w-2 h-2 rounded-full bg-[var(--gold)]" />
-            </span>
-            REGISTRATION PORTAL LAUNCHING SOON
-          </div>
-
-          {/* Back CTA */}
-          <Link
-            to="/events"
-            className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm font-bold glass border border-gold/30 text-gold hover:bg-gold/10 transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Explore More Events
-          </Link>
-        </div>
+        <EventsShowtime />
       </main>
 
       <Footer />
