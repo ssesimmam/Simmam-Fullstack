@@ -16,7 +16,7 @@ export function Hero() {
         <img
           src={heroBg}
           alt=""
-          fetchpriority="high"
+          fetchPriority="high"
           loading="eager"
           width={1920}
           height={1080}
