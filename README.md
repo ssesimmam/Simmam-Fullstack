@@ -72,13 +72,13 @@ graph TD
 
 The digital manifestation of SIMMAM 2026 is brought to life by this dedicated team of developers and architects.
 
-| Name | Role | Contact |
-| :--- | :--- | :--- |
-| **Sasvanthu G** | 👑 Team Lead | [+91 86108 73714](tel:+918610873714) |
-| **Moniga V** | 🏗 Technical Architect | [+91 63791 92435](tel:+916379192435) |
-| **Roshini R** | 📊 Product Analyst | [+91 86105 99005](tel:+918610599005) |
-| **Suvedhan G** | 💻 Full-Stack Developer | [+91 90422 98646](tel:+919042298646) |
-| **Sudharsan R K** | 🛠 Software Developer | [+91 63799 96328](tel:+916379996328) |
+| Name | Role | 
+| :--- | :--- | 
+| **Sasvanthu G** | 👑 Team Lead |
+| **Moniga V** | 🏗 Technical Architect | 
+| **Roshini R** | 📊 Product Analyst | 
+| **Suvedhan G** | 💻 Full-Stack Developer | 
+| **Sudharsan R K** | 🛠 Software Developer | 
 
 ---
 
