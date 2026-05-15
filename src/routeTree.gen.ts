@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as MyScheduleRouteImport } from './routes/my-schedule'
 import { Route as LiveScoresRouteImport } from './routes/live-scores'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as IndexRouteImport } from './routes/index'
@@ -37,6 +38,11 @@ const MyScheduleRoute = MyScheduleRouteImport.update({
 const LiveScoresRoute = LiveScoresRouteImport.update({
   id: '/live-scores',
   path: '/live-scores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
   '/events': typeof EventsRoute
+  '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
   '/register': typeof RegisterRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
   '/events': typeof EventsRoute
+  '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
   '/register': typeof RegisterRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/captains': typeof CaptainsRoute
   '/events': typeof EventsRoute
+  '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
   '/register': typeof RegisterRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/'
     | '/captains'
     | '/events'
+    | '/live'
     | '/live-scores'
     | '/my-schedule'
     | '/register'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/'
     | '/captains'
     | '/events'
+    | '/live'
     | '/live-scores'
     | '/my-schedule'
     | '/register'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/'
     | '/captains'
     | '/events'
+    | '/live'
     | '/live-scores'
     | '/my-schedule'
     | '/register'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CaptainsRoute: typeof CaptainsRoute
   EventsRoute: typeof EventsRoute
+  LiveRoute: typeof LiveRoute
   LiveScoresRoute: typeof LiveScoresRoute
   MyScheduleRoute: typeof MyScheduleRoute
   RegisterRoute: typeof RegisterRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: '/live-scores'
       fullPath: '/live-scores'
       preLoaderRoute: typeof LiveScoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CaptainsRoute: CaptainsRoute,
   EventsRoute: EventsRoute,
+  LiveRoute: LiveRoute,
   LiveScoresRoute: LiveScoresRoute,
   MyScheduleRoute: MyScheduleRoute,
   RegisterRoute: RegisterRoute,

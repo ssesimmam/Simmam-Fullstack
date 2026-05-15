@@ -28,8 +28,8 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (formEvent: React.FormEvent) => {
-    formEvent.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setError('')
 
@@ -40,7 +40,7 @@ function LoginPage() {
       } else {
         navigate({ to: '/admin', replace: true })
       }
-    } catch {
+    } catch (err) {
       setError('Login failed. Please try again.')
     } finally {
       setIsLoading(false)
@@ -51,10 +51,14 @@ function LoginPage() {
     <div className="min-h-screen bg-black text-white">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="rounded-xl border border-[#333] bg-[#111] p-8">
+          <div className="bg-[#111] border border-[#333] rounded-xl p-8">
             <div className="text-center">
-              <h1 className="font-display text-3xl font-bold tracking-widest text-white">SIMMAM</h1>
-              <p className="mt-2 text-sm text-gray-400">Admin Control Center</p>
+              <h1 className="font-display text-3xl font-bold text-white tracking-widest">
+                SIMMAM
+              </h1>
+              <p className="mt-2 text-sm text-gray-400">
+                Admin Control Center
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -92,20 +96,24 @@ function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                <div className="rounded-lg border border-gray-600 bg-[#222] p-3 text-sm text-white">
                   {error}
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full rounded-md bg-white font-medium text-black hover:bg-gray-200"
+                className="w-full bg-white text-black hover:bg-gray-200 rounded-md font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? 'Authenticating...' : 'Sign In (Google Auth Temp)'}

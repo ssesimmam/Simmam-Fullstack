@@ -5,7 +5,7 @@ export interface AdminUser {
   name: string
   email: string
   role: AdminRole
-  assignedEvent?: string
+  assignedEvent?: string // for coordinator role
 }
 
 export interface Permission {

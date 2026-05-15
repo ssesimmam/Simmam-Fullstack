@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import type { AdminUser, AdminRole } from '@/types/admin'
+import { ROLE_PERMISSIONS } from '@/types/admin'
 
-import { ROLE_PERMISSIONS, type AdminUser } from '@/types/admin'
-
+// Mock users for development - in production, this would come from an API
 const MOCK_USERS: AdminUser[] = [
   {
     id: '1',
@@ -45,32 +46,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsLoading(false)
-      return
-    }
-
+    // Check for stored auth on mount
     const storedUser = localStorage.getItem('simmam_admin_user')
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser))
-      } catch {
+      } catch (error) {
         localStorage.removeItem('simmam_admin_user')
       }
     }
-
     setIsLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const mockUser = MOCK_USERS.find((entry) => entry.email === email)
-
-    if (mockUser && password === 'admin123') {
+    // Mock authentication - in production, this would be an API call
+    const mockUser = MOCK_USERS.find(u => u.email === email)
+    if (mockUser && password === 'admin123') { // Simple mock password
       setUser(mockUser)
       localStorage.setItem('simmam_admin_user', JSON.stringify(mockUser))
       return true
     }
-
     return false
   }
 
@@ -83,8 +78,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false
 
     const permissions = ROLE_PERMISSIONS[user.role] || []
-    return permissions.some(
-      (permission) => permission.resource === resource && permission.actions.includes(action),
+
+    return permissions.some(perm =>
+      perm.resource === resource && perm.actions.includes(action)
     )
   }
 
@@ -97,10 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
-
   return context
 }
