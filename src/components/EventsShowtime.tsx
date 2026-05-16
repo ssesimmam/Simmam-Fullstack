@@ -9,11 +9,13 @@ import {
   ChevronRight,
   Calendar,
   User,
+  Settings,
 } from "lucide-react";
 import { showtimeEvents, FESTIVAL_DATES, type ShowtimeEvent } from "@/lib/showtimeEvents";
 import { getUser, isRegistered } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useData } from "@/lib/store";
+import { UserSetupModal } from "./UserSetupModal";
 
 // ─── Category color map ───────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
@@ -114,6 +116,7 @@ export function EventsShowtime() {
   const [user, setUser] = useState(getUser);
   const [registrationTick, setRegistrationTick] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
   const dateScrollRef = useRef<HTMLDivElement>(null);
 
   const refreshUser = () => {
@@ -184,18 +187,39 @@ export function EventsShowtime() {
           Select a date to explore events · Click Register to secure your spot
         </p>
 
-        {user && (
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-            <User className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span className="text-xs text-[#D4AF37]">
-              Signed in as <strong>{user.name}</strong>
-            </span>
-            <Link
-              to="/my-schedule"
-              className="text-[10px] tracking-wider text-[#D4AF37]/70 hover:text-[#D4AF37] transition ml-1"
+        {user ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+              <User className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span className="text-xs text-[#D4AF37]">
+                Signed in as <strong>{user.name}</strong>
+              </span>
+              <Link
+                to="/my-schedule"
+                className="text-[10px] tracking-wider text-[#D4AF37]/70 hover:text-[#D4AF37] transition ml-1"
+              >
+                MY SCHEDULE →
+              </Link>
+            </div>
+            <button
+              id="edit-profile-shortcut-btn"
+              onClick={() => setShowSetupModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/40 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition"
             >
-              MY SCHEDULE →
-            </Link>
+              <Settings className="w-3 h-3" />
+              Edit Profile
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <button
+              id="setup-profile-btn"
+              onClick={() => setShowSetupModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition"
+            >
+              <User className="w-3.5 h-3.5" />
+              Set Up Profile &amp; Dashboard
+            </button>
           </div>
         )}
       </div>
@@ -331,12 +355,20 @@ export function EventsShowtime() {
         )}
       </div>
 
-      {/* ── Auth / Registration Modal ───────────────────────────── */}
+      {/* ── Auth / Registration Modal ────────────────────────── */}
       {modalEvent && (
         <AuthModal
           event={modalEvent}
           onClose={() => { setModalEvent(null); refreshUser(); }}
           onRegistered={() => { setModalEvent(null); refreshUser(); }}
+        />
+      )}
+
+      {/* ── User Setup Modal ────────────────────────────────── */}
+      {showSetupModal && (
+        <UserSetupModal
+          onSave={refreshUser}
+          onClose={() => setShowSetupModal(false)}
         />
       )}
     </div>
