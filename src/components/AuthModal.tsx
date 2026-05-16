@@ -61,6 +61,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
       name: formName.trim(),
       picture: `https://api.dicebear.com/8.x/initials/svg?seed=${formName.trim()}`,
       registerNumber: formRegNo.trim().toUpperCase(),
+      house: existingUser?.house ?? '',
     }
 
     saveUser(newUser)
