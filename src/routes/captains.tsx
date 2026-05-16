@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Particles } from "@/components/Particles";
 import { Tilt3D } from "@/components/Tilt3D";
-import { houses } from "@/lib/houses";
+import { useData } from "@/lib/store";
 
 export const Route = createFileRoute("/captains")({
   head: () => ({
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/captains")({
 });
 
 function CaptainsPage() {
+  const { houses } = useData();
   const formatName = (name: string) => name.startsWith("Dr. ") ? "Dr. " + name.substring(4).toUpperCase() : name.toUpperCase();
 
   return (

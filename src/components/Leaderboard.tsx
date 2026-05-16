@@ -18,7 +18,8 @@ import {
   Award,
   Clock,
 } from "lucide-react";
-import { houses, type House } from "@/lib/houses";
+import { type House } from "@/lib/houses";
+import { useData } from "@/lib/store";
 
 /* ─── Color Palette ────────────────────────────────────────── */
 
@@ -38,8 +39,9 @@ const C = {
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
-const ranked = [...houses].sort((a, b) => b.points2025 - a.points2025);
-const totalPoints = ranked.reduce((s, h) => s + h.points2025, 0);
+function getHousePoints(house: House) {
+  return Number(house.points2026 ?? house.points2025 ?? 0);
+}
 
 const ELEMENT_ICONS: Record<string, typeof Flame> = {
   Fire: Flame,
@@ -320,7 +322,7 @@ function PodiumCard({
               }`}
             style={{ color: C.mainText }}
           >
-            <AnimatedNumber value={house.points2025} />
+            <AnimatedNumber value={getHousePoints(house)} />
           </div>
           <span
             className="text-[10px] tracking-[0.3em] mt-1 block"
@@ -360,7 +362,7 @@ function PodiumCard({
 
 /* ─── Ranking Table ────────────────────────────────────────── */
 
-function RankingTable() {
+function RankingTable({ ranked }: { ranked: House[] }) {
   return (
     <div
       className="relative rounded-xl overflow-hidden max-w-3xl mx-auto"
@@ -456,7 +458,7 @@ function RankingTable() {
                 className="font-display text-base font-bold tabular-nums"
                 style={{ color: isTop3 ? C.headingGold : C.mainText }}
               >
-                {house.points2025.toLocaleString()}
+                {getHousePoints(house).toLocaleString()}
               </span>
             </div>
           </div>
@@ -468,16 +470,16 @@ function RankingTable() {
 
 /* ─── Footer Stats Strip ───────────────────────────────────── */
 
-function FooterStats() {
+function FooterStats({ houses, totalPoints, topHouse }: { houses: House[]; totalPoints: number; topHouse?: string }) {
   const stats = useMemo(
     () => [
       { icon: Users, label: "Total Houses", value: String(houses.length) },
       { icon: Hash, label: "Total Points", value: totalPoints.toLocaleString() },
       { icon: TrendingUp, label: "Lead Changes", value: "12" },
-      { icon: Award, label: "Top House", value: ranked[0]?.name ?? "—" },
+      { icon: Award, label: "Top House", value: topHouse ?? "—" },
       { icon: Clock, label: "Last Updated", value: "Just now" },
     ],
-    []
+    [houses.length, totalPoints, topHouse]
   );
 
   return (
@@ -523,6 +525,16 @@ function FooterStats() {
 /* ─── Main Leaderboard ─────────────────────────────────────── */
 
 export function Leaderboard() {
+  const { houses } = useData();
+  const ranked = useMemo(
+    () => [...houses].sort((a, b) => getHousePoints(b) - getHousePoints(a)),
+    [houses],
+  );
+  const totalPoints = useMemo(
+    () => ranked.reduce((sum, house) => sum + getHousePoints(house), 0),
+    [ranked],
+  );
+
   const first = ranked[0];
   const second = ranked[1];
   const third = ranked[2];
@@ -579,13 +591,13 @@ export function Leaderboard() {
         {/* ── Top 3 Podium ─────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5 mb-12 md:mb-16">
           <div className="order-2 sm:order-1 sm:mt-6">
-            <PodiumCard house={second} rank={2} />
+            {second && <PodiumCard house={second} rank={2} />}
           </div>
           <div className="order-1 sm:order-2">
-            <PodiumCard house={first} rank={1} featured />
+            {first && <PodiumCard house={first} rank={1} featured />}
           </div>
           <div className="order-3 sm:mt-6">
-            <PodiumCard house={third} rank={3} />
+            {third && <PodiumCard house={third} rank={3} />}
           </div>
         </div>
 
@@ -611,8 +623,10 @@ export function Leaderboard() {
               }}
             />
           </div>
-          <RankingTable />
+          <RankingTable ranked={ranked} />
         </div>
+
+        <FooterStats houses={houses} totalPoints={totalPoints} topHouse={first?.name} />
 
       </div>
     </section>

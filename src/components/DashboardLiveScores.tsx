@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Crown, Activity, TrendingUp } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { Counter } from "./Counter";
 import { Tilt3D } from "./Tilt3D";
 import { SectionHeader } from "./Dashboard";
-import { houses } from "../lib/houses";
+import { useData } from "@/lib/store";
 
 type Stat = {
   label: string;
@@ -14,12 +13,6 @@ type Stat = {
   accent: "gold" | "red";
   href?: string;
 };
-
-import { allEvents } from "@/lib/eventsData";
-
-
-
-
 
 type HouseScore = {
   name: string;
@@ -36,22 +29,22 @@ type HouseScore = {
 };
 
 export function DashboardLiveScores() {
+  const { houses, events, participants } = useData();
 
+  const participationScores = useMemo(() => {
+    return participants.reduce<Record<string, number>>((acc, participant) => {
+      const houseName = participant.house;
+      acc[houseName] = (acc[houseName] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [participants]);
 
-  const participationScores: Record<string, number> = {
-    "Agniyas": 0,
-    "Marutas": 0,
-    "Rudras": 0,
-    "Dhronas": 0,
-    "Suryas": 0,
-    "Vajras": 0,
-  };
-
-  const [houseScores, setHouseScores] = useState<HouseScore[]>(() => 
-    houses
+  const houseScores = useMemo(
+    () =>
+      houses
       .map((h) => {
         const participation = participationScores[h.name] || 0;
-        const totalPoints = participation + (h.breakdown?.winners || 0) + (h.breakdown?.runners || 0);
+        const totalPoints = Number(h.points2026 ?? h.points2025 ?? 0);
         return {
           name: h.name,
           short: h.short,
@@ -70,16 +63,18 @@ export function DashboardLiveScores() {
           isOriginalShape: h.isOriginalShape,
         };
       })
-      .sort((a, b) => b.points - a.points)
+      .sort((a, b) => b.points - a.points),
+    [houses, participationScores],
   );
 
-  const max = Math.max(...houseScores.map((s) => s.points));
+  const max = Math.max(...houseScores.map((s) => s.points), 1);
   const leader = houseScores[0];
+  const floatedEvents = events.filter((event) => event.is_floated);
 
   const dynamicStats: Stat[] = [
-    { label: "Total Teams", value: 6, hint: "Agniyas, Dhronas, Marutas, Rudras, Suryas, Vajras", accent: "gold", href: "/#teams" },
-    { label: "Total Participants", value: 0, hint: "Across all events", accent: "red" },
-    { label: "Total Events", value: 150, hint: "", accent: "gold", href: "/events" },
+    { label: "Total Teams", value: houses.length, hint: "All active houses in SIMMAM", accent: "gold", href: "/#teams" },
+    { label: "Total Participants", value: participants.length, hint: "Across all events", accent: "red" },
+    { label: "Total Events", value: floatedEvents.length, hint: "Currently floated from admin panel", accent: "gold", href: "/events" },
     { label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
     { label: "1st Place Holder", value: 1, suffix: leader ? ` — ${leader.name}` : " — ...", hint: "Leading the rankings", accent: "gold", href: "/#leaderboard" },
     { label: "Highest Score", value: leader?.points || 0, suffix: leader ? ` — ${leader.name}` : " — ...", hint: leader ? `${leader.name} — Current Best` : "...", accent: "red", href: "/#leaderboard" },

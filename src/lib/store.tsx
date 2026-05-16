@@ -128,9 +128,16 @@ const generateMockParticipants = (events: AdminEvent[], houses: House[]): Partic
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [events, setEvents] = useState<AdminEvent[]>([]);
-  const [houses, setHouses] = useState<House[]>([]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [events, setEvents] = useState<AdminEvent[]>(() => initializeEvents());
+  const [houses, setHouses] = useState<House[]>(() =>
+    initialHouses.map((h) => ({
+      ...h,
+      points2026: h.points2026 ?? h.points2025 ?? 0,
+    })),
+  );
+  const [participants, setParticipants] = useState<Participant[]>(() =>
+    generateMockParticipants(initializeEvents(), initialHouses),
+  );
   const [settings, setSettings] = useState({
     festivalStatus: 'pre' as const,
     registrationsOpen: true,

@@ -9,7 +9,6 @@ import {
   User,
 } from 'lucide-react'
 import { getUserRegistrations, getCheckedInEvents, clearAllUserData, type Registration, type UserProfile } from '@/lib/registrationStore'
-import { houses } from '@/lib/houses'
 import { useData } from '@/lib/store'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -185,7 +184,7 @@ interface UserDashboardProps {
 }
 
 export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardProps) {
-  const { participants } = useData()
+  const { participants, houses } = useData()
   const [activeTab, setActiveTab] = useState<Tab>('registered')
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)

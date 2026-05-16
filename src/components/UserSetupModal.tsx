@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
-import { houses } from '@/lib/houses'
+import { useData } from '@/lib/store'
 
 interface UserSetupModalProps {
   onSave: () => void
@@ -9,6 +9,7 @@ interface UserSetupModalProps {
 }
 
 export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
+  const { houses } = useData()
   const existing = getUser()
 
   const [formName, setFormName] = useState(existing?.name ?? '')
