@@ -4,12 +4,12 @@ import { useData } from '@/lib/store'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useState } from 'react'
-import { 
-  Settings2, 
-  ShieldCheck, 
-  Users2, 
-  BellRing, 
-  Globe, 
+import {
+  Settings2,
+  ShieldCheck,
+  Users2,
+  BellRing,
+  Globe,
   Lock,
   Save,
   AlertTriangle
@@ -17,12 +17,12 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
@@ -68,9 +68,9 @@ function SettingsPage() {
             <div className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-sm font-medium text-gray-200">Festival Status</Label>
-                <Select 
-                  value={localSettings.festivalStatus} 
-                  onValueChange={(val: any) => setLocalSettings({...localSettings, festivalStatus: val})}
+                <Select
+                  value={localSettings.festivalStatus}
+                  onValueChange={(val: any) => setLocalSettings({ ...localSettings, festivalStatus: val })}
                 >
                   <SelectTrigger className="bg-gray-800 border-gray-600 h-10">
                     <SelectValue placeholder="Select status" />
@@ -91,9 +91,9 @@ function SettingsPage() {
                   <Label className="text-white font-medium">Public Registrations</Label>
                   <p className="text-xs text-gray-500">Toggle new participant signups</p>
                 </div>
-                <Switch 
-                  checked={localSettings.registrationsOpen} 
-                  onCheckedChange={(val) => setLocalSettings({...localSettings, registrationsOpen: val})}
+                <Switch
+                  checked={localSettings.registrationsOpen}
+                  onCheckedChange={(val) => setLocalSettings({ ...localSettings, registrationsOpen: val })}
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ function SettingsPage() {
         </div>
 
         <div className="flex justify-end pt-4">
-          <Button 
+          <Button
             onClick={handleSave}
             className="bg-white text-black font-bold text-sm px-8 py-2 rounded-md hover:bg-gray-200 transition-colors"
           >

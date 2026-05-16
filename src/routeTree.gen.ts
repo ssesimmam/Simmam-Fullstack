@@ -23,6 +23,7 @@ import { Route as AdminLayoutSettingsRouteImport } from './routes/admin/_layout/
 import { Route as AdminLayoutParticipantsRouteImport } from './routes/admin/_layout/participants'
 import { Route as AdminLayoutLeaderboardRouteImport } from './routes/admin/_layout/leaderboard'
 import { Route as AdminLayoutEventsRouteImport } from './routes/admin/_layout/events'
+import { Route as AdminLayoutDataEntryRouteImport } from './routes/admin/_layout/data-entry'
 import { Route as AdminLayoutCheckinRouteImport } from './routes/admin/_layout/checkin'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -95,6 +96,11 @@ const AdminLayoutEventsRoute = AdminLayoutEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
+const AdminLayoutDataEntryRoute = AdminLayoutDataEntryRouteImport.update({
+  id: '/data-entry',
+  path: '/data-entry',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
 const AdminLayoutCheckinRoute = AdminLayoutCheckinRouteImport.update({
   id: '/checkin',
   path: '/checkin',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/checkin': typeof AdminLayoutCheckinRoute
+  '/admin/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/events': typeof AdminLayoutEventsRoute
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/checkin': typeof AdminLayoutCheckinRoute
+  '/admin/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/events': typeof AdminLayoutEventsRoute
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/admin/_layout': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/_layout/checkin': typeof AdminLayoutCheckinRoute
+  '/admin/_layout/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/_layout/events': typeof AdminLayoutEventsRoute
   '/admin/_layout/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/_layout/participants': typeof AdminLayoutParticipantsRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/login'
     | '/admin/checkin'
+    | '/admin/data-entry'
     | '/admin/events'
     | '/admin/leaderboard'
     | '/admin/participants'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/login'
     | '/admin/checkin'
+    | '/admin/data-entry'
     | '/admin/events'
     | '/admin/leaderboard'
     | '/admin/participants'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/admin/_layout'
     | '/admin/login'
     | '/admin/_layout/checkin'
+    | '/admin/_layout/data-entry'
     | '/admin/_layout/events'
     | '/admin/_layout/leaderboard'
     | '/admin/_layout/participants'
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLayoutEventsRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
+    '/admin/_layout/data-entry': {
+      id: '/admin/_layout/data-entry'
+      path: '/data-entry'
+      fullPath: '/admin/data-entry'
+      preLoaderRoute: typeof AdminLayoutDataEntryRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
     '/admin/_layout/checkin': {
       id: '/admin/_layout/checkin'
       path: '/checkin'
@@ -329,6 +348,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminLayoutRouteChildren {
   AdminLayoutCheckinRoute: typeof AdminLayoutCheckinRoute
+  AdminLayoutDataEntryRoute: typeof AdminLayoutDataEntryRoute
   AdminLayoutEventsRoute: typeof AdminLayoutEventsRoute
   AdminLayoutLeaderboardRoute: typeof AdminLayoutLeaderboardRoute
   AdminLayoutParticipantsRoute: typeof AdminLayoutParticipantsRoute
@@ -338,6 +358,7 @@ interface AdminLayoutRouteChildren {
 
 const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
   AdminLayoutCheckinRoute: AdminLayoutCheckinRoute,
+  AdminLayoutDataEntryRoute: AdminLayoutDataEntryRoute,
   AdminLayoutEventsRoute: AdminLayoutEventsRoute,
   AdminLayoutLeaderboardRoute: AdminLayoutLeaderboardRoute,
   AdminLayoutParticipantsRoute: AdminLayoutParticipantsRoute,
