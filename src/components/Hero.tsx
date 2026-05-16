@@ -1,4 +1,4 @@
-import { Calendar, Trophy, Zap } from "lucide-react";
+import { Calendar, Trophy, Zap, User } from "lucide-react";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { Countdown } from "./Countdown";
 import { LionEmblem } from "./LionEmblem";
@@ -129,6 +129,14 @@ export function Hero() {
             <Zap className="w-4 h-4" />
             Register Now
             <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition" />
+          </a>
+          <a
+            href="/profile"
+            className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-semibold text-sm bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/70 text-black shadow-[0_0_20px_#D4AF3740] hover:scale-105 transition-transform"
+          >
+            <User className="w-4 h-4" />
+            My Profile
+            <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/20 transition" />
           </a>
           <a
             href="/#teams"

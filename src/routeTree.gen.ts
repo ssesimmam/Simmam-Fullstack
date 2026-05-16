@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyScheduleRouteImport } from './routes/my-schedule'
 import { Route as LiveScoresRouteImport } from './routes/live-scores'
 import { Route as LiveRouteImport } from './routes/live'
@@ -29,6 +30,11 @@ import { Route as AdminLayoutCheckinRouteImport } from './routes/admin/_layout/c
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyScheduleRoute = MyScheduleRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/admin': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/checkin': typeof AdminLayoutCheckinRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute
   '/live-scores': typeof LiveScoresRoute
   '/my-schedule': typeof MyScheduleRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/admin/_layout': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/live-scores'
     | '/my-schedule'
+    | '/profile'
     | '/register'
     | '/admin'
     | '/admin/login'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/live-scores'
     | '/my-schedule'
+    | '/profile'
     | '/register'
     | '/admin/login'
     | '/admin/checkin'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/live-scores'
     | '/my-schedule'
+    | '/profile'
     | '/register'
     | '/admin/_layout'
     | '/admin/login'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute
   LiveScoresRoute: typeof LiveScoresRoute
   MyScheduleRoute: typeof MyScheduleRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   AdminLayoutRoute: typeof AdminLayoutRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-schedule': {
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   LiveScoresRoute: LiveScoresRoute,
   MyScheduleRoute: MyScheduleRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   AdminLayoutRoute: AdminLayoutRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,

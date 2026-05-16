@@ -3,6 +3,7 @@ export type UserProfile = {
   name: string
   picture: string
   registerNumber: string
+  house: string
 }
 
 export type Registration = {
@@ -36,6 +37,13 @@ export function saveUser(user: UserProfile): void {
 
 export function clearUser(): void {
   sessionStorage.removeItem(USER_KEY)
+}
+
+/** Wipes the user session AND all their localStorage registrations. */
+export function clearAllUserData(email: string): void {
+  sessionStorage.removeItem(USER_KEY)
+  const regKey = `simmam_regs_${email.toLowerCase()}`
+  localStorage.removeItem(regKey)
 }
 
 export function getUserRegistrations(email: string): Registration[] {
@@ -103,4 +111,28 @@ function simpleHash(value: string): string {
   }
 
   return hash.toString(36).padStart(8, '0')
+}
+
+// ─── Check-In Helpers ─────────────────────────────────────────────────────────
+
+export type CheckedInEntry = {
+  eventName: string
+  event: string
+  house: string
+  checkIn: boolean
+}
+
+/**
+ * Returns all participant records where the user's email matches and checkIn is true.
+ * Participants come from the admin store (useData().participants).
+ */
+export function getCheckedInEvents(
+  email: string,
+  participants: CheckedInEntry[],
+): CheckedInEntry[] {
+  return participants.filter(
+    (p) =>
+      (p as any).email?.toLowerCase() === email.toLowerCase() &&
+      p.checkIn === true,
+  )
 }
