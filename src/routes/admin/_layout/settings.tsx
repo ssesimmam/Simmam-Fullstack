@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/store'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
+import WebHealthMonitor from '@/components/admin/WebHealthMonitor'
 import { useState } from 'react'
 import { 
   Globe, 
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/admin/_layout/settings')({
 })
 
 function SettingsPage() {
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
   const { settings, updateSettings } = useData()
   const [localSettings, setLocalSettings] = useState(settings)
 
@@ -109,6 +110,11 @@ function SettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Web Health Monitor — developer admin only */}
+        {user?.role === 'developer_admin' && (
+          <WebHealthMonitor />
+        )}
 
         <div className="flex justify-end pt-4">
           <Button 

@@ -48,6 +48,10 @@ function DataEntryPage() {
   const [activeTab, setActiveTab] = useState<'events' | 'participants' | 'live'>('events')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Live page participation state
+  const [liveSelectedEvent, setLiveSelectedEvent] = useState<string>('')
+  const [liveParticipantToAdd, setLiveParticipantToAdd] = useState<string>('')
+
   // Event editing state
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null)
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
@@ -230,25 +234,27 @@ function DataEntryPage() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder={activeTab === 'events' ? 'Search events...' : 'Search events for participants...'}
-            className="pl-10 bg-gray-800 border-gray-600 text-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {/* Search — hidden on Live tab */}
+      {activeTab !== 'live' && (
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder={activeTab === 'events' ? 'Search events...' : 'Search events for participants...'}
+              className="pl-10 bg-gray-800 border-gray-600 text-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button
+            onClick={() => activeTab === 'events' ? setShowAddEvent(true) : setShowAddParticipant(true)}
+            className="bg-white text-black font-semibold hover:bg-gray-200 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add {activeTab === 'events' ? 'Event' : 'Participant'}
+          </Button>
         </div>
-        <Button
-          onClick={() => activeTab === 'events' ? setShowAddEvent(true) : setShowAddParticipant(true)}
-          className="bg-white text-black font-semibold hover:bg-gray-200 w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add {activeTab === 'events' ? 'Event' : 'Participant'}
-        </Button>
-      </div>
+      )}
 
       {/* ════════════════════════════════════════════ */}
       {/* EVENTS MANAGEMENT TAB                        */}
@@ -332,30 +338,6 @@ function DataEntryPage() {
                       </div>
                     </div>
 
-                    {event.result && (
-                      <div className="mb-4">
-                        <div className="text-gray-400 text-xs uppercase tracking-wide mb-2">Results</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-black border border-[#333] rounded-lg p-3">
-                            <div className="text-gray-500 text-xs mb-1">Winner</div>
-                            <div className="text-white text-sm">{event.result.winnerHouse || '—'}</div>
-                          </div>
-                          <div className="bg-black border border-[#333] rounded-lg p-3">
-                            <div className="text-gray-500 text-xs mb-1">Runner-Up</div>
-                            <div className="text-white text-sm">{event.result.runnerUpHouse || '—'}</div>
-                          </div>
-                          <div className="bg-black border border-[#333] rounded-lg p-3">
-                            <div className="text-gray-500 text-xs mb-1">Points</div>
-                            <div className="text-white text-sm">{event.result.pointsAwarded || '—'}</div>
-                          </div>
-                          <div className="bg-black border border-[#333] rounded-lg p-3">
-                            <div className="text-gray-500 text-xs mb-1">Day</div>
-                            <div className="text-white text-sm">{event.result.resultDay || '—'}</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     <Dialog>
                       <DialogTrigger asChild>
                         <button
@@ -413,55 +395,6 @@ function DataEntryPage() {
                                   value={editingEvent.participantCount} 
                                   onChange={(e) => setEditingEvent({...editingEvent, participantCount: parseInt(e.target.value)})}
                                   className="bg-gray-800 border-gray-600 text-white"
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-4 pt-4 border-t border-gray-700 mt-4">
-                              <h4 className="font-semibold text-white">Event Results</h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-gray-300">Result Day</Label>
-                                  <Input 
-                                    placeholder="e.g. DAY 1"
-                                    value={editingEvent.result?.resultDay || ''} 
-                                    onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, resultDay: e.target.value} as any})}
-                                    className="bg-gray-800 border-gray-600 text-white"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-gray-300">Points Awarded</Label>
-                                  <Input 
-                                    type="number"
-                                    placeholder="e.g. 100"
-                                    value={editingEvent.result?.pointsAwarded || ''} 
-                                    onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, pointsAwarded: parseInt(e.target.value)} as any})}
-                                    className="bg-gray-800 border-gray-600 text-white"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-gray-300">Winner House</Label>
-                                  <Input 
-                                    placeholder="e.g. Agniyas"
-                                    value={editingEvent.result?.winnerHouse || ''} 
-                                    onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, winnerHouse: e.target.value} as any})}
-                                    className="bg-gray-800 border-gray-600 text-white"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-gray-300">Runner-Up House</Label>
-                                  <Input 
-                                    placeholder="e.g. Rudras"
-                                    value={editingEvent.result?.runnerUpHouse || ''} 
-                                    onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, runnerUpHouse: e.target.value} as any})}
-                                    className="bg-gray-800 border-gray-600 text-white"
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Publish Results</span>
-                                <Switch
-                                  checked={editingEvent.result?.isPublished || false}
-                                  onCheckedChange={(val) => setEditingEvent({...editingEvent, result: {...editingEvent.result, isPublished: val} as any})}
                                 />
                               </div>
                             </div>
@@ -920,6 +853,151 @@ function DataEntryPage() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Participation Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-[#333] pb-3">
+              <Users className="w-5 h-5 text-gray-400" />
+              <div>
+                <h3 className="text-white font-semibold">Participation</h3>
+                <p className="text-xs text-gray-500">View and assign participants to live events</p>
+              </div>
+            </div>
+
+            {/* Event Selector Dropdown */}
+            <div className="space-y-2">
+              <Label className="text-gray-400 text-xs">Select Event</Label>
+              <Select value={liveSelectedEvent} onValueChange={(val) => { setLiveSelectedEvent(val); setLiveParticipantToAdd('') }}>
+                <SelectTrigger className="bg-[#111] border-[#333] text-white">
+                  <SelectValue placeholder="Choose an event to view participants..." />
+                </SelectTrigger>
+                <SelectContent className="bg-[#111] border-[#333] max-h-[280px]">
+                  {events.filter(e => e.is_floated).map(ev => (
+                    <SelectItem key={ev.id} value={ev.name}>{ev.name} — {ev.category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Participants for Selected Event */}
+            {liveSelectedEvent && (() => {
+              const eventParticipants = participants.filter(p => p.event === liveSelectedEvent)
+              // Participants not already in this event (for assignment dropdown)
+              const assignableParticipants = participants.filter(
+                p => p.event !== liveSelectedEvent
+              )
+              // Unique names for the dropdown (deduplicate by name+regNo)
+              const seen = new Set<string>()
+              const uniqueAssignable = assignableParticipants.filter(p => {
+                const key = `${p.name}::${p.regNo}`
+                if (seen.has(key)) return false
+                seen.add(key)
+                return true
+              })
+
+              // Group by house
+              const houseGroups = houses
+                .map(house => ({
+                  houseName: house.name,
+                  houseAccent: house.accent,
+                  members: eventParticipants.filter(p => p.house === house.name),
+                }))
+                .filter(group => group.members.length > 0)
+
+              return (
+                <div className="space-y-4">
+                  {/* Assign Participant Dropdown */}
+                  <div className="flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="flex-1 space-y-2 w-full">
+                      <Label className="text-gray-400 text-xs">Assign Existing Participant</Label>
+                      <Select value={liveParticipantToAdd} onValueChange={setLiveParticipantToAdd}>
+                        <SelectTrigger className="bg-[#111] border-[#333] text-white">
+                          <SelectValue placeholder="Select a participant to assign..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#111] border-[#333] max-h-[220px]">
+                          {uniqueAssignable.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name} — {p.regNo} ({p.house})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      disabled={!liveParticipantToAdd}
+                      className="bg-white text-black font-semibold hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
+                      onClick={() => {
+                        const source = participants.find(p => p.id === liveParticipantToAdd)
+                        if (source) {
+                          const newP: Participant = {
+                            ...source,
+                            id: `p-${Date.now()}`,
+                            event: liveSelectedEvent,
+                            status: 'confirmed',
+                            checkIn: false,
+                            certificate: false,
+                          }
+                          addParticipant(newP)
+                          setLiveParticipantToAdd('')
+                          toast.success(`${source.name} assigned to ${liveSelectedEvent}`)
+                        }
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Assign
+                    </Button>
+                  </div>
+
+                  {/* Participant List */}
+                  <div className="bg-[#111] border border-[#333] rounded-lg overflow-hidden">
+                    <div className="p-4 border-b border-[#333] flex items-center justify-between">
+                      <div className="text-white font-medium text-sm">{liveSelectedEvent}</div>
+                      <span className="text-gray-500 text-xs">
+                        {eventParticipants.length} participant{eventParticipants.length !== 1 ? 's' : ''} • {houseGroups.length} house{houseGroups.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    {houseGroups.length > 0 ? (
+                      <div className="p-4 space-y-3">
+                        {houseGroups.map(group => (
+                          <div key={group.houseName} className="bg-black border border-[#333] rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div
+                                className="w-3 h-3 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: group.houseAccent }}
+                              />
+                              <span className="text-white font-medium text-sm">{group.houseName}</span>
+                              <span className="text-gray-500 text-xs">
+                                {group.members.length} participant{group.members.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                            <div className="space-y-1.5">
+                              {group.members.map(p => (
+                                <div key={p.id} className="flex items-center justify-between py-1.5 px-2 bg-[#111] rounded text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Users className="w-3.5 h-3.5 text-gray-500" />
+                                    <span className="text-white">{p.name}</span>
+                                    <span className="text-gray-600 text-xs">{p.regNo}</span>
+                                  </div>
+                                  <span className={`text-xs capitalize ${p.status === 'confirmed' ? 'text-green-400' : p.status === 'pending' ? 'text-yellow-400' : 'text-gray-500'}`}>
+                                    {p.status}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-600 text-sm">
+                        No participants assigned to this event yet
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}
