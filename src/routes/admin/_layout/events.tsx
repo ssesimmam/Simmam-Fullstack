@@ -55,11 +55,6 @@ function EventsPage() {
     toast.success(`Event ${event.name} is now ${!event.is_floated ? 'floated' : 'hidden from public'}`)
   }
 
-  const handleToggleLiveTomorrow = (event: AdminEvent) => {
-    updateEvent({ ...event, is_live_tomorrow: !event.is_live_tomorrow })
-    toast.success(`${event.name} is ${!event.is_live_tomorrow ? 'now' : 'no longer'} visible on the Live Tomorrow page`)
-  }
-
   const handleToggleRegistration = (event: AdminEvent) => {
     updateEvent({ ...event, registration_open: !event.registration_open })
     toast.success(
@@ -239,14 +234,6 @@ function EventsPage() {
                 <Switch
                   checked={event.is_floated}
                   onCheckedChange={() => handleToggleFloat(event)}
-                  disabled={!hasPermission('events', 'update')}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Tomorrow Live</span>
-                <Switch
-                  checked={event.is_live_tomorrow}
-                  onCheckedChange={() => handleToggleLiveTomorrow(event)}
                   disabled={!hasPermission('events', 'update')}
                 />
               </div>

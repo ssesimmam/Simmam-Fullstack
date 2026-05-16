@@ -85,23 +85,45 @@ const initializeEvents = (): AdminEvent[] => {
 // Mock participants
 const generateMockParticipants = (events: AdminEvent[], houses: House[]): Participant[] => {
   const participants: Participant[] = [];
-  const names = ["Aravind", "Bhavana", "Chandra", "Deepak", "Eshwar", "Farzana", "Gautam", "Hema", "Indira", "Jeevan"];
-  
-  for (let i = 0; i < 50; i++) {
-    const event = events[Math.floor(Math.random() * events.length)];
-    const house = houses[Math.floor(Math.random() * houses.length)];
-    participants.push({
-      id: `p-${i}`,
-      name: `${names[i % names.length]} ${String.fromCharCode(65 + (i % 26))}`,
-      regNo: `2026SIM${1000 + i}`,
-      email: `${names[i % names.length].toLowerCase()}@example.com`,
-      house: house.name,
-      event: event.name,
-      status: 'confirmed',
-      checkIn: Math.random() > 0.5,
-      certificate: false
-    });
+  const firstNames = [
+    "Aravind", "Bhavana", "Chandra", "Deepak", "Eshwar", "Farzana", "Gautam", "Hema", "Indira", "Jeevan",
+    "Kavya", "Lakshmi", "Manoj", "Nithya", "Omkar", "Priya", "Rajan", "Sneha", "Tarun", "Uma",
+    "Vikram", "Wasim", "Yamini", "Zara", "Aditi", "Balaji", "Charulata", "Dinesh", "Esha", "Farhan"
+  ];
+  const lastNames = [
+    "Krishnan", "Reddy", "Sharma", "Iyer", "Nair", "Patel", "Gupta", "Joshi", "Menon", "Pillai",
+    "Rao", "Sundaram", "Venkat", "Bhat", "Das", "Kumar", "Singh", "Murugan", "Rajan", "Subramanian"
+  ];
+  const statuses: Array<'confirmed' | 'pending' | 'waitlisted'> = ['confirmed', 'confirmed', 'confirmed', 'pending', 'waitlisted'];
+
+  // Seed-like counter for deterministic but varied distribution
+  let counter = 0;
+
+  // Ensure every event gets participants from multiple houses
+  for (const event of events) {
+    // Each event gets 2-5 participants per house
+    for (const house of houses) {
+      const countForThisGroup = 2 + (counter % 4); // 2 to 5
+      for (let j = 0; j < countForThisGroup; j++) {
+        const fnIndex = counter % firstNames.length;
+        const lnIndex = (counter * 7 + j) % lastNames.length;
+        const statusIndex = (counter + j) % statuses.length;
+        participants.push({
+          id: `p-${counter}`,
+          name: `${firstNames[fnIndex]} ${lastNames[lnIndex]}`,
+          regNo: `2026SIM${1000 + counter}`,
+          email: `${firstNames[fnIndex].toLowerCase()}.${lastNames[lnIndex].toLowerCase()}@simats.edu`,
+          house: house.name,
+          event: event.name,
+          status: statuses[statusIndex],
+          checkIn: counter % 3 !== 0,
+          certificate: false
+        });
+        counter++;
+      }
+    }
   }
+
   return participants;
 };
 
