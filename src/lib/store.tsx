@@ -49,8 +49,10 @@ interface DataContextType {
   houses: House[];
   participants: Participant[];
   updateEvent: (updatedEvent: AdminEvent) => void;
+  addEvent: (newEvent: AdminEvent) => void;
   updateHouse: (updatedHouse: House) => void;
   updateParticipant: (updatedParticipant: Participant) => void;
+  addParticipant: (newParticipant: Participant) => void;
   updateHousePoints: (houseName: string, points: number, reason?: string, issuedBy?: string) => void;
   pointsHistory: PointTransaction[];
   findAdminEventByName: (name: string) => AdminEvent | undefined;
@@ -186,6 +188,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('simmam_events', JSON.stringify(newEvents));
   };
 
+  const addEvent = (newEvent: AdminEvent) => {
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    localStorage.setItem('simmam_events', JSON.stringify(updatedEvents));
+  };
+
   const updateHouse = (updatedHouse: House) => {
     const newHouses = houses.map(h => h.name === updatedHouse.name ? updatedHouse : h);
     setHouses(newHouses);
@@ -196,6 +204,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const newParticipants = participants.map(p => p.id === updatedParticipant.id ? updatedParticipant : p);
     setParticipants(newParticipants);
     localStorage.setItem('simmam_participants', JSON.stringify(newParticipants));
+  };
+
+  const addParticipant = (newParticipant: Participant) => {
+    const updatedParticipants = [...participants, newParticipant];
+    setParticipants(updatedParticipants);
+    localStorage.setItem('simmam_participants', JSON.stringify(updatedParticipants));
   };
 
   const updateHousePoints = (houseName: string, points: number, reason?: string, issuedBy: string = 'Admin') => {
@@ -251,8 +265,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       houses, 
       participants, 
       updateEvent, 
+      addEvent,
       updateHouse, 
       updateParticipant, 
+      addParticipant,
       updateHousePoints,
       pointsHistory,
       findAdminEventByName,

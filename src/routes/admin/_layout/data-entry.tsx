@@ -11,7 +11,11 @@ import {
   ChevronDown,
   ChevronRight,
   CalendarDays,
-  Users
+  Users,
+  Plus,
+  Radio,
+  Trophy,
+  Medal
 } from 'lucide-react'
 import { 
   Dialog, 
@@ -40,8 +44,8 @@ export const Route = createFileRoute('/admin/_layout/data-entry')({
 
 function DataEntryPage() {
   const { user } = useAuth()
-  const { events, houses, participants, updateEvent, updateParticipant } = useData()
-  const [activeTab, setActiveTab] = useState<'events' | 'participants'>('events')
+  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant } = useData()
+  const [activeTab, setActiveTab] = useState<'events' | 'participants' | 'live'>('events')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Event editing state
@@ -52,6 +56,18 @@ function DataEntryPage() {
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
   const [expandedPEvents, setExpandedPEvents] = useState<Set<string>>(new Set())
   const [expandedPHouses, setExpandedPHouses] = useState<Set<string>>(new Set())
+
+  // Add new state
+  const [showAddEvent, setShowAddEvent] = useState(false)
+  const [newEventName, setNewEventName] = useState('')
+  const [newEventCategory, setNewEventCategory] = useState('')
+
+  const [showAddParticipant, setShowAddParticipant] = useState(false)
+  const [newPName, setNewPName] = useState('')
+  const [newPRegNo, setNewPRegNo] = useState('')
+  const [newPEmail, setNewPEmail] = useState('')
+  const [newPHouse, setNewPHouse] = useState('')
+  const [newPEvent, setNewPEvent] = useState('')
 
   // Dev admin only
   if (user?.role !== 'developer_admin') {
@@ -78,6 +94,36 @@ function DataEntryPage() {
       setEditingEvent(null)
       toast.success('Event updated successfully')
     }
+  }
+
+  const handleAddEvent = () => {
+    if (!newEventName.trim() || !newEventCategory.trim()) {
+      toast.error('Event name and category are required')
+      return
+    }
+    const newEvent: AdminEvent = {
+      id: `event-${Date.now()}`,
+      name: newEventName.trim(),
+      category: newEventCategory.trim(),
+      icon: events[0]?.icon || (() => null),
+      description: '',
+      venue: '',
+      date: '',
+      time: '',
+      is_floated: true,
+      is_live_tomorrow: false,
+      registration_open: true,
+      checkin_enabled: false,
+      status: 'upcoming',
+      participantCount: 0,
+      prizeInfo: 'Trophy + Certificate',
+      result: undefined,
+    }
+    addEvent(newEvent)
+    setNewEventName('')
+    setNewEventCategory('')
+    setShowAddEvent(false)
+    toast.success(`Event "${newEvent.name}" created`)
   }
 
   // ── Participant helpers ──
@@ -114,6 +160,32 @@ function DataEntryPage() {
     toast.success(`${participant.name} moved to waitlisted`)
   }
 
+  const handleAddParticipant = () => {
+    if (!newPName.trim() || !newPRegNo.trim() || !newPHouse || !newPEvent) {
+      toast.error('Name, Reg No, House, and Event are required')
+      return
+    }
+    const newP: Participant = {
+      id: `p-${Date.now()}`,
+      name: newPName.trim(),
+      regNo: newPRegNo.trim(),
+      email: newPEmail.trim(),
+      house: newPHouse,
+      event: newPEvent,
+      status: 'confirmed',
+      checkIn: false,
+      certificate: false,
+    }
+    addParticipant(newP)
+    setNewPName('')
+    setNewPRegNo('')
+    setNewPEmail('')
+    setNewPHouse('')
+    setNewPEvent('')
+    setShowAddParticipant(false)
+    toast.success(`Participant "${newP.name}" added`)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -145,6 +217,17 @@ function DataEntryPage() {
           <Users className="w-4 h-4" />
           Participant Management
         </button>
+        <button
+          onClick={() => { setActiveTab('live'); setSearchQuery('') }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+            activeTab === 'live'
+              ? 'bg-white text-black'
+              : 'bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:bg-black'
+          }`}
+        >
+          <Radio className="w-4 h-4" />
+          Live Page
+        </button>
       </div>
 
       {/* Search */}
@@ -158,6 +241,13 @@ function DataEntryPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <Button
+          onClick={() => activeTab === 'events' ? setShowAddEvent(true) : setShowAddParticipant(true)}
+          className="bg-white text-black font-semibold hover:bg-gray-200 w-full sm:w-auto"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add {activeTab === 'events' ? 'Event' : 'Participant'}
+        </Button>
       </div>
 
       {/* ════════════════════════════════════════════ */}
@@ -165,6 +255,40 @@ function DataEntryPage() {
       {/* ════════════════════════════════════════════ */}
       {activeTab === 'events' && (
         <div className="space-y-3">
+          {/* Add Event Form */}
+          {showAddEvent && (
+            <div className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-4">
+              <h4 className="text-white font-medium text-sm">New Event</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Event Name</Label>
+                  <Input
+                    placeholder="e.g. Cricket"
+                    className="bg-black border-[#333] text-white"
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Category</Label>
+                  <Input
+                    placeholder="e.g. Sports"
+                    className="bg-black border-[#333] text-white"
+                    value={newEventCategory}
+                    onChange={(e) => setNewEventCategory(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={() => setShowAddEvent(false)}>Cancel</Button>
+                <Button className="bg-white text-black font-semibold hover:bg-gray-200" onClick={handleAddEvent}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Event
+                </Button>
+              </div>
+            </div>
+          )}
+
           {filteredEvents.map((event) => {
             const isExpanded = expandedEvents.has(event.id)
 
@@ -363,6 +487,51 @@ function DataEntryPage() {
       {/* ════════════════════════════════════════════ */}
       {activeTab === 'participants' && (
         <div className="space-y-3">
+          {/* Add Participant Form */}
+          {showAddParticipant && (
+            <div className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-4">
+              <h4 className="text-white font-medium text-sm">New Participant</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Full Name</Label>
+                  <Input placeholder="e.g. Aravind Kumar" className="bg-black border-[#333] text-white" value={newPName} onChange={(e) => setNewPName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Reg No</Label>
+                  <Input placeholder="e.g. 2026SIM1234" className="bg-black border-[#333] text-white" value={newPRegNo} onChange={(e) => setNewPRegNo(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Email</Label>
+                  <Input placeholder="e.g. name@simats.edu" className="bg-black border-[#333] text-white" value={newPEmail} onChange={(e) => setNewPEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">House</Label>
+                  <Select value={newPHouse} onValueChange={setNewPHouse}>
+                    <SelectTrigger className="bg-black border-[#333] text-white"><SelectValue placeholder="Select house..." /></SelectTrigger>
+                    <SelectContent className="bg-[#111] border-[#333]">
+                      {houses.map(h => <SelectItem key={h.name} value={h.name}>{h.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Event</Label>
+                  <Select value={newPEvent} onValueChange={setNewPEvent}>
+                    <SelectTrigger className="bg-black border-[#333] text-white"><SelectValue placeholder="Select event..." /></SelectTrigger>
+                    <SelectContent className="bg-[#111] border-[#333] max-h-[200px]">
+                      {events.map(ev => <SelectItem key={ev.id} value={ev.name}>{ev.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={() => setShowAddParticipant(false)}>Cancel</Button>
+                <Button className="bg-white text-black font-semibold hover:bg-gray-200" onClick={handleAddParticipant}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Participant
+                </Button>
+              </div>
+            </div>
+          )}
           {filteredParticipantEvents.map(event => {
             const eventParticipants = participants.filter(p => p.event === event.name)
             const isEventExpanded = expandedPEvents.has(event.name)
@@ -572,6 +741,186 @@ function DataEntryPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════ */}
+      {/* LIVE PAGE MANAGEMENT TAB                     */}
+      {/* ════════════════════════════════════════════ */}
+      {activeTab === 'live' && (
+        <div className="space-y-8">
+
+          {/* Tomorrow's Events Toggle */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-[#333] pb-3">
+              <CalendarDays className="w-5 h-5 text-gray-400" />
+              <div>
+                <h3 className="text-white font-semibold">Tomorrow's Floated Events</h3>
+                <p className="text-xs text-gray-500">Toggle which events appear in the "Tomorrow's Events" section on the /live page</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {events.filter(e => e.is_floated).map(event => (
+                <div key={event.id} className="flex items-center justify-between p-4 bg-[#111] border border-[#333] rounded-lg hover:bg-black transition">
+                  <div>
+                    <div className="text-white font-medium text-sm">{event.name}</div>
+                    <div className="text-gray-500 text-xs">{event.category} • <span className="capitalize">{event.status}</span></div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-medium ${event.is_live_tomorrow ? 'text-green-400' : 'text-gray-600'}`}>
+                      {event.is_live_tomorrow ? 'LIVE' : 'OFF'}
+                    </span>
+                    <Switch
+                      checked={event.is_live_tomorrow}
+                      onCheckedChange={(val) => updateEvent({ ...event, is_live_tomorrow: val })}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Event Results Editor */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-[#333] pb-3">
+              <Trophy className="w-5 h-5 text-gray-400" />
+              <div>
+                <h3 className="text-white font-semibold">Event Results</h3>
+                <p className="text-xs text-gray-500">Set winner, runner-up, and publish results to the /live page</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {events.map(event => {
+                const hasResult = event.result && (event.result.winnerHouse || event.result.runnerUpHouse)
+
+                return (
+                  <div key={event.id} className="bg-[#111] border border-[#333] rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="text-white font-medium text-sm">{event.name}</div>
+                          <div className="text-gray-500 text-xs">{event.category}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {hasResult && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${event.result?.isPublished ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-800 text-gray-500 border border-[#333]'}`}>
+                            {event.result?.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        )}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button
+                              className="flex items-center gap-2 px-3 py-1.5 bg-[#222] text-white text-xs font-medium rounded-lg hover:bg-[#333] transition"
+                              onClick={() => setEditingEvent(event)}
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              {hasResult ? 'Edit Result' : 'Set Result'}
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                            <DialogHeader>
+                              <DialogTitle>Result: {event.name}</DialogTitle>
+                            </DialogHeader>
+                            {editingEvent && (
+                              <form onSubmit={handleUpdateEvent} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-gray-300">Result Day</Label>
+                                    <Input 
+                                      placeholder="e.g. DAY 1"
+                                      value={editingEvent.result?.resultDay || ''} 
+                                      onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, resultDay: e.target.value} as any})}
+                                      className="bg-gray-800 border-gray-600 text-white"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-gray-300">Points Awarded</Label>
+                                    <Input 
+                                      type="number"
+                                      placeholder="e.g. 100"
+                                      value={editingEvent.result?.pointsAwarded || ''} 
+                                      onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, pointsAwarded: parseInt(e.target.value)} as any})}
+                                      className="bg-gray-800 border-gray-600 text-white"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-gray-300">Winner House</Label>
+                                    <Select
+                                      value={editingEvent.result?.winnerHouse || ''}
+                                      onValueChange={(val) => setEditingEvent({...editingEvent, result: {...editingEvent.result, winnerHouse: val} as any})}
+                                    >
+                                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                                        <SelectValue placeholder="Select winner..." />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-gray-800 border-gray-600">
+                                        {houses.map(h => (
+                                          <SelectItem key={h.name} value={h.name}>{h.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-gray-300">Runner-Up House</Label>
+                                    <Select
+                                      value={editingEvent.result?.runnerUpHouse || ''}
+                                      onValueChange={(val) => setEditingEvent({...editingEvent, result: {...editingEvent.result, runnerUpHouse: val} as any})}
+                                    >
+                                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                                        <SelectValue placeholder="Select runner-up..." />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-gray-800 border-gray-600">
+                                        {houses.map(h => (
+                                          <SelectItem key={h.name} value={h.name}>{h.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+                                  <span className="text-sm text-gray-300">Publish to Live Page</span>
+                                  <Switch
+                                    checked={editingEvent.result?.isPublished || false}
+                                    onCheckedChange={(val) => setEditingEvent({...editingEvent, result: {...editingEvent.result, isPublished: val} as any})}
+                                  />
+                                </div>
+                                <DialogFooter>
+                                  <Button type="submit" className="bg-white text-black font-semibold hover:bg-gray-200 mt-4">
+                                    Save Result
+                                  </Button>
+                                </DialogFooter>
+                              </form>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+
+                    {/* Inline result preview */}
+                    {hasResult && (
+                      <div className="border-t border-[#222] px-4 py-3 bg-black/30 flex items-center gap-6 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+                          <span className="text-gray-400">Winner:</span>
+                          <span className="text-white font-medium">{event.result?.winnerHouse}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Medal className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-gray-400">Runner-Up:</span>
+                          <span className="text-white font-medium">{event.result?.runnerUpHouse}</span>
+                        </div>
+                        {event.result?.resultDay && (
+                          <span className="text-gray-500">{event.result.resultDay}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

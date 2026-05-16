@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminLayoutRouteImport } from './routes/admin/_layout'
 import { Route as AdminLayoutIndexRouteImport } from './routes/admin/_layout/index'
+import { Route as AdminLayoutUserManagementRouteImport } from './routes/admin/_layout/user-management'
 import { Route as AdminLayoutSettingsRouteImport } from './routes/admin/_layout/settings'
 import { Route as AdminLayoutParticipantsRouteImport } from './routes/admin/_layout/participants'
 import { Route as AdminLayoutLeaderboardRouteImport } from './routes/admin/_layout/leaderboard'
@@ -82,6 +83,12 @@ const AdminLayoutIndexRoute = AdminLayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
+const AdminLayoutUserManagementRoute =
+  AdminLayoutUserManagementRouteImport.update({
+    id: '/user-management',
+    path: '/user-management',
+    getParentRoute: () => AdminLayoutRoute,
+  } as any)
 const AdminLayoutSettingsRoute = AdminLayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
+  '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/': typeof AdminLayoutIndexRoute
 }
 export interface FileRoutesByTo {
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
+  '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin': typeof AdminLayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/admin/_layout/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/_layout/participants': typeof AdminLayoutParticipantsRoute
   '/admin/_layout/settings': typeof AdminLayoutSettingsRoute
+  '/admin/_layout/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/_layout/': typeof AdminLayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/admin/participants'
     | '/admin/settings'
+    | '/admin/user-management'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/admin/participants'
     | '/admin/settings'
+    | '/admin/user-management'
     | '/admin'
   id:
     | '__root__'
@@ -226,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/_layout/leaderboard'
     | '/admin/_layout/participants'
     | '/admin/_layout/settings'
+    | '/admin/_layout/user-management'
     | '/admin/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLayoutIndexRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
+    '/admin/_layout/user-management': {
+      id: '/admin/_layout/user-management'
+      path: '/user-management'
+      fullPath: '/admin/user-management'
+      preLoaderRoute: typeof AdminLayoutUserManagementRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
     '/admin/_layout/settings': {
       id: '/admin/_layout/settings'
       path: '/settings'
@@ -373,6 +393,7 @@ interface AdminLayoutRouteChildren {
   AdminLayoutLeaderboardRoute: typeof AdminLayoutLeaderboardRoute
   AdminLayoutParticipantsRoute: typeof AdminLayoutParticipantsRoute
   AdminLayoutSettingsRoute: typeof AdminLayoutSettingsRoute
+  AdminLayoutUserManagementRoute: typeof AdminLayoutUserManagementRoute
   AdminLayoutIndexRoute: typeof AdminLayoutIndexRoute
 }
 
@@ -383,6 +404,7 @@ const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
   AdminLayoutLeaderboardRoute: AdminLayoutLeaderboardRoute,
   AdminLayoutParticipantsRoute: AdminLayoutParticipantsRoute,
   AdminLayoutSettingsRoute: AdminLayoutSettingsRoute,
+  AdminLayoutUserManagementRoute: AdminLayoutUserManagementRoute,
   AdminLayoutIndexRoute: AdminLayoutIndexRoute,
 }
 
