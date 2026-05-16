@@ -4,6 +4,7 @@ export type House = {
   short: string;
   element: string;
   points2025: number;
+  points2026: number;
   pointsChange?: number;
   captain: { name: string; phone: string; instagram?: string };
   vice: { name: string; phone: string; instagram?: string };
@@ -27,6 +28,7 @@ export const houses: House[] = [
     short: "AGN",
     element: "Fire",
     points2025: 45900,
+    points2026: 0,
     pointsChange: 1200,
     captain: { name: "Shaik Abdul Hussain", phone: "+91 99941 07450" },
     vice: { name: "Charan Teja", phone: "+91 90309 18090" },
@@ -52,6 +54,7 @@ export const houses: House[] = [
     short: "DHR",
     element: "Wisdom",
     points2025: 23660,
+    points2026: 0,
     pointsChange: -300,
     captain: { name: "Libika", phone: "+91 90923 02052" },
     vice: { name: "G. Sai Charitha", phone: "+91 63054 03861" },
@@ -77,6 +80,7 @@ export const houses: House[] = [
     short: "MAR",
     element: "Wind",
     points2025: 28420,
+    points2026: 0,
     pointsChange: 450,
     captain: { name: "Harshitha G", phone: "+91 90140 43741" },
     vice: { name: "Aravind Khanna", phone: "+91 84386 98334" },
@@ -102,6 +106,7 @@ export const houses: House[] = [
     short: "RUD",
     element: "Storm",
     points2025: 45140,
+    points2026: 0,
     pointsChange: 800,
     captain: { name: "Nithish Kumar P", phone: "+91 82207 37003" },
     vice: { name: "Sivadharshan M", phone: "+91 91599 51478" },
@@ -127,6 +132,7 @@ export const houses: House[] = [
     short: "SUR",
     element: "Sun",
     points2025: 31460,
+    points2026: 0,
     pointsChange: -150,
     captain: { name: "Thanveer Aashif N", phone: "+91 93457 11740" },
     vice: { name: "Manoj", phone: "+91 93908 94487" },
@@ -152,6 +158,7 @@ export const houses: House[] = [
     short: "VAJ",
     element: "Thunder",
     points2025: 22960,
+    points2026: 0,
     pointsChange: 600,
     captain: { name: "Rahul Perumal M", phone: "+91 98412 01989" },
     vice: { name: "Theja Sri", phone: "+91 94900 31377" },

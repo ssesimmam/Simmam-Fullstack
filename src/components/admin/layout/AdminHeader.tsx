@@ -1,10 +1,12 @@
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, LogOut } from 'lucide-react'
+import { useAuth } from '@/lib/auth'
 
 import AdminMobileNav from './AdminMobileNav'
 
 export default function AdminHeader() {
+  const { user, logout } = useAuth()
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/20 backdrop-blur-2xl">
+    <header className="sticky top-0 z-40 border-b border-[#333] bg-black">
       <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <AdminMobileNav />
@@ -17,13 +19,28 @@ export default function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="glass flex h-11 w-11 items-center justify-center rounded-2xl">
+          <button className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors">
             <Search className="h-5 w-5 text-white" />
           </button>
 
-          <button className="glass flex h-11 w-11 items-center justify-center rounded-2xl">
+          <button className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors">
             <Bell className="h-5 w-5 text-white" />
           </button>
+
+          {user && (
+            <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-[#333]">
+              <div className="text-right">
+                <p className="text-sm font-medium text-white">{user.name}</p>
+                <p className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
+              </div>
+              <button
+                onClick={logout}
+                className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors"
+              >
+                <LogOut className="h-5 w-5 text-white" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

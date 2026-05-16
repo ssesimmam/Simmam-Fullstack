@@ -4,24 +4,20 @@ interface Props {
   title: string
   value: string
   icon: LucideIcon
-  accent?: 'gold' | 'red'
 }
 
 export default function StatCard({
   title,
   value,
   icon: Icon,
-  accent = 'gold',
 }: Props) {
   return (
     <div
-      className={`glass-strong rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 ${
-        accent === 'gold' ? 'neon-border' : 'neon-border-red'
-      }`}
+      className={`bg-[#111] border border-[#333] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1`}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-400">
             {title}
           </p>
 
@@ -30,8 +26,8 @@ export default function StatCard({
           </h3>
         </div>
 
-        <div className="glass flex h-14 w-14 items-center justify-center rounded-2xl">
-          <Icon className="h-7 w-7 text-yellow-400" />
+        <div className="bg-black border border-[#333] flex h-14 w-14 items-center justify-center rounded-2xl">
+          <Icon className="h-7 w-7 text-white" />
         </div>
       </div>
     </div>

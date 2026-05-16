@@ -9,10 +9,8 @@ interface Props {
 
 export default function AdminLayout({ children }: Props) {
   return (
-    <div className="min-h-screen bg-background text-white">
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.12),transparent_35%),radial-gradient(circle_at_bottom,rgba(220,20,60,0.12),transparent_35%)]" />
-
-      <div className="relative-flex">
+    <div className="min-h-screen bg-black text-white">
+      <div className="relative flex">
         <AdminSidebar />
 
         <main className="min-h-screen flex-1 lg:ml-72">

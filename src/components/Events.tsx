@@ -1,27 +1,24 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Tilt3D } from "./Tilt3D";
 import { X, Search } from "lucide-react";
 import { SectionHeader } from "./Dashboard";
-import { allEvents, type Event } from "../lib/eventsData";
+import { useData, type AdminEvent } from "../lib/store";
 
 const categories = ["All", "Tech", "Non-Tech", "Sports"];
 
 export function Events() {
-  const navigate = useNavigate();
+  const { events } = useData();
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
 
-  const handleRegister = (eventName: string) => {
-    setSelectedEvent(null);
-    navigate({ to: "/register", search: { event: eventName } });
-  };
-
-  const list = allEvents.filter((e) => {
+  const list = events.filter((e) => {
+    if (!e.is_floated) return false;
     const matchesCategory = filter === "All" || e.mainCategory === filter;
-    const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          e.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.category.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -34,6 +31,19 @@ export function Events() {
           subtitle="From algorithmic showdowns to runway spectacles — SIMMAM 2026 has a stage for every spark."
         />
 
+        {/* Global Register Button */}
+        {list.some((e) => e.registration_open) && (
+          <div className="flex justify-center mb-10">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-background font-bold shadow-[var(--shadow-glow-red)] hover:scale-105 transition-transform"
+            >
+              Go to Registration Portal
+            </Link>
+          </div>
+        )}
+
+        {/* Search */}
         <div className="relative max-w-md mx-auto mb-8">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             <Search className="w-5 h-5 text-foreground/40" />
@@ -47,6 +57,7 @@ export function Events() {
           />
         </div>
 
+        {/* Category filters */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           {categories.map((c) => (
             <button
@@ -63,6 +74,7 @@ export function Events() {
           ))}
         </div>
 
+        {/* Event grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {list.map((e, index) => (
             <Tilt3D key={`${e.name}-${e.category}-${index}`} max={10}>
@@ -70,54 +82,62 @@ export function Events() {
                 onClick={() => setSelectedEvent(e)}
                 className="group relative glass rounded-2xl p-5 hover-lift overflow-hidden h-full cursor-pointer"
               >
-              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl bg-[var(--gold)]/30 opacity-50 group-hover:opacity-90 transition" />
-              <div className="relative flex items-start justify-between">
-                <div className="p-3 rounded-xl bg-gold/10 text-gold neon-border group-hover:scale-110 transition-transform">
-                  <e.icon className="w-5 h-5" />
+                <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl bg-[var(--gold)]/30 opacity-50 group-hover:opacity-90 transition" />
+                <div className="relative flex items-start justify-between">
+                  <div className="p-3 rounded-xl bg-gold/10 text-gold neon-border group-hover:scale-110 transition-transform">
+                    {e.icon ? <e.icon className="w-5 h-5" /> : <div className="w-5 h-5 bg-gold/20 rounded" />}
+                  </div>
+                  <span className="text-[10px] tracking-[0.25em] text-foreground/50">
+                    {e.category.toUpperCase()}
+                  </span>
                 </div>
-                <span className="text-[10px] tracking-[0.25em] text-foreground/50">
-                  {e.category.toUpperCase()}
-                </span>
-              </div>
-              <div className="relative mt-5">
-                <div className="font-display text-xl font-bold text-foreground">{e.name}</div>
-              </div>
-              <button className="relative mt-5 w-full py-2.5 rounded-lg text-xs font-semibold border border-gold/30 text-gold hover:bg-gold/10 transition">
-                View Rules & Register
-              </button>
+                <div className="relative mt-5">
+                  <div className="font-display text-xl font-bold text-foreground">
+                    {e.name}
+                  </div>
+                </div>
+                <div className="relative mt-5 w-full py-2.5 rounded-lg text-xs font-semibold border border-gold/30 text-gold hover:bg-gold/10 transition text-center">
+                  View Details
+                </div>
               </div>
             </Tilt3D>
           ))}
         </div>
 
-        {/* Rules Modal */}
+        {/* ── Rules Modal ───────────────────────────────────────── */}
         {selectedEvent && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div 
+            <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setSelectedEvent(null)}
             />
-            <div className="relative w-full max-w-lg bg-[#0a0515] border border-white/10 rounded-2xl p-6 md:p-8 animate-rise-in shadow-2xl">
+            <div className="relative w-full max-w-lg bg-[#0a0515] border border-white/10 rounded-2xl p-6 md:p-8 animate-rise-in shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
               <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl opacity-20 bg-[var(--gold)] pointer-events-none" />
-              <button 
+              <button
                 onClick={() => setSelectedEvent(null)}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/5 text-foreground/50 hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
-              
+
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 rounded-xl bg-gold/10 text-gold neon-border">
-                  <selectedEvent.icon className="w-6 h-6" />
+                  {selectedEvent.icon ? <selectedEvent.icon className="w-6 h-6" /> : <div className="w-6 h-6 bg-gold/20 rounded" />}
                 </div>
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-foreground">{selectedEvent.name}</h3>
-                  <p className="text-xs tracking-[0.2em] text-gold/80 uppercase">{selectedEvent.category}</p>
+                  <h3 className="font-display text-2xl font-bold text-foreground">
+                    {selectedEvent.name}
+                  </h3>
+                  <p className="text-xs tracking-[0.2em] text-gold/80 uppercase">
+                    {selectedEvent.category}
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4 mb-8">
-                <h4 className="text-sm font-semibold text-foreground/80 border-b border-white/10 pb-2">Event Rules</h4>
+                <h4 className="text-sm font-semibold text-foreground/80 border-b border-white/10 pb-2">
+                  Event Rules
+                </h4>
                 <ul className="space-y-3">
                   {selectedEvent.rules && selectedEvent.rules.length > 0 ? (
                     selectedEvent.rules.map((rule, i) => (
@@ -127,17 +147,25 @@ export function Events() {
                       </li>
                     ))
                   ) : (
-                    <li className="text-sm text-foreground/50 italic">No specific rules listed.</li>
+                    <li className="text-sm text-foreground/50 italic">
+                      No specific rules listed.
+                    </li>
                   )}
                 </ul>
               </div>
 
-              <button
-                onClick={() => handleRegister(selectedEvent.name)}
-                className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-background hover:shadow-[var(--shadow-glow-red)] transition-all"
-              >
-                Register for this Event
-              </button>
+              {selectedEvent.registration_open ? (
+                <Link
+                  to="/register"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-background hover:shadow-[var(--shadow-glow-red)] transition-all"
+                >
+                  Register for Events
+                </Link>
+              ) : (
+                <div className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold bg-gray-600 text-gray-400 cursor-not-allowed">
+                  Registration Closed
+                </div>
+              )}
             </div>
           </div>
         )}
