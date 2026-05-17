@@ -13,6 +13,8 @@ export interface EventResult {
 
 export interface AdminEvent extends Event {
   id: string;
+  venue?: string;
+  time?: string;
   is_floated: boolean;
   is_live_tomorrow: boolean;
   registration_open: boolean;

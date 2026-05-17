@@ -110,10 +110,8 @@ function DataEntryPage() {
       name: newEventName.trim(),
       category: newEventCategory.trim(),
       icon: events[0]?.icon || (() => null),
-      description: '',
-      venue: '',
-      date: '',
-      time: '',
+      mainCategory: 'Non-Tech',
+      rules: [],
       is_floated: true,
       is_live_tomorrow: false,
       registration_open: true,
@@ -336,6 +334,14 @@ function DataEntryPage() {
                         <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Participants</div>
                         <div className="text-white text-sm">{event.participantCount}</div>
                       </div>
+                      <div className="bg-black border border-[#333] rounded-lg p-3">
+                        <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Venue</div>
+                        <div className="text-white text-sm">{event.venue || '—'}</div>
+                      </div>
+                      <div className="bg-black border border-[#333] rounded-lg p-3">
+                        <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Time</div>
+                        <div className="text-white text-sm">{event.time || '—'}</div>
+                      </div>
                     </div>
 
                     <Dialog>
@@ -394,6 +400,24 @@ function DataEntryPage() {
                                   type="number"
                                   value={editingEvent.participantCount} 
                                   onChange={(e) => setEditingEvent({...editingEvent, participantCount: parseInt(e.target.value)})}
+                                  className="bg-gray-800 border-gray-600 text-white"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-gray-300">Venue</Label>
+                                <Input 
+                                  placeholder="e.g. Main Auditorium"
+                                  value={editingEvent.venue || ''} 
+                                  onChange={(e) => setEditingEvent({...editingEvent, venue: e.target.value})}
+                                  className="bg-gray-800 border-gray-600 text-white"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-gray-300">Time</Label>
+                                <Input 
+                                  placeholder="e.g. 10:00 AM - 12:00 PM"
+                                  value={editingEvent.time || ''} 
+                                  onChange={(e) => setEditingEvent({...editingEvent, time: e.target.value})}
                                   className="bg-gray-800 border-gray-600 text-white"
                                 />
                               </div>
