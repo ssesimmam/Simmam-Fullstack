@@ -95,32 +95,73 @@ const mapEventStatus = (status?: string): AdminEvent['status'] => {
 
 const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>>): AdminEvent[] => {
   const fallback = initialEvents[0];
-  return remoteEvents.map((remoteEvent, index) => {
-    const staticEvent = initialEvents.find((event) => event.name.toLowerCase() === remoteEvent.name.toLowerCase());
-    const base = staticEvent || fallback;
+  
+  const mappedInitial = initialEvents.map((staticEvent, index) => {
+    const remoteEvent = remoteEvents.find((re) => re.name.toLowerCase() === staticEvent.name.toLowerCase());
+
+    if (remoteEvent) {
+      return {
+        ...staticEvent,
+        id: remoteEvent.id,
+        name: remoteEvent.name,
+        category: remoteEvent.category || staticEvent.category,
+        mainCategory: (remoteEvent.main_category as any) || staticEvent.mainCategory,
+        venue: remoteEvent.venue || (staticEvent as any).venue,
+        time: remoteEvent.time_slot || staticEvent.time,
+        date: remoteEvent.date || (staticEvent as any).date,
+        is_floated: remoteEvent.is_floated ?? true,
+        is_live_tomorrow: false,
+        registration_open: remoteEvent.registration_open ?? true,
+        checkin_enabled: remoteEvent.checkin_enabled ?? false,
+        status: mapEventStatus(remoteEvent.status),
+        participantCount: remoteEvent.capacity ?? 0,
+        prizeInfo: remoteEvent.prize_info || 'Trophy + Certificate',
+        result: undefined,
+        icon: staticEvent.icon,
+        rules: staticEvent.rules,
+        description: remoteEvent.description || staticEvent.description,
+        order: (staticEvent as any).order ?? index + 1,
+      };
+    }
 
     return {
-      ...base,
+      ...staticEvent,
+      id: `event-${index}`,
+      is_floated: false,
+      is_live_tomorrow: false,
+      registration_open: false,
+      checkin_enabled: false,
+      status: 'upcoming',
+      participantCount: 0,
+      prizeInfo: 'Trophy + Certificate',
+      result: undefined,
+    };
+  });
+
+  const newRemoteEvents = remoteEvents
+    .filter((re) => !initialEvents.some((staticEvent) => staticEvent.name.toLowerCase() === re.name.toLowerCase()))
+    .map((remoteEvent, index) => ({
+      ...fallback,
       id: remoteEvent.id,
       name: remoteEvent.name,
-      category: remoteEvent.category || base.category,
-      mainCategory: (remoteEvent.main_category as any) || base.mainCategory,
-      venue: remoteEvent.venue || (base as any).venue,
+      category: remoteEvent.category || fallback.category,
+      mainCategory: (remoteEvent.main_category as any) || fallback.mainCategory,
+      venue: remoteEvent.venue || (fallback as any).venue,
       time: remoteEvent.time_slot || undefined,
+      date: remoteEvent.date || undefined,
       is_floated: remoteEvent.is_floated ?? true,
       is_live_tomorrow: false,
       registration_open: remoteEvent.registration_open ?? true,
       checkin_enabled: remoteEvent.checkin_enabled ?? false,
       status: mapEventStatus(remoteEvent.status),
-      participantCount: 0,
+      participantCount: remoteEvent.capacity ?? 0,
       prizeInfo: remoteEvent.prize_info || 'Trophy + Certificate',
       result: undefined,
-      icon: base.icon,
-      rules: base.rules,
-      description: remoteEvent.description || base.description,
-      order: base.order ?? index + 1,
-    };
-  });
+      description: remoteEvent.description || fallback.description,
+      order: 1000 + index,
+    }));
+
+  return [...mappedInitial, ...newRemoteEvents];
 };
 
 // Participants are populated from the admin API; remove built-in mock generation.
@@ -149,13 +190,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const storedPointsHistory = localStorage.getItem('simmam_points_history');
 
     const initialAdminEvents = initializeEvents();
-    
+
     if (storedEvents) {
       const parsedEvents = JSON.parse(storedEvents);
       const reattachedEvents = parsedEvents.map((e: any) => {
         const staticEvent = initialEvents.find(se => se.name === e.name);
-        return { 
-          ...e, 
+        return {
+          ...e,
           icon: staticEvent?.icon || initialEvents[0].icon // Fallback to first static icon
         };
       });
@@ -305,9 +346,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateHousePoints = (houseName: string, points: number, reason?: string, issuedBy: string = 'Admin') => {
     const newHouses = houses.map(h => {
       if (h.name === houseName) {
-        return { 
-          ...h, 
-          points2026: Number(h.points2026 ?? 0) + Number(points) 
+        return {
+          ...h,
+          points2026: Number(h.points2026 ?? 0) + Number(points)
         };
       }
       return h;

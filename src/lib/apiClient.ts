@@ -29,6 +29,7 @@ export type ApiRegistration = {
   ticket_code: string
   status: string
   registered_at: string
+  checked_in?: boolean
 }
 
 export type CreateRegistrationPayload = {

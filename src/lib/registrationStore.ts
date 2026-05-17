@@ -18,6 +18,7 @@ export type Registration = {
   category: string
   registeredAt: string
   ticketCode: string
+  checkedIn?: boolean
 }
 
 const USER_KEY = 'simmam_user'
@@ -84,6 +85,7 @@ export async function syncUserRegistrations(email: string): Promise<Registration
     category: item.category,
     registeredAt: item.registered_at,
     ticketCode: item.ticket_code,
+    checkedIn: !!item.checked_in,
   }))
 
   saveUserRegistrations(email, mapped)

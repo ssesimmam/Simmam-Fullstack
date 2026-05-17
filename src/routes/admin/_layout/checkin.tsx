@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { CheckCircle, Search } from 'lucide-react'
 
@@ -43,18 +43,8 @@ function CheckInPage() {
     }
   }
 
-  useEffect(() => {
-    void loadReport()
-  }, [])
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim() && !selectedEvent.trim()) {
-      setRows([])
-      return
-    }
-
+  const loadData = async () => {
     setLoading(true)
-
     try {
       const registrations = await fetchAdminRegistrations({
         search: searchQuery || undefined,
@@ -63,11 +53,20 @@ function CheckInPage() {
       setRows(registrations)
       await loadReport()
     } catch (error: any) {
-      toast.error(error?.message || 'Search failed')
+      toast.error(error?.message || 'Failed to load data')
       setRows([])
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    void loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleSearch = () => {
+    void loadData()
   }
 
   const handleMarkAttendance = async (registrationId: string) => {
@@ -94,126 +93,125 @@ function CheckInPage() {
     <div className="space-y-6">
       <PageHeader
         title="Attendance / Check-In"
-        subtitle="Search participants, mark attendance, and monitor attendance reports"
+        subtitle="Mark participant attendance. Check In to confirm OD eligibility."
       />
 
-      <div className="bg-[#111] border border-[#333] rounded-lg p-4 grid grid-cols-1 lg:grid-cols-4 gap-3">
-        <div className="relative lg:col-span-2">
+      {/* Search bar */}
+      <div className="bg-[#111] border border-[#333] rounded-lg p-4 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <Input
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search participant by name or email"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Search by participant name or email..."
             className="pl-10 bg-black border-[#333] text-white"
           />
         </div>
-
         <Input
           value={selectedEvent}
-          onChange={(event) => setSelectedEvent(event.target.value)}
+          onChange={(e) => setSelectedEvent(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           list="checkin-events"
-          placeholder="Filter by event"
-          className="bg-black border-[#333] text-white"
+          placeholder="Filter by event..."
+          className="bg-black border-[#333] text-white sm:w-56"
         />
-
         <datalist id="checkin-events">
-          {eventSuggestions.map((eventName) => (
-            <option key={eventName} value={eventName} />
+          {eventSuggestions.map((name) => (
+            <option key={name} value={name} />
           ))}
         </datalist>
-
-        <Button className="bg-white text-black hover:bg-gray-200" onClick={handleSearch}>
-          Search Participant
+        <Button className="bg-white text-black hover:bg-gray-200 shrink-0" onClick={handleSearch}>
+          <Search className="w-4 h-4 mr-2" /> Search
         </Button>
       </div>
 
+      {/* Participant list */}
       <div className="bg-[#111] border border-[#333] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#333] text-sm text-gray-400">Search Results</div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-black/40 text-gray-400">
-              <tr>
-                <th className="text-left p-3">Registration ID</th>
-                <th className="text-left p-3">Participant</th>
-                <th className="text-left p-3">Event</th>
-                <th className="text-left p-3">Status</th>
-                <th className="text-right p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-4 text-gray-500">Loading...</td>
-                </tr>
-              ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-4 text-gray-500">No matching participants found.</td>
-                </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr key={row.registration_id} className="border-t border-[#222] text-white/90">
-                    <td className="p-3 font-mono text-xs text-gray-400">{row.registration_id.slice(0, 8)}</td>
-                    <td className="p-3">{row.participant_name}</td>
-                    <td className="p-3">{row.event_name}</td>
-                    <td className="p-3">
-                      <span className={`text-xs uppercase tracking-wide ${row.checked_in ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {row.checked_in ? 'Checked In' : 'Pending'}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-end">
-                        <Button
-                          className="bg-white text-black hover:bg-gray-200"
-                          size="sm"
-                          onClick={() => handleMarkAttendance(row.registration_id)}
-                          disabled={row.checked_in}
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          {row.checked_in ? 'Checked In' : 'Mark Attendance'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="px-4 py-3 border-b border-[#333] flex items-center justify-between">
+          <span className="text-sm text-gray-400">Participants</span>
+          <span className="text-xs text-gray-600">{rows.length} record{rows.length !== 1 ? 's' : ''}</span>
         </div>
+
+        {loading ? (
+          <div className="divide-y divide-[#222]">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-4 animate-pulse">
+                <div className="space-y-2">
+                  <div className="h-4 w-40 bg-white/10 rounded" />
+                  <div className="h-3 w-28 bg-white/6 rounded" />
+                </div>
+                <div className="h-9 w-24 bg-white/8 rounded-lg" />
+              </div>
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="px-4 py-10 text-center text-gray-500 text-sm">
+            No participants found.
+          </div>
+        ) : (
+          <div className="divide-y divide-[#1a1a1a]">
+            {rows.map((row) => (
+              <div
+                key={row.registration_id}
+                className="flex items-center justify-between px-4 py-4 hover:bg-black/30 transition"
+              >
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">{row.participant_name}</p>
+                  <p className="text-gray-500 text-xs mt-0.5 truncate">{row.event_name}</p>
+                </div>
+
+                <div className="shrink-0 ml-4">
+                  {row.checked_in ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 text-xs font-bold uppercase tracking-wide">
+                      <CheckCircle className="w-3.5 h-3.5" /> Checked In
+                    </span>
+                  ) : (
+                    <button
+                      className="px-4 py-2 bg-white hover:bg-gray-200 text-black text-xs font-bold rounded-lg transition"
+                      onClick={() => handleMarkAttendance(row.registration_id)}
+                    >
+                      Check In
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="bg-[#111] border border-[#333] rounded-lg p-4">
-        <h3 className="text-white font-semibold mb-3">Attendance Reports</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-gray-400">
-              <tr>
-                <th className="text-left p-2">Event Name</th>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Total Registrations</th>
-                <th className="text-left p-2">Checked In</th>
-                <th className="text-left p-2">Attendance Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendanceReport.length === 0 ? (
+      {/* Attendance Report */}
+      {attendanceReport.length > 0 && (
+        <div className="bg-[#111] border border-[#333] rounded-lg p-4">
+          <h3 className="text-white font-semibold mb-3 text-sm">Attendance Report</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-gray-400">
                 <tr>
-                  <td colSpan={5} className="p-3 text-gray-500">Run a search to refresh attendance report.</td>
+                  <th className="text-left p-2">Event</th>
+                  <th className="text-left p-2">Date</th>
+                  <th className="text-left p-2">Total</th>
+                  <th className="text-left p-2">Checked In</th>
+                  <th className="text-left p-2">Rate</th>
                 </tr>
-              ) : (
-                attendanceReport.map((item) => (
+              </thead>
+              <tbody>
+                {attendanceReport.map((item) => (
                   <tr key={`${item.event_name}-${item.event_date}`} className="border-t border-[#222] text-white/90">
                     <td className="p-2">{item.event_name}</td>
-                    <td className="p-2">{item.event_date || '-'}</td>
+                    <td className="p-2 text-gray-400">{item.event_date || '-'}</td>
                     <td className="p-2">{item.total}</td>
-                    <td className="p-2">{item.checked_in}</td>
-                    <td className="p-2">{item.attendance_rate}%</td>
+                    <td className="p-2 text-green-400">{item.checked_in}</td>
+                    <td className="p-2 text-[#D4AF37]">{item.attendance_rate}%</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
+

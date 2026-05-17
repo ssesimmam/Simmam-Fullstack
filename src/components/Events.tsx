@@ -14,7 +14,6 @@ export function Events() {
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
 
   const list = events.filter((e) => {
-    if (!e.is_floated) return false;
     const matchesCategory = filter === "All" || e.mainCategory === filter;
     const matchesSearch =
       e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,11 +62,10 @@ export function Events() {
             <button
               key={c}
               onClick={() => setFilter(c)}
-              className={`px-4 py-2 rounded-full text-xs tracking-wider transition ${
-                filter === c
+              className={`px-4 py-2 rounded-full text-xs tracking-wider transition ${filter === c
                   ? "bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-background font-semibold shadow-[var(--shadow-glow-red)]"
                   : "glass text-foreground/70 hover:text-gold"
-              }`}
+                }`}
             >
               {c}
             </button>
@@ -96,8 +94,19 @@ export function Events() {
                     {e.name}
                   </div>
                 </div>
-                <div className="relative mt-5 w-full py-2.5 rounded-lg text-xs font-semibold border border-gold/30 text-gold hover:bg-gold/10 transition text-center">
-                  View Details
+                <div className="relative mt-5 w-full flex gap-2">
+                  <div className="flex-1 py-2.5 rounded-lg text-xs font-semibold border border-[var(--gold)]/30 text-[var(--gold)] hover:bg-[var(--gold)]/10 transition text-center flex items-center justify-center">
+                    View Details
+                  </div>
+                  {e.registration_open && (
+                    <Link
+                      to="/register"
+                      onClick={(ev) => ev.stopPropagation()}
+                      className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-white hover:opacity-90 transition text-center flex items-center justify-center"
+                    >
+                      Register Now
+                    </Link>
+                  )}
                 </div>
               </div>
             </Tilt3D>
