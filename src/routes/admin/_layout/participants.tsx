@@ -1,30 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
-import { useData, type Participant } from '@/lib/store'
+import { useData } from '@/lib/store'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useState } from 'react'
-import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { toast } from 'sonner'
+import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight } from 'lucide-react'
 
 export const Route = createFileRoute('/admin/_layout/participants')({
   component: ParticipantsPage,
@@ -32,16 +12,13 @@ export const Route = createFileRoute('/admin/_layout/participants')({
 
 function ParticipantsPage() {
   const { hasPermission } = useAuth()
-  const { participants, houses, events, updateParticipant } = useData()
+  const { participants, houses, events } = useData()
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [expandedHouses, setExpandedHouses] = useState<Set<string>>(new Set())
-  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
 
   if (!hasPermission('participants', 'read')) {
     return <AccessDenied />
   }
-
-  const canEdit = hasPermission('participants', 'update')
 
   const totalParticipants = participants.length
   const checkedInCount = participants.filter(p => p.checkIn).length
@@ -64,20 +41,6 @@ function ParticipantsPage() {
       newExpanded.add(key)
     }
     setExpandedHouses(newExpanded)
-  }
-
-  const handleUpdateParticipant = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (editingParticipant) {
-      updateParticipant(editingParticipant)
-      setEditingParticipant(null)
-      toast.success('Participant updated successfully')
-    }
-  }
-
-  const handleDeleteParticipant = (participant: Participant) => {
-    updateParticipant({ ...participant, status: 'waitlisted' as const })
-    toast.success(`${participant.name} moved to waitlisted`)
   }
 
   return (
@@ -229,123 +192,6 @@ function ParticipantsPage() {
                                       </div>
                                     ) : (
                                       <span className="text-gray-600 text-sm">Not checked in</span>
-                                    )}
-
-                                    {canEdit && (
-                                      <div className="flex items-center gap-1 ml-2">
-                                        <Dialog>
-                                          <DialogTrigger asChild>
-                                            <button
-                                              className="p-1.5 text-gray-500 hover:text-white transition"
-                                              onClick={() => setEditingParticipant(participant)}
-                                            >
-                                              <Edit className="w-3.5 h-3.5" />
-                                            </button>
-                                          </DialogTrigger>
-                                          <DialogContent className="bg-gray-900 border-gray-700 text-white">
-                                            <DialogHeader>
-                                              <DialogTitle>Edit Participant: {participant.name}</DialogTitle>
-                                            </DialogHeader>
-                                            {editingParticipant && (
-                                              <form onSubmit={handleUpdateParticipant} className="space-y-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">Name</Label>
-                                                    <Input
-                                                      value={editingParticipant.name}
-                                                      onChange={(e) => setEditingParticipant({...editingParticipant, name: e.target.value})}
-                                                      className="bg-gray-800 border-gray-600 text-white"
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">Reg No</Label>
-                                                    <Input
-                                                      value={editingParticipant.regNo}
-                                                      onChange={(e) => setEditingParticipant({...editingParticipant, regNo: e.target.value})}
-                                                      className="bg-gray-800 border-gray-600 text-white"
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">Email</Label>
-                                                    <Input
-                                                      value={editingParticipant.email}
-                                                      onChange={(e) => setEditingParticipant({...editingParticipant, email: e.target.value})}
-                                                      className="bg-gray-800 border-gray-600 text-white"
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">House</Label>
-                                                    <Select
-                                                      value={editingParticipant.house}
-                                                      onValueChange={(val) => setEditingParticipant({...editingParticipant, house: val})}
-                                                    >
-                                                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                                                        <SelectValue />
-                                                      </SelectTrigger>
-                                                      <SelectContent className="bg-gray-800 border-gray-600">
-                                                        {houses.map(h => (
-                                                          <SelectItem key={h.name} value={h.name}>{h.name}</SelectItem>
-                                                        ))}
-                                                      </SelectContent>
-                                                    </Select>
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">Event</Label>
-                                                    <Select
-                                                      value={editingParticipant.event}
-                                                      onValueChange={(val) => setEditingParticipant({...editingParticipant, event: val})}
-                                                    >
-                                                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                                                        <SelectValue />
-                                                      </SelectTrigger>
-                                                      <SelectContent className="bg-gray-800 border-gray-600">
-                                                        {events.map(ev => (
-                                                          <SelectItem key={ev.id} value={ev.name}>{ev.name}</SelectItem>
-                                                        ))}
-                                                      </SelectContent>
-                                                    </Select>
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-gray-300">Status</Label>
-                                                    <Select
-                                                      value={editingParticipant.status}
-                                                      onValueChange={(val: any) => setEditingParticipant({...editingParticipant, status: val})}
-                                                    >
-                                                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                                                        <SelectValue />
-                                                      </SelectTrigger>
-                                                      <SelectContent className="bg-gray-800 border-gray-600">
-                                                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                                                        <SelectItem value="pending">Pending</SelectItem>
-                                                        <SelectItem value="waitlisted">Waitlisted</SelectItem>
-                                                      </SelectContent>
-                                                    </Select>
-                                                  </div>
-                                                </div>
-                                                <div className="flex items-center justify-between pt-2">
-                                                  <span className="text-sm text-gray-300">Checked In</span>
-                                                  <Switch
-                                                    checked={editingParticipant.checkIn}
-                                                    onCheckedChange={(val) => setEditingParticipant({...editingParticipant, checkIn: val})}
-                                                  />
-                                                </div>
-                                                <DialogFooter>
-                                                  <Button type="submit" className="bg-white text-black font-semibold hover:bg-gray-200 mt-4">
-                                                    Save Changes
-                                                  </Button>
-                                                </DialogFooter>
-                                              </form>
-                                            )}
-                                          </DialogContent>
-                                        </Dialog>
-                                        <button
-                                          className="p-1.5 text-gray-500 hover:text-red-400 transition"
-                                          onClick={() => handleDeleteParticipant(participant)}
-                                          title="Move to waitlisted"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
                                     )}
                                   </div>
                                 </div>

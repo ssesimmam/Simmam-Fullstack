@@ -9,6 +9,8 @@ import {
     Users,
     CheckCircle,
     UserCog,
+    Database,
+    UsersRound,
 } from 'lucide-react'
 
 import { Link } from '@tanstack/react-router'
@@ -65,6 +67,11 @@ const MENU_ITEMS = {
       icon: CalendarDays,
     },
     {
+      title: 'Data Entry',
+      href: '/admin/data-entry',
+      icon: Database,
+    },
+    {
       title: 'Leaderboard',
       href: '/admin/leaderboard',
       icon: Trophy,
@@ -78,6 +85,11 @@ const MENU_ITEMS = {
       title: 'Check-In',
       href: '/admin/checkin',
       icon: CheckCircle,
+    },
+    {
+      title: 'User Management',
+      href: '/admin/user-management',
+      icon: UsersRound,
     },
     {
       title: 'Settings',

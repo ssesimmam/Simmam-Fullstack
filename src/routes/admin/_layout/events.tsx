@@ -8,26 +8,9 @@ import {
   Search, 
   Users, 
   Clock,
-  Edit
+  MapPin
 } from 'lucide-react'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
@@ -36,10 +19,10 @@ export const Route = createFileRoute('/admin/_layout/events')({
 })
 
 function EventsPage() {
-  const { hasPermission } = useAuth()
+  const { user, hasPermission } = useAuth()
+  const isDev = user?.role === 'developer_admin'
   const { events, updateEvent } = useData()
   const [searchQuery, setSearchQuery] = useState('')
-  const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null)
 
   if (!hasPermission('events', 'read')) {
     return <AccessDenied />
@@ -69,15 +52,6 @@ function EventsPage() {
     )
   }
 
-  const handleUpdateEvent = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (editingEvent) {
-      updateEvent(editingEvent)
-      setEditingEvent(null)
-      toast.success('Event updated successfully')
-    }
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -105,125 +79,6 @@ function EventsPage() {
           >
             <div className="flex justify-between items-start mb-4">
               <div className="text-sm text-gray-400 uppercase tracking-wide">{event.category}</div>
-              {hasPermission('events', 'update') && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button 
-                      className="p-1 text-gray-400 hover:text-white"
-                      onClick={() => setEditingEvent(event)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-gray-900 border-gray-700 text-white">
-                    <DialogHeader>
-                      <DialogTitle>Edit Event: {event.name}</DialogTitle>
-                    </DialogHeader>
-                    {editingEvent && (
-                      <form onSubmit={handleUpdateEvent} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-gray-300">Event Name</Label>
-                            <Input 
-                              value={editingEvent.name} 
-                              onChange={(e) => setEditingEvent({...editingEvent, name: e.target.value})}
-                              className="bg-gray-800 border-gray-600 text-white"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-gray-300">Category</Label>
-                            <Input 
-                              value={editingEvent.category} 
-                              onChange={(e) => setEditingEvent({...editingEvent, category: e.target.value})}
-                              className="bg-gray-800 border-gray-600 text-white"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-gray-300">Status</Label>
-                            <Select 
-                              value={editingEvent.status} 
-                              onValueChange={(val: any) => setEditingEvent({...editingEvent, status: val})}
-                            >
-                              <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-gray-600">
-                                <SelectItem value="upcoming">Upcoming</SelectItem>
-                                <SelectItem value="ongoing">Ongoing</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-gray-300">Participant Count</Label>
-                            <Input 
-                              type="number"
-                              value={editingEvent.participantCount} 
-                              onChange={(e) => setEditingEvent({...editingEvent, participantCount: parseInt(e.target.value)})}
-                              className="bg-gray-800 border-gray-600 text-white"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-4 pt-4 border-t border-gray-700 mt-4">
-                          <h4 className="font-semibold text-white">Event Results</h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-gray-300">Result Day</Label>
-                              <Input 
-                                placeholder="e.g. DAY 1"
-                                value={editingEvent.result?.resultDay || ''} 
-                                onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, resultDay: e.target.value} as any})}
-                                className="bg-gray-800 border-gray-600 text-white"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-gray-300">Points Awarded</Label>
-                              <Input 
-                                type="number"
-                                placeholder="e.g. 100"
-                                value={editingEvent.result?.pointsAwarded || ''} 
-                                onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, pointsAwarded: parseInt(e.target.value)} as any})}
-                                className="bg-gray-800 border-gray-600 text-white"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-gray-300">Winner House</Label>
-                              <Input 
-                                placeholder="e.g. Agniyas"
-                                value={editingEvent.result?.winnerHouse || ''} 
-                                onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, winnerHouse: e.target.value} as any})}
-                                className="bg-gray-800 border-gray-600 text-white"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-gray-300">Runner-Up House</Label>
-                              <Input 
-                                placeholder="e.g. Rudras"
-                                value={editingEvent.result?.runnerUpHouse || ''} 
-                                onChange={(e) => setEditingEvent({...editingEvent, result: {...editingEvent.result, runnerUpHouse: e.target.value} as any})}
-                                className="bg-gray-800 border-gray-600 text-white"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">Publish Results</span>
-                            <Switch
-                              checked={editingEvent.result?.isPublished || false}
-                              onCheckedChange={(val) => setEditingEvent({...editingEvent, result: {...editingEvent.result, isPublished: val} as any})}
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit" className="bg-white text-black font-semibold hover:bg-gray-200 mt-4">
-                            Save Changes
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    )}
-                  </DialogContent>
-                </Dialog>
-              )}
             </div>
 
             <h3 className="text-lg font-semibold text-white mb-2">{event.name}</h3>
@@ -255,7 +110,24 @@ function EventsPage() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[#333] flex items-center justify-between text-sm text-gray-500">
+            {isDev && (event.venue || event.time) && (
+              <div className="mt-4 pt-3 border-t border-[#333] space-y-1.5">
+                {event.venue && (
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <MapPin className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{event.venue}</span>
+                  </div>
+                )}
+                {event.time && (
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Clock className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{event.time}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className={`${isDev && (event.venue || event.time) ? 'mt-3' : 'mt-4'} pt-4 border-t border-[#333] flex items-center justify-between text-sm text-gray-500`}>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 <span>{event.participantCount}</span>
