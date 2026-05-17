@@ -132,6 +132,12 @@ app.get('/api/admin/houses', async (_req, res) => {
   }
 })
 
+let inMemoryAdminSettings = {
+  festival_status: 'pre',
+  registrations_open: true,
+  coordinator_assignments: {} as any,
+}
+
 app.get('/api/admin/settings', async (_req, res) => {
   try {
     const { data, error } = await supabase
@@ -140,10 +146,22 @@ app.get('/api/admin/settings', async (_req, res) => {
       .limit(1)
       .single()
 
-    if (error && error.code === 'PGRST116') {
-      return res.json({ settings: DEFAULT_ADMIN_SETTINGS })
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.json({ settings: DEFAULT_ADMIN_SETTINGS })
+      }
+      if (error.code === 'PGRST205' || error.message?.includes('admin_settings')) {
+        console.warn('Table admin_settings not found, falling back to in-memory settings.')
+        return res.json({
+          settings: {
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          },
+        })
+      }
+      throw error
     }
-    if (error) throw error
 
     res.json({
       settings: {
@@ -180,7 +198,24 @@ app.post('/api/admin/settings', async (req, res) => {
       .select('festival_status,registrations_open,coordinator_assignments')
       .single()
 
-    if (error) throw error
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('admin_settings')) {
+        console.warn('Table admin_settings not found, updating in-memory settings.')
+        inMemoryAdminSettings = {
+          festival_status: festivalStatus,
+          registrations_open: registrationsOpen,
+          coordinator_assignments: coordinatorAssignments || {},
+        }
+        return res.json({
+          settings: {
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          },
+        })
+      }
+      throw error
+    }
 
     res.json({
       settings: {
