@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
 import { useData, AdminEvent, type Participant } from '@/lib/store'
+import { createAdminEvent, updateAdminEvent, createAdminParticipant, updateAdminParticipant } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useState } from 'react'
@@ -91,20 +92,41 @@ function DataEntryPage() {
     setExpandedEvents(newExpanded)
   }
 
-  const handleUpdateEvent = (e: React.FormEvent) => {
+  const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingEvent) {
+    if (!editingEvent) return
+
+    const payload = {
+      name: editingEvent.name,
+      category: editingEvent.category,
+      description: editingEvent.description,
+      date: (editingEvent as any).date,
+      time_slot: editingEvent.time,
+      venue: editingEvent.venue,
+      capacity: editingEvent.participantCount,
+      registration_open: editingEvent.registration_open,
+      checkin_enabled: editingEvent.checkin_enabled,
+      is_floated: editingEvent.is_floated,
+      status: editingEvent.status,
+    }
+
+    try {
+      await updateAdminEvent(editingEvent.id, payload)
       updateEvent(editingEvent)
       setEditingEvent(null)
       toast.success('Event updated successfully')
+    } catch (error: any) {
+      setEditingEvent(null)
+      toast.error(error?.message || 'Failed to update event')
     }
   }
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!newEventName.trim() || !newEventCategory.trim()) {
       toast.error('Event name and category are required')
       return
     }
+
     const newEvent: AdminEvent = {
       id: `event-${Date.now()}`,
       name: newEventName.trim(),
@@ -121,7 +143,34 @@ function DataEntryPage() {
       prizeInfo: 'Trophy + Certificate',
       result: undefined,
     }
-    addEvent(newEvent)
+
+    try {
+      const created = await createAdminEvent({
+        name: newEvent.name,
+        description: newEvent.description || '',
+        category: newEvent.category,
+        main_category: newEvent.mainCategory,
+        date: (newEvent as any).date || new Date().toISOString().slice(0, 10),
+        time_slot: newEvent.time || '00:00',
+        venue: newEvent.venue || 'TBD',
+        capacity: 0,
+      })
+
+      addEvent({
+        ...newEvent,
+        id: created.id,
+        is_floated: created.is_floated ?? newEvent.is_floated,
+        registration_open: created.registration_open ?? newEvent.registration_open,
+        checkin_enabled: created.checkin_enabled ?? newEvent.checkin_enabled,
+        status: created.status === 'live' ? 'ongoing' : created.status || newEvent.status,
+        venue: created.venue || newEvent.venue,
+        time: created.time_slot || newEvent.time,
+      })
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create event')
+      return
+    }
+
     setNewEventName('')
     setNewEventCategory('')
     setShowAddEvent(false)
@@ -148,25 +197,63 @@ function DataEntryPage() {
     setExpandedPHouses(newExpanded)
   }
 
-  const handleUpdateParticipant = (e: React.FormEvent) => {
+  const handleUpdateParticipant = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingParticipant) {
-      updateParticipant(editingParticipant)
+    if (!editingParticipant) return
+
+    try {
+      const result = await updateAdminParticipant(editingParticipant.id, {
+        status: editingParticipant.status,
+        event_name: editingParticipant.event,
+        email: editingParticipant.email,
+        name: editingParticipant.name,
+        register_number: editingParticipant.regNo,
+        house: editingParticipant.house,
+      })
+
+      // Map API response back to Participant shape
+      const mapped: Participant = {
+        id: result.registration_id,
+        name: result.participant_name,
+        regNo: result.reg_no || '',
+        email: result.email || editingParticipant.email,
+        house: result.house || editingParticipant.house,
+        event: result.event_name,
+        status: (result.registration_status as any) || editingParticipant.status,
+        checkIn: !!result.checked_in,
+        certificate: false,
+      }
+
+      updateParticipant(mapped)
       setEditingParticipant(null)
       toast.success('Participant updated successfully')
+    } catch (error: any) {
+      setEditingParticipant(null)
+      toast.error(error?.message || 'Failed to update participant')
     }
   }
 
-  const handleDeleteParticipant = (participant: Participant) => {
-    updateParticipant({ ...participant, status: 'waitlisted' as const })
-    toast.success(`${participant.name} moved to waitlisted`)
+  const handleDeleteParticipant = async (participant: Participant) => {
+    try {
+      await updateAdminParticipant(participant.id, { status: 'waitlisted' })
+      updateParticipant({ ...participant, status: 'waitlisted' })
+      toast.success(`${participant.name} moved to waitlisted`)
+    } catch (error: any) {
+      toast.error(error?.message || `Failed to move ${participant.name} to waitlisted`)
+    }
   }
 
-  const handleAddParticipant = () => {
+  const handleAddParticipant = async () => {
     if (!newPName.trim() || !newPRegNo.trim() || !newPHouse || !newPEvent) {
       toast.error('Name, Reg No, House, and Event are required')
       return
     }
+
+    if (!newPEmail.trim()) {
+      toast.error('Email is required to persist participants to the backend')
+      return
+    }
+
     const newP: Participant = {
       id: `p-${Date.now()}`,
       name: newPName.trim(),
@@ -178,7 +265,28 @@ function DataEntryPage() {
       checkIn: false,
       certificate: false,
     }
-    addParticipant(newP)
+
+    try {
+      const created = await createAdminParticipant({
+        email: newP.email,
+        name: newP.name,
+        register_number: newP.regNo,
+        house: newP.house,
+        event_name: newP.event,
+      })
+
+      addParticipant({
+        ...newP,
+        id: created.registration_id,
+        event: created.event_name,
+        status: created.registration_status as any,
+        checkIn: !!created.checked_in,
+      })
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to add participant')
+      return
+    }
+
     setNewPName('')
     setNewPRegNo('')
     setNewPEmail('')
@@ -951,20 +1059,30 @@ function DataEntryPage() {
                     <Button
                       disabled={!liveParticipantToAdd}
                       className="bg-white text-black font-semibold hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
-                      onClick={() => {
+                          onClick={async () => {
                         const source = participants.find(p => p.id === liveParticipantToAdd)
-                        if (source) {
-                          const newP: Participant = {
-                            ...source,
-                            id: `p-${Date.now()}`,
-                            event: liveSelectedEvent,
-                            status: 'confirmed',
-                            checkIn: false,
+                        if (!source) return
+
+                        try {
+                          const updated = await updateAdminParticipant(source.id, { event_name: liveSelectedEvent, status: 'confirmed' })
+
+                          const mapped: Participant = {
+                            id: updated.registration_id,
+                            name: updated.participant_name,
+                            regNo: updated.reg_no || source.regNo,
+                            email: updated.email || source.email,
+                            house: updated.house || source.house,
+                            event: updated.event_name,
+                            status: (updated.registration_status as any) || 'confirmed',
+                            checkIn: !!updated.checked_in,
                             certificate: false,
                           }
-                          addParticipant(newP)
+
+                          addParticipant(mapped)
                           setLiveParticipantToAdd('')
                           toast.success(`${source.name} assigned to ${liveSelectedEvent}`)
+                        } catch (error: any) {
+                          toast.error(error?.message || 'Failed to assign participant')
                         }
                       }}
                     >

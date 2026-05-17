@@ -1,14 +1,12 @@
 import {
     CalendarDays,
     LayoutDashboard,
-    Megaphone,
     Menu,
     Settings,
     Shield,
     Trophy,
     Users,
     CheckCircle,
-    UserCog,
     Database,
     UsersRound,
 } from 'lucide-react'
@@ -52,12 +50,27 @@ const MENU_ITEMS = {
       href: '/admin/leaderboard',
       icon: Trophy,
     },
+    {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
+    },
+    {
+      title: 'User Management',
+      href: '/admin/user-management',
+      icon: UsersRound,
+    },
   ],
   reg_team: [
     {
       title: 'Check-In',
       href: '/admin/checkin',
       icon: CheckCircle,
+    },
+    {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
     },
   ],
   developer_admin: [
@@ -90,6 +103,11 @@ const MENU_ITEMS = {
       title: 'User Management',
       href: '/admin/user-management',
       icon: UsersRound,
+    },
+    {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
     },
     {
       title: 'Settings',

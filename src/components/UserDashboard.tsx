@@ -8,7 +8,7 @@ import {
   Sparkles,
   User,
 } from 'lucide-react'
-import { getUserRegistrations, getCheckedInEvents, clearAllUserData, type Registration, type UserProfile } from '@/lib/registrationStore'
+import { getUserRegistrations, getCheckedInEvents, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
 import { useData } from '@/lib/store'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -194,10 +194,16 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
 
   const loadData = useCallback(() => {
     setLoading(true)
-    setTimeout(() => {
-      setRegistrations(getUserRegistrations(user.email))
-      setLoading(false)
-    }, 350)
+    const cached = getUserRegistrations(user.email)
+    setRegistrations(cached)
+    void syncUserRegistrations(user.email)
+      .then((rows) => {
+        setRegistrations(rows)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }, [user.email])
 
   useEffect(() => {

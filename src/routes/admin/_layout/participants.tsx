@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/store'
+import { fetchAdminRegistrations, type AdminRegistrationRow } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
-import { useState } from 'react'
 import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight } from 'lucide-react'
 
 export const Route = createFileRoute('/admin/_layout/participants')({
@@ -13,6 +14,8 @@ export const Route = createFileRoute('/admin/_layout/participants')({
 function ParticipantsPage() {
   const { hasPermission } = useAuth()
   const { participants, houses, events } = useData()
+  const [registrations, setRegistrations] = useState<AdminRegistrationRow[]>([])
+  const [loading, setLoading] = useState(false)
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [expandedHouses, setExpandedHouses] = useState<Set<string>>(new Set())
 
@@ -20,8 +23,35 @@ function ParticipantsPage() {
     return <AccessDenied />
   }
 
-  const totalParticipants = participants.length
-  const checkedInCount = participants.filter(p => p.checkIn).length
+  useEffect(() => {
+    setLoading(true)
+    void fetchAdminRegistrations()
+      .then((data) => {
+        setRegistrations(data)
+      })
+      .catch(() => {
+        setRegistrations([])
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  const apiParticipants = registrations.map((row) => ({
+    id: row.registration_id,
+    name: row.participant_name,
+    regNo: row.reg_no || '',
+    email: row.email,
+    house: row.house || 'Unknown',
+    event: row.event_name,
+    status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
+    checkIn: !!row.checked_in,
+    certificate: false,
+  }))
+
+  const effectiveParticipants = apiParticipants
+  const totalParticipants = effectiveParticipants.length
+  const checkedInCount = effectiveParticipants.filter(p => p.checkIn).length
 
   const toggleEvent = (eventName: string) => {
     const newExpanded = new Set(expandedEvents)
@@ -80,7 +110,7 @@ function ParticipantsPage() {
         <h3 className="text-lg font-semibold text-white mb-4">House-wise Counts</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {houses.map(house => {
-            const count = participants.filter(p => p.house === house.name).length
+            const count = effectiveParticipants.filter(p => p.house === house.name).length
             return (
               <div key={house.name} className="bg-black border border-[#333] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
@@ -100,7 +130,7 @@ function ParticipantsPage() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-white">Event-wise Participants</h3>
         {events.map(event => {
-          const eventParticipants = participants.filter(p => p.event === event.name)
+          const eventParticipants = effectiveParticipants.filter(p => p.event === event.name)
           const checkedIn = eventParticipants.filter(p => p.checkIn).length
           const isEventExpanded = expandedEvents.has(event.name)
 

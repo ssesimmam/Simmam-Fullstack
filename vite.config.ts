@@ -11,6 +11,15 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 export default defineConfig({
   cloudflare: false,
   vite: {
+    server: {
+      proxy: {
+        '/api': {
+          target: process.env.VITE_API_URL || 'http://localhost:4000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     plugins: [
       ViteImageOptimizer({
         // Default options are usually good enough (lossless compression)

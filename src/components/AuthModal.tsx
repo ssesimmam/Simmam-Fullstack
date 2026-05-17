@@ -3,7 +3,7 @@ import { ArrowRight, Check, Hash, LogIn, Mail, Shield, User, X } from 'lucide-re
 
 import {
   getUser,
-  isRegistered,
+  isRegisteredForEvent,
   registerForEvent,
   saveUser,
   type UserProfile,
@@ -11,6 +11,7 @@ import {
 
 export type RegistrationEvent = {
   id: string
+  backendEventId?: string
   name: string
   category: string
   date?: string
@@ -80,31 +81,37 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     await new Promise((resolve) => setTimeout(resolve, 600))
 
-    const result = registerForEvent(user.email, {
+    try {
+      const result = await registerForEvent(user.email, {
       eventId: event.id,
+      backendEventId: event.backendEventId,
       eventName: event.name,
       date: event.date ?? '',
       timeSlot: event.timeSlot ?? '',
       endTime: event.endTime ?? '',
       venue: event.venue ?? '',
       category: event.category,
-    })
+      })
 
-    setSubmitting(false)
+      setSubmitting(false)
 
-    if (result.alreadyRegistered) {
-      setFormError('You are already registered for this event.')
-      return
+      if (result.alreadyRegistered) {
+        setFormError('You are already registered for this event.')
+        return
+      }
+
+      setStep('success')
+      setTimeout(() => {
+        onRegistered()
+      }, 1500)
+    } catch (error: any) {
+      setSubmitting(false)
+      setFormError(error?.message || 'Unable to complete registration right now.')
     }
-
-    setStep('success')
-    setTimeout(() => {
-      onRegistered()
-    }, 1500)
   }
 
   const currentUser = getUser()
-  const alreadyReg = currentUser && isRegistered(currentUser.email, event.id)
+  const alreadyReg = currentUser && isRegisteredForEvent(currentUser.email, event.backendEventId ?? event.id, event.name)
 
   return (
     <>

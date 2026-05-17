@@ -1,20 +1,16 @@
-﻿import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
 import { CheckCircle, Search } from 'lucide-react'
 
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
-import {
-  checkInRegistration,
-  fetchAdminRegistrations,
-  fetchAttendanceReport,
-} from '@/lib/adminApi'
+import { checkInRegistration, fetchAdminRegistrations, fetchAttendanceReport } from '@/lib/adminApi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/_layout/checkin')({
+export const Route = createFileRoute('/admin/_layout/checkin/new')({
   component: CheckInPage,
 })
 
@@ -30,10 +26,6 @@ function CheckInPage() {
     return <AccessDenied />
   }
 
-  const eventSuggestions = useMemo(() => {
-    return Array.from(new Set(rows.map((row) => row.event_name).filter(Boolean)))
-  }, [rows])
-
   const loadReport = async () => {
     try {
       const report = await fetchAttendanceReport()
@@ -43,10 +35,6 @@ function CheckInPage() {
     }
   }
 
-  useEffect(() => {
-    void loadReport()
-  }, [])
-
   const handleSearch = async () => {
     if (!searchQuery.trim() && !selectedEvent.trim()) {
       setRows([])
@@ -54,7 +42,6 @@ function CheckInPage() {
     }
 
     setLoading(true)
-
     try {
       const registrations = await fetchAdminRegistrations({
         search: searchQuery || undefined,
@@ -70,6 +57,11 @@ function CheckInPage() {
     }
   }
 
+  const eventSuggestions = useMemo(() => {
+    const set = new Set(rows.map((row) => row.event_name).filter(Boolean))
+    return Array.from(set)
+  }, [rows])
+
   const handleMarkAttendance = async (registrationId: string) => {
     if (!hasPermission('checkin', 'create')) {
       toast.error('You do not have permission to mark attendance')
@@ -82,11 +74,7 @@ function CheckInPage() {
       setRows((prev) => prev.filter((row) => row.registration_id !== registrationId))
       await loadReport()
     } catch (error: any) {
-      if (error?.message?.includes('already_checked_in')) {
-        toast.error('This registration has already been checked in')
-      } else {
-        toast.error(error?.message || 'Unable to mark attendance')
-      }
+      toast.error(error?.message || 'Unable to mark attendance')
     }
   }
 
@@ -115,7 +103,6 @@ function CheckInPage() {
           placeholder="Filter by event"
           className="bg-black border-[#333] text-white"
         />
-
         <datalist id="checkin-events">
           {eventSuggestions.map((eventName) => (
             <option key={eventName} value={eventName} />
@@ -133,32 +120,32 @@ function CheckInPage() {
           <table className="w-full text-sm">
             <thead className="bg-black/40 text-gray-400">
               <tr>
-                <th className="text-left p-3">Registration ID</th>
-                <th className="text-left p-3">Participant</th>
-                <th className="text-left p-3">Event</th>
-                <th className="text-left p-3">Status</th>
+                <th className="text-left p-3">Check-In ID</th>
+                <th className="text-left p-3">User ID</th>
+                <th className="text-left p-3">Participant Name</th>
+                <th className="text-left p-3">Event Name</th>
+                <th className="text-left p-3">Attendance Status</th>
                 <th className="text-right p-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-4 text-gray-500">Loading...</td>
+                  <td colSpan={6} className="p-4 text-gray-500">Loading...</td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-4 text-gray-500">No matching participants found.</td>
+                  <td colSpan={6} className="p-4 text-gray-500">No matching participants found.</td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.registration_id} className="border-t border-[#222] text-white/90">
-                    <td className="p-3 font-mono text-xs text-gray-400">{row.registration_id.slice(0, 8)}</td>
+                    <td className="p-3 font-mono text-xs text-gray-400">CHK-{row.registration_id.slice(0, 8)}</td>
+                    <td className="p-3 font-mono text-xs text-gray-400">{row.user_id.slice(0, 8)}...</td>
                     <td className="p-3">{row.participant_name}</td>
                     <td className="p-3">{row.event_name}</td>
                     <td className="p-3">
-                      <span className={`text-xs uppercase tracking-wide ${row.checked_in ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {row.checked_in ? 'Checked In' : 'Pending'}
-                      </span>
+                      <span className="text-amber-400 text-xs uppercase tracking-wide">Pending</span>
                     </td>
                     <td className="p-3">
                       <div className="flex justify-end">
@@ -166,10 +153,9 @@ function CheckInPage() {
                           className="bg-white text-black hover:bg-gray-200"
                           size="sm"
                           onClick={() => handleMarkAttendance(row.registration_id)}
-                          disabled={row.checked_in}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          {row.checked_in ? 'Checked In' : 'Mark Attendance'}
+                          Mark Attendance
                         </Button>
                       </div>
                     </td>

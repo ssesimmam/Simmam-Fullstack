@@ -33,7 +33,7 @@ const MOCK_USERS: AdminUser[] = [
 
 interface AuthContextType {
   user: AdminUser | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string, profile?: AdminRole) => Promise<boolean>
   logout: () => void
   hasPermission: (resource: string, action: string) => boolean
   isLoading: boolean
@@ -58,14 +58,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, profile?: AdminRole): Promise<boolean> => {
     // Mock authentication - in production, this would be an API call
-    const mockUser = MOCK_USERS.find(u => u.email === email)
-    if (mockUser && password === 'admin123') { // Simple mock password
+    const normalizedEmail = email.trim().toLowerCase()
+    const mockUser = MOCK_USERS.find((entry) => entry.email.toLowerCase() === normalizedEmail)
+    if (!mockUser) return false
+
+    const passwordValid = password === 'admin123' // TODO: replace with API + bcrypt validation
+    const profileValid = profile ? mockUser.role === profile : true
+
+    if (passwordValid && profileValid) {
       setUser(mockUser)
       localStorage.setItem('simmam_admin_user', JSON.stringify(mockUser))
       return true
     }
+
     return false
   }
 

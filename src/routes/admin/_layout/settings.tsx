@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/store'
+import { fetchAdminSettings, saveAdminSettings } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import WebHealthMonitor from '@/components/admin/WebHealthMonitor'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   Globe, 
   Save,
@@ -28,16 +29,56 @@ export const Route = createFileRoute('/admin/_layout/settings')({
 
 function SettingsPage() {
   const { hasPermission, user } = useAuth()
-  const { settings, updateSettings } = useData()
+  const { settings, updateSettings, refreshData } = useData()
   const [localSettings, setLocalSettings] = useState(settings)
+  const [loading, setLoading] = useState(true)
 
   if (!hasPermission('settings', 'read')) {
     return <AccessDenied />
   }
 
-  const handleSave = () => {
-    updateSettings(localSettings)
-    toast.success('System settings updated successfully')
+  useEffect(() => {
+    setLocalSettings(settings)
+    let mounted = true
+
+    void fetchAdminSettings()
+      .then((remoteSettings) => {
+        if (!mounted) return
+        setLocalSettings(remoteSettings)
+        updateSettings(remoteSettings)
+      })
+      .catch(() => {
+        // Keep local settings if backend is unavailable
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [settings, updateSettings])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading settings...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const handleSave = async () => {
+    try {
+      const saved = await saveAdminSettings(localSettings)
+      await refreshData()
+      updateSettings(saved)
+      toast.success('System settings updated successfully')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to save settings')
+    }
   }
 
   return (

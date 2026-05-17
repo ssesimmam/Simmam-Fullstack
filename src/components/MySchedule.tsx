@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkles } from 'lucide-react'
 
-import { clearUser, getUser, getUserRegistrations, type Registration } from '@/lib/registrationStore'
+import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type Registration } from '@/lib/registrationStore'
 
 function RegistrationCard({ reg }: { reg: Registration }) {
   const dayLabel = new Date(`${reg.date}T12:00:00`).toLocaleDateString('en-IN', {
@@ -96,6 +96,11 @@ export function MySchedule() {
   useEffect(() => {
     if (user) {
       setRegistrations(getUserRegistrations(user.email))
+      void syncUserRegistrations(user.email)
+        .then(setRegistrations)
+        .catch(() => {
+          // Keep cached registrations if API is temporarily unavailable.
+        })
     }
   }, [user])
 

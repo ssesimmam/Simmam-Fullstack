@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Clock,
@@ -11,11 +11,21 @@ import {
   User,
   Settings,
 } from "lucide-react";
-import { showtimeEvents, FESTIVAL_DATES, type ShowtimeEvent } from "@/lib/showtimeEvents";
-import { getUser, isRegistered } from "@/lib/registrationStore";
+import { getUser, isRegisteredForEvent } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useData } from "@/lib/store";
 import { UserSetupModal } from "./UserSetupModal";
+
+type DisplayEvent = {
+  id: string;
+  name: string;
+  mainCategory: string;
+  date: string;
+  timeSlot: string;
+  endTime: string;
+  venue: string;
+  registrationOpen: boolean;
+};
 
 // ─── Category color map ───────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
@@ -30,9 +40,9 @@ function getCategoryStyle(cat: string) {
 
 // ─── Single Event Card ────────────────────────────────────────────────────────
 interface EventCardProps {
-  event: ShowtimeEvent;
+  event: DisplayEvent;
   user: ReturnType<typeof getUser>;
-  onRegister: (event: ShowtimeEvent) => void;
+  onRegister: (event: DisplayEvent) => void;
   registered: boolean;
   registrationOpen: boolean;
 }
@@ -111,7 +121,7 @@ function EventCard({ event, user, onRegister, registered, registrationOpen }: Ev
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function EventsShowtime() {
   const { events: adminEvents } = useData();
-  const [selectedDate, setSelectedDate] = useState(FESTIVAL_DATES[0].key);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalEvent, setModalEvent] = useState<RegistrationEvent | null>(null);
   const [user, setUser] = useState(getUser);
   const [registrationTick, setRegistrationTick] = useState(0);
@@ -138,13 +148,51 @@ export function EventsShowtime() {
     dateScrollRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
   };
 
-  const filteredEvents = showtimeEvents.filter((e) => {
-    const adminEv = adminEvents.find((a) => a.name === e.name);
-    const isFloated = adminEv ? adminEv.is_floated : true;
-    return e.date === selectedDate && isFloated;
-  });
+  const allDisplayEvents = useMemo<DisplayEvent[]>(() => {
+    return adminEvents
+      .filter((event) => event.is_floated)
+      .map((event) => ({
+        id: event.id,
+        name: event.name,
+        mainCategory: event.mainCategory,
+        date: (event as any).date || '',
+        timeSlot: event.time || 'TBD',
+        endTime: (event as any).endTime || '',
+        venue: event.venue || 'Venue TBA',
+        registrationOpen: event.registration_open,
+      }))
+      .filter((event) => !!event.date)
+      .sort((left, right) => {
+        if (left.date === right.date) return left.timeSlot.localeCompare(right.timeSlot)
+        return left.date.localeCompare(right.date)
+      });
+  }, [adminEvents]);
 
-  const grouped = filteredEvents.reduce<Record<string, ShowtimeEvent[]>>(
+  const festivalDates = useMemo(() => {
+    const uniqueDates = Array.from(new Set(allDisplayEvents.map((event) => event.date)));
+    return uniqueDates.map((dateKey) => {
+      const dateObj = new Date(`${dateKey}T12:00:00`);
+      const short = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const month = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      return {
+        key: dateKey,
+        label: `${short} ${dateObj.getDate()} ${month}`,
+        short,
+        day: dateObj.getDate(),
+        month,
+      };
+    });
+  }, [allDisplayEvents]);
+
+  useEffect(() => {
+    if (!selectedDate && festivalDates.length > 0) {
+      setSelectedDate(festivalDates[0].key);
+    }
+  }, [festivalDates, selectedDate]);
+
+  const filteredEvents = allDisplayEvents.filter((event) => event.date === selectedDate);
+
+  const grouped = filteredEvents.reduce<Record<string, DisplayEvent[]>>(
     (acc, ev) => {
       if (!acc[ev.mainCategory]) acc[ev.mainCategory] = [];
       acc[ev.mainCategory].push(ev);
@@ -153,17 +201,18 @@ export function EventsShowtime() {
     {}
   );
 
-  const selectedDateInfo = FESTIVAL_DATES.find((d) => d.key === selectedDate);
+  const selectedDateInfo = festivalDates.find((d) => d.key === selectedDate);
 
-  const toRegEvent = (e: ShowtimeEvent): RegistrationEvent => ({
+  const toRegEvent = (e: DisplayEvent): RegistrationEvent => ({
     id: e.id,
+    backendEventId: e.id,
     name: e.name,
     category: e.mainCategory,
     date: e.date,
     timeSlot: e.timeSlot,
     endTime: e.endTime,
     venue: e.venue,
-    dayLabel: e.dayLabel,
+    dayLabel: selectedDateInfo?.label,
   });
 
   return (
@@ -240,9 +289,9 @@ export function EventsShowtime() {
             className="flex gap-2 overflow-x-auto scrollbar-none flex-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {FESTIVAL_DATES.map((d) => {
+            {festivalDates.map((d) => {
               const isSelected = d.key === selectedDate;
-              const count = showtimeEvents.filter((e) => e.date === d.key).length;
+              const count = allDisplayEvents.filter((event) => event.date === d.key).length;
               return (
                 <button
                   key={d.key}
@@ -261,7 +310,7 @@ export function EventsShowtime() {
                     {d.day}
                   </span>
                   <span className={`text-[9px] tracking-widest ${isSelected ? "text-[#D4AF37]/70" : "text-white/30"}`}>
-                    MAY
+                    {d.month}
                   </span>
                   <span className={`text-[9px] mt-0.5 ${isSelected ? "text-[#D4AF37]/60" : "text-white/25"}`}>
                     {count} events
@@ -321,15 +370,13 @@ export function EventsShowtime() {
                   </div>
                   <div className="space-y-3">
                     {events.map((ev) => {
-                      const adminEv = adminEvents.find((a) => a.name === ev.name);
-                      const regOpen = adminEv ? adminEv.registration_open : true;
                       return (
                         <EventCard
                           key={ev.id}
                           event={ev}
                           user={user}
-                          registered={user ? isRegistered(user.email, ev.id) : false}
-                          registrationOpen={regOpen}
+                          registered={user ? isRegisteredForEvent(user.email, ev.id, ev.name) : false}
+                          registrationOpen={ev.registrationOpen}
                           onRegister={(e) => setModalEvent(toRegEvent(e))}
                         />
                       );

@@ -1,6 +1,8 @@
 import { allEvents as initialEvents, type Event } from './eventsData';
 import { houses as initialHouses, type House } from './houses';
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { fetchLeaderboard } from './apiClient';
+import { fetchAdminEvents, fetchAdminHouses, fetchAdminRegistrations, fetchAdminSettings, type AdminSettings } from './adminApi';
 
 // Extend Event type for admin features
 export interface EventResult {
@@ -52,6 +54,7 @@ interface DataContextType {
   participants: Participant[];
   updateEvent: (updatedEvent: AdminEvent) => void;
   addEvent: (newEvent: AdminEvent) => void;
+  deleteEvent: (eventId: string) => void;
   updateHouse: (updatedHouse: House) => void;
   updateParticipant: (updatedParticipant: Participant) => void;
   addParticipant: (newParticipant: Participant) => void;
@@ -60,12 +63,9 @@ interface DataContextType {
   findAdminEventByName: (name: string) => AdminEvent | undefined;
   isRegistrationAllowed: (eventName: string) => boolean;
   isCheckInAllowed: (eventName: string) => boolean;
-  settings: {
-    festivalStatus: 'pre' | 'live' | 'post';
-    registrationsOpen: boolean;
-    coordinatorAssignments: Record<string, string>;
-  };
+  settings: AdminSettings;
   updateSettings: (newSettings: any) => void;
+  refreshData: () => Promise<void>; // New refresh function
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -86,50 +86,44 @@ const initializeEvents = (): AdminEvent[] => {
   }));
 };
 
-// Mock participants
-const generateMockParticipants = (events: AdminEvent[], houses: House[]): Participant[] => {
-  const participants: Participant[] = [];
-  const firstNames = [
-    "Aravind", "Bhavana", "Chandra", "Deepak", "Eshwar", "Farzana", "Gautam", "Hema", "Indira", "Jeevan",
-    "Kavya", "Lakshmi", "Manoj", "Nithya", "Omkar", "Priya", "Rajan", "Sneha", "Tarun", "Uma",
-    "Vikram", "Wasim", "Yamini", "Zara", "Aditi", "Balaji", "Charulata", "Dinesh", "Esha", "Farhan"
-  ];
-  const lastNames = [
-    "Krishnan", "Reddy", "Sharma", "Iyer", "Nair", "Patel", "Gupta", "Joshi", "Menon", "Pillai",
-    "Rao", "Sundaram", "Venkat", "Bhat", "Das", "Kumar", "Singh", "Murugan", "Rajan", "Subramanian"
-  ];
-  const statuses: Array<'confirmed' | 'pending' | 'waitlisted'> = ['confirmed', 'confirmed', 'confirmed', 'pending', 'waitlisted'];
-
-  // Seed-like counter for deterministic but varied distribution
-  let counter = 0;
-
-  // Ensure every event gets participants from multiple houses
-  for (const event of events) {
-    // Each event gets 2-5 participants per house
-    for (const house of houses) {
-      const countForThisGroup = 2 + (counter % 4); // 2 to 5
-      for (let j = 0; j < countForThisGroup; j++) {
-        const fnIndex = counter % firstNames.length;
-        const lnIndex = (counter * 7 + j) % lastNames.length;
-        const statusIndex = (counter + j) % statuses.length;
-        participants.push({
-          id: `p-${counter}`,
-          name: `${firstNames[fnIndex]} ${lastNames[lnIndex]}`,
-          regNo: `2026SIM${1000 + counter}`,
-          email: `${firstNames[fnIndex].toLowerCase()}.${lastNames[lnIndex].toLowerCase()}@simats.edu`,
-          house: house.name,
-          event: event.name,
-          status: statuses[statusIndex],
-          checkIn: counter % 3 !== 0,
-          certificate: false
-        });
-        counter++;
-      }
-    }
-  }
-
-  return participants;
+const mapEventStatus = (status?: string): AdminEvent['status'] => {
+  if (status === 'live' || status === 'ongoing') return 'ongoing';
+  if (status === 'completed') return 'completed';
+  if (status === 'cancelled') return 'cancelled';
+  return 'upcoming';
 };
+
+const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>>): AdminEvent[] => {
+  const fallback = initialEvents[0];
+  return remoteEvents.map((remoteEvent, index) => {
+    const staticEvent = initialEvents.find((event) => event.name.toLowerCase() === remoteEvent.name.toLowerCase());
+    const base = staticEvent || fallback;
+
+    return {
+      ...base,
+      id: remoteEvent.id,
+      name: remoteEvent.name,
+      category: remoteEvent.category || base.category,
+      mainCategory: (remoteEvent.main_category as any) || base.mainCategory,
+      venue: remoteEvent.venue || (base as any).venue,
+      time: remoteEvent.time_slot || undefined,
+      is_floated: remoteEvent.is_floated ?? true,
+      is_live_tomorrow: false,
+      registration_open: remoteEvent.registration_open ?? true,
+      checkin_enabled: remoteEvent.checkin_enabled ?? false,
+      status: mapEventStatus(remoteEvent.status),
+      participantCount: 0,
+      prizeInfo: remoteEvent.prize_info || 'Trophy + Certificate',
+      result: undefined,
+      icon: base.icon,
+      rules: base.rules,
+      description: remoteEvent.description || base.description,
+      order: base.order ?? index + 1,
+    };
+  });
+};
+
+// Participants are populated from the admin API; remove built-in mock generation.
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<AdminEvent[]>(() => initializeEvents());
@@ -139,13 +133,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       points2026: h.points2026 ?? h.points2025 ?? 0,
     })),
   );
-  const [participants, setParticipants] = useState<Participant[]>(() =>
-    generateMockParticipants(initializeEvents(), initialHouses),
-  );
-  const [settings, setSettings] = useState({
-    festivalStatus: 'pre' as const,
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [settings, setSettings] = useState<AdminSettings>({
+    festivalStatus: 'pre',
     registrationsOpen: true,
-    coordinatorAssignments: {} as Record<string, string>,
+    coordinatorAssignments: {},
   });
   const [pointsHistory, setPointsHistory] = useState<PointTransaction[]>([]);
 
@@ -185,11 +177,94 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     if (storedParticipants) setParticipants(JSON.parse(storedParticipants));
-    else setParticipants(generateMockParticipants(initialAdminEvents, initialHouses));
+    else setParticipants([]);
 
     if (storedSettings) setSettings(JSON.parse(storedSettings));
     if (storedPointsHistory) setPointsHistory(JSON.parse(storedPointsHistory));
   }, []);
+
+  const refreshData = useCallback(async () => {
+    try {
+      const [remoteEvents, remoteHouses, remoteLeaderboard, remoteSettings, remoteRegistrations] = await Promise.all([
+        fetchAdminEvents(),
+        fetchAdminHouses(),
+        fetchLeaderboard(),
+        fetchAdminSettings(),
+        fetchAdminRegistrations(),
+      ])
+
+      if (remoteEvents.length > 0) {
+        const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents);
+        setEvents(mappedEvents);
+        localStorage.setItem('simmam_events', JSON.stringify(mappedEvents));
+      }
+
+      if (remoteHouses.length > 0) {
+        const leaderboardPointsByName = new Map(
+          remoteLeaderboard.map((item) => [item.house_name.toLowerCase(), Number(item.total_points ?? item.points ?? 0)]),
+        );
+
+        const mappedHouses = initialHouses.map((house) => {
+          const remoteHouse = remoteHouses.find((candidate) => candidate.name.toLowerCase() === house.name.toLowerCase());
+          const points2026 = leaderboardPointsByName.get(house.name.toLowerCase()) ?? Number(remoteHouse?.points ?? house.points2026 ?? 0);
+
+          return {
+            ...house,
+            accent: remoteHouse?.accent || house.accent,
+            points2026,
+          };
+        });
+
+        setHouses(mappedHouses);
+        localStorage.setItem('simmam_houses', JSON.stringify(mappedHouses));
+      }
+
+      if (Array.isArray(remoteRegistrations)) {
+        const mappedParticipants = remoteRegistrations.map((row) => ({
+          id: row.registration_id,
+          name: row.participant_name,
+          regNo: row.reg_no || '',
+          email: row.email,
+          house: row.house || 'Unknown',
+          event: row.event_name,
+          status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
+          checkIn: !!row.checked_in,
+          certificate: false,
+        }))
+        setParticipants(mappedParticipants)
+        localStorage.setItem('simmam_participants', JSON.stringify(mappedParticipants))
+      }
+
+      if (remoteSettings) {
+        setSettings(remoteSettings);
+        localStorage.setItem('simmam_settings', JSON.stringify(remoteSettings));
+      }
+    } catch (err) {
+      console.error('Failed to refresh data from API:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshData();
+    const refreshInterval = window.setInterval(() => {
+      void refreshData();
+    }, 15000);
+
+    const handleVisibilityRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshData();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibilityRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityRefresh);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener('focus', handleVisibilityRefresh);
+      document.removeEventListener('visibilitychange', handleVisibilityRefresh);
+    };
+  }, [refreshData]);
 
   const updateEvent = (updatedEvent: AdminEvent) => {
     const newEvents = events.map(e => e.id === updatedEvent.id ? updatedEvent : e);
@@ -199,6 +274,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addEvent = (newEvent: AdminEvent) => {
     const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    localStorage.setItem('simmam_events', JSON.stringify(updatedEvents));
+  };
+
+  const deleteEvent = (eventId: string) => {
+    const updatedEvents = events.filter((event) => event.id !== eventId);
     setEvents(updatedEvents);
     localStorage.setItem('simmam_events', JSON.stringify(updatedEvents));
   };
@@ -269,14 +350,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DataContext.Provider value={{ 
-      events, 
-      houses, 
-      participants, 
-      updateEvent, 
+    <DataContext.Provider value={{
+      events,
+      houses,
+      participants,
+      updateEvent,
       addEvent,
-      updateHouse, 
-      updateParticipant, 
+      deleteEvent,
+      updateHouse,
+      updateParticipant,
       addParticipant,
       updateHousePoints,
       pointsHistory,
@@ -284,7 +366,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       isRegistrationAllowed,
       isCheckInAllowed,
       settings,
-      updateSettings
+      updateSettings,
+      refreshData
     }}>
       {children}
     </DataContext.Provider>
