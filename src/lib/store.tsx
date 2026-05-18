@@ -15,6 +15,7 @@ export interface EventResult {
 
 export interface AdminEvent extends Event {
   id: string;
+  date?: string;
   venue?: string;
   time?: string;
   is_floated: boolean;
