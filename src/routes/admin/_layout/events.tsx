@@ -227,11 +227,6 @@ function EventsPage() {
     }
   }
 
-  const openEditDialog = (event: AdminEvent) => {
-    setEditingEvent(event)
-    syncFormFromEvent(event)
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -296,11 +291,6 @@ function EventsPage() {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" className="border-[#333]" onClick={() => openEditDialog(event)}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit Event
-                      </Button>
-
                       {canManage && (
                         <>
                           <Button

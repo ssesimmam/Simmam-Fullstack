@@ -55,6 +55,7 @@ function DataEntryPage() {
 
   // Event editing state
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null)
+  const [eventDateError, setEventDateError] = useState<string>('')
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
 
   // Participant editing state
@@ -66,6 +67,7 @@ function DataEntryPage() {
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [newEventName, setNewEventName] = useState('')
   const [newEventCategory, setNewEventCategory] = useState('')
+  const [newEventDate, setNewEventDate] = useState(new Date().toISOString().slice(0, 10))
 
   const [showAddParticipant, setShowAddParticipant] = useState(false)
   const [newPName, setNewPName] = useState('')
@@ -96,11 +98,16 @@ function DataEntryPage() {
     e.preventDefault()
     if (!editingEvent) return
 
+    if (!editingEvent.date) {
+      setEventDateError('Event Date is required')
+      return
+    }
+
     const payload = {
       name: editingEvent.name,
       category: editingEvent.category,
       description: editingEvent.description,
-      date: (editingEvent as any).date,
+      date: editingEvent.date,
       time_slot: editingEvent.time,
       venue: editingEvent.venue,
       capacity: editingEvent.participantCount,
@@ -168,8 +175,8 @@ function DataEntryPage() {
   }
 
   const handleAddEvent = async () => {
-    if (!newEventName.trim() || !newEventCategory.trim()) {
-      toast.error('Event name and category are required')
+    if (!newEventName.trim() || !newEventCategory.trim() || !newEventDate) {
+      toast.error('Event name, category and date are required')
       return
     }
 
@@ -177,6 +184,7 @@ function DataEntryPage() {
       id: `event-${Date.now()}`,
       name: newEventName.trim(),
       category: newEventCategory.trim(),
+      date: newEventDate,
       icon: events[0]?.icon || (() => null),
       mainCategory: 'Non-Tech',
       rules: [],
@@ -196,7 +204,7 @@ function DataEntryPage() {
         description: newEvent.description || '',
         category: newEvent.category,
         main_category: newEvent.mainCategory,
-        date: (newEvent as any).date || new Date().toISOString().slice(0, 10),
+        date: newEvent.date || new Date().toISOString().slice(0, 10),
         time_slot: newEvent.time || '00:00',
         venue: newEvent.venue || 'TBD',
         capacity: 0,
@@ -428,7 +436,7 @@ function DataEntryPage() {
           {showAddEvent && (
             <div className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-4">
               <h4 className="text-white font-medium text-sm">New Event</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-400 text-xs">Event Name</Label>
                   <Input
@@ -445,6 +453,15 @@ function DataEntryPage() {
                     className="bg-black border-[#333] text-white"
                     value={newEventCategory}
                     onChange={(e) => setNewEventCategory(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Event Date</Label>
+                  <Input
+                    type="date"
+                    className="bg-black border-[#333] text-white"
+                    value={newEventDate}
+                    onChange={(e) => setNewEventDate(e.target.value)}
                   />
                 </div>
               </div>
@@ -521,7 +538,10 @@ function DataEntryPage() {
                       <DialogTrigger asChild>
                         <button
                           className="flex items-center gap-2 px-4 py-2 bg-white text-black text-sm font-semibold rounded-lg hover:bg-gray-200 transition"
-                          onClick={() => setEditingEvent(event)}
+                          onClick={() => {
+                            setEditingEvent(event)
+                            setEventDateError('')
+                          }}
                         >
                           <Edit className="w-4 h-4" />
                           Edit Event
@@ -584,6 +604,19 @@ function DataEntryPage() {
                                   onChange={(e) => setEditingEvent({...editingEvent, venue: e.target.value})}
                                   className="bg-gray-800 border-gray-600 text-white"
                                 />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-gray-300">Event Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editingEvent.date || ''}
+                                  onChange={(e) => {
+                                    setEventDateError('')
+                                    setEditingEvent({...editingEvent, date: e.target.value})
+                                  }}
+                                  className="bg-gray-800 border-gray-600 text-white"
+                                />
+                                {eventDateError ? <p className="text-red-400 text-xs mt-1">{eventDateError}</p> : null}
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-gray-300">Time</Label>
