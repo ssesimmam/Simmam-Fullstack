@@ -5,13 +5,14 @@ import { Edit, Plus, Search, Trash2, XCircle, CheckCircle2 } from 'lucide-react'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
-import { useData, type AdminEvent } from '@/lib/store'
-import { closeAdminEventRegistration, createAdminEvent, deleteAdminEvent, updateAdminEvent } from '@/lib/adminApi'
+import { useData, type AdminEvent, mapRemoteEventToAdminEvent, resolvePersistedEventId } from '@/lib/store'
+import { createAdminEvent, deleteAdminEvent, updateAdminEvent } from '@/lib/adminApi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/admin/_layout/events')({
@@ -68,6 +69,15 @@ function EventsPage() {
     )
   }, [events, searchQuery])
 
+  const persistEventPatch = async (event: AdminEvent, patch: Record<string, unknown>) => {
+    const liveEventId = await resolvePersistedEventId(event)
+    const updated = await updateAdminEvent(liveEventId, patch)
+    const mapped = mapRemoteEventToAdminEvent(updated as any, event)
+    updateEvent(mapped)
+    void refreshData()
+    return mapped
+  }
+
   const syncFormFromEvent = (event: AdminEvent) => {
     setForm({
       name: event.name,
@@ -114,7 +124,29 @@ function EventsPage() {
         capacity: Number(form.maxParticipants),
       })
 
-      await refreshData()
+      addEvent(mapRemoteEventToAdminEvent(created as any, {
+        ...emptyForm,
+        id: created.id,
+        name: created.name,
+        description: created.description || '',
+        category: created.category || form.category.trim(),
+        mainCategory: created.main_category || form.category.trim(),
+        venue: created.venue || form.venue.trim(),
+        time: created.time_slot || form.time.trim(),
+        date: created.date || form.date,
+        icon: events[0]?.icon,
+        rules: events[0]?.rules || [],
+        is_floated: created.is_floated ?? true,
+        is_live_tomorrow: false,
+        registration_open: created.registration_open ?? true,
+        checkin_enabled: created.checkin_enabled ?? false,
+        status: created.status === 'live' ? 'ongoing' : created.status || 'upcoming',
+        participantCount: created.capacity ?? Number(form.maxParticipants),
+        prizeInfo: created.prize_info || 'Trophy + Certificate',
+        result: undefined,
+      } as AdminEvent))
+
+      void refreshData()
       setShowCreate(false)
       setForm(emptyForm)
       toast.success('Event created')
@@ -133,7 +165,7 @@ function EventsPage() {
     }
 
     try {
-      await updateAdminEvent(editingEvent.id, {
+      const updated = await persistEventPatch(editingEvent, {
         name: form.name.trim(),
         description: form.description.trim(),
         category: form.category.trim(),
@@ -144,7 +176,6 @@ function EventsPage() {
         capacity: Number(form.maxParticipants),
       })
 
-      await refreshData()
       setEditingEvent(null)
       setForm(emptyForm)
       toast.success('Event updated')
@@ -157,7 +188,7 @@ function EventsPage() {
     if (!window.confirm(`Delete event: ${event.name}?`)) return
 
     try {
-      await deleteAdminEvent(event.id)
+      await deleteAdminEvent(await resolvePersistedEventId(event))
       await refreshData()
       toast.success('Event deleted')
     } catch (error: any) {
@@ -167,26 +198,33 @@ function EventsPage() {
 
   const handleToggleRegistration = async (event: AdminEvent) => {
     try {
-      const payload = { registration_open: !event.registration_open }
-      if (event.id.startsWith('event-')) {
-        await createAdminEvent({
-          name: event.name,
-          description: event.description || '',
-          category: event.category,
-          main_category: event.mainCategory,
-          date: (event as any).date || new Date().toISOString().split('T')[0],
-          time_slot: event.time || 'TBA',
-          venue: event.venue || 'TBA',
-          capacity: event.participantCount || 100,
-          ...payload
-        })
-      } else {
-        await updateAdminEvent(event.id, payload)
-      }
-      await refreshData()
+      await persistEventPatch(event, { registration_open: !event.registration_open })
       toast.success(`Registration ${event.registration_open ? 'closed' : 'opened'} for ${event.name}`)
     } catch (error: any) {
       toast.error(error?.message || 'Failed to toggle registration')
+    }
+  }
+
+  const handleToggleFloat = async (event: AdminEvent) => {
+    try {
+      await persistEventPatch(event, { is_floated: !event.is_floated })
+      toast.success(`${event.is_floated ? 'Removed from' : 'Added to'} floated events for ${event.name}`)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to toggle floated state')
+    }
+  }
+
+  const handleToggleLiveTomorrow = async (event: AdminEvent, nextLiveState?: boolean) => {
+    try {
+      const enabled = nextLiveState ?? !event.is_live_tomorrow
+      await persistEventPatch(event, {
+        is_live_tomorrow: enabled,
+        is_floated: enabled ? true : event.is_floated,
+        registration_open: enabled ? true : event.registration_open,
+      })
+      toast.success(`${enabled ? 'Marked live tomorrow' : 'Removed from live tomorrow'} for ${event.name}`)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to toggle live status')
     }
   }
 
@@ -269,8 +307,26 @@ function EventsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className={event.registration_open ? "border-amber-500/40 text-amber-400 hover:bg-amber-500/10" : "border-green-500/40 text-green-400 hover:bg-green-500/10"}
-                            onClick={() => handleToggleRegistration(event)}
+                            className={event.is_floated ? 'border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10' : 'border-gray-500/40 text-gray-400 hover:bg-gray-500/10'}
+                            onClick={() => void handleToggleFloat(event)}
+                          >
+                            {event.is_floated ? 'Floated' : 'Float Off'}
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={event.is_live_tomorrow ? 'border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10' : 'border-gray-500/40 text-gray-400 hover:bg-gray-500/10'}
+                            onClick={() => void handleToggleLiveTomorrow(event)}
+                          >
+                            {event.is_live_tomorrow ? 'LIVE Tomorrow' : 'Mark LIVE'}
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={event.registration_open ? 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10' : 'border-green-500/40 text-green-400 hover:bg-green-500/10'}
+                            onClick={() => void handleToggleRegistration(event)}
                           >
                             {event.registration_open ? (
                               <>

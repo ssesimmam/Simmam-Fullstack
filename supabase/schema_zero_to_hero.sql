@@ -81,6 +81,7 @@ create table if not exists events (
   registration_open boolean not null default true,
   checkin_enabled boolean not null default false,
   is_floated boolean not null default true,
+  is_live_tomorrow boolean not null default false,
   status event_status not null default 'upcoming',
   capacity int,
   prize_info text,

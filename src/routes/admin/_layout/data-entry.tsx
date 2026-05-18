@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
-import { useData, AdminEvent, type Participant } from '@/lib/store'
+import { useData, AdminEvent, type Participant, mapRemoteEventToAdminEvent, resolvePersistedEventId } from '@/lib/store'
 import { createAdminEvent, updateAdminEvent, createAdminParticipant, updateAdminParticipant, deleteAdminRegistration, checkInRegistration, removeAdminCheckin } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
@@ -111,14 +111,60 @@ function DataEntryPage() {
     }
 
     try {
-      await updateAdminEvent(editingEvent.id, payload)
-      updateEvent(editingEvent)
+      const liveEventId = await resolvePersistedEventId(editingEvent)
+      const updated = await updateAdminEvent(liveEventId, payload)
+      updateEvent(mapRemoteEventToAdminEvent(updated as any, editingEvent))
       setEditingEvent(null)
+      void refreshData()
       toast.success('Event updated successfully')
     } catch (error: any) {
       setEditingEvent(null)
       toast.error(error?.message || 'Failed to update event')
     }
+  }
+
+  const applyLiveToggle = async (event: AdminEvent, nextLiveState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+
+    const updated = await updateAdminEvent(liveEventId, {
+      is_live_tomorrow: nextLiveState,
+      is_floated: nextLiveState ? true : event.is_floated,
+      registration_open: nextLiveState ? true : event.registration_open,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      is_live_tomorrow: nextLiveState,
+      is_floated: nextLiveState ? true : event.is_floated,
+      registration_open: nextLiveState ? true : event.registration_open,
+    })
+    void refreshData()
+  }
+
+  const applyFloatToggle = async (event: AdminEvent, nextFloatState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+    const updated = await updateAdminEvent(liveEventId, {
+      is_floated: nextFloatState,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      is_floated: nextFloatState,
+    })
+    void refreshData()
+  }
+
+  const applyRegistrationToggle = async (event: AdminEvent, nextRegistrationState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+    const updated = await updateAdminEvent(liveEventId, {
+      registration_open: nextRegistrationState,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      registration_open: nextRegistrationState,
+    })
+    void refreshData()
   }
 
   const handleAddEvent = async () => {
@@ -156,7 +202,7 @@ function DataEntryPage() {
         capacity: 0,
       })
 
-      addEvent({
+      addEvent(mapRemoteEventToAdminEvent(created as any, {
         ...newEvent,
         id: created.id,
         is_floated: created.is_floated ?? newEvent.is_floated,
@@ -165,7 +211,9 @@ function DataEntryPage() {
         status: created.status === 'live' ? 'ongoing' : created.status || newEvent.status,
         venue: created.venue || newEvent.venue,
         time: created.time_slot || newEvent.time,
-      })
+      } as AdminEvent))
+
+      void refreshData()
     } catch (error: any) {
       toast.error(error?.message || 'Failed to create event')
       return
@@ -843,7 +891,7 @@ function DataEntryPage() {
             </div>
 
             <div className="space-y-2">
-              {events.filter(e => e.is_floated).map(event => (
+              {events.map(event => (
                 <div key={event.id} className="flex items-center justify-between p-4 bg-[#111] border border-[#333] rounded-lg hover:bg-black transition">
                   <div>
                     <div className="text-white font-medium text-sm">{event.name}</div>
@@ -853,13 +901,24 @@ function DataEntryPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium ${event.is_live_tomorrow ? 'text-green-400' : 'text-gray-600'}`}>
-                      {event.is_live_tomorrow ? 'LIVE' : 'OFF'}
-                    </span>
+                    <button
+                      type="button"
+                      className={`text-xs font-medium transition ${event.is_floated ? 'text-[#D4AF37]' : 'text-gray-600'}`}
+                      onClick={() => void applyFloatToggle(event, !event.is_floated)}
+                    >
+                      {event.is_floated ? 'FLOATED' : 'FLOAT OFF'}
+                    </button>
                     <Switch
                       checked={event.is_live_tomorrow}
-                      onCheckedChange={(val) => updateEvent({ ...event, is_live_tomorrow: val })}
+                      onCheckedChange={(val) => void applyLiveToggle(event, val)}
                     />
+                    <button
+                      type="button"
+                      className={`text-xs font-medium transition ${event.registration_open ? 'text-green-400' : 'text-red-400'}`}
+                      onClick={() => void applyRegistrationToggle(event, !event.registration_open)}
+                    >
+                      {event.registration_open ? 'REG OPEN' : 'REG CLOSED'}
+                    </button>
                   </div>
                 </div>
               ))}

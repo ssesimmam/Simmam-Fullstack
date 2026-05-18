@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
+import fs from 'fs'
+import path from 'path'
 
 dotenv.config()
 
@@ -77,6 +79,99 @@ let adminSettingsTableMissing = false
 
 const isMissingAdminSettingsTableError = (error: any) =>
   error?.code === 'PGRST205' || error?.message?.includes('admin_settings')
+
+type EventCatalogItem = {
+  name: string
+  category: string
+  mainCategory: string
+  rules: string[]
+}
+
+const getEventCatalogPath = () => {
+  const candidates = [
+    path.resolve(process.cwd(), '../src/lib/eventsData.ts'),
+    path.resolve(__dirname, '../../src/lib/eventsData.ts'),
+    path.resolve(process.cwd(), 'src/lib/eventsData.ts'),
+  ]
+
+  const existingPath = candidates.find((candidate) => fs.existsSync(candidate))
+  if (!existingPath) {
+    throw new Error('Unable to locate src/lib/eventsData.ts for event catalog seeding')
+  }
+
+  return existingPath
+}
+
+const extractEventCatalog = (): EventCatalogItem[] => {
+  const catalogPath = getEventCatalogPath()
+  const source = fs.readFileSync(catalogPath, 'utf8')
+  const arrayStart = source.indexOf('export const allEvents: Event[] = [')
+  const arrayEnd = source.lastIndexOf('];')
+
+  if (arrayStart < 0 || arrayEnd < 0 || arrayEnd <= arrayStart) {
+    throw new Error('Unable to parse event catalog from eventsData.ts')
+  }
+
+  const arrayText = source.slice(arrayStart, arrayEnd)
+  const objectPattern = /\{\s*name:\s*"([^"]+)"[\s\S]*?category:\s*"([^"]+)"[\s\S]*?mainCategory:\s*"([^"]+)"[\s\S]*?rules:\s*\[([\s\S]*?)\]\s*\}/g
+  const rulePattern = /"((?:[^"\\]|\\.)*)"/g
+
+  const catalog: EventCatalogItem[] = []
+  for (const match of arrayText.matchAll(objectPattern)) {
+    const [, name, category, mainCategory, rulesRaw] = match
+    const rules = Array.from(rulesRaw.matchAll(rulePattern), (ruleMatch) => ruleMatch[1].replace(/\\"/g, '"'))
+    catalog.push({ name, category, mainCategory, rules })
+  }
+
+  if (catalog.length === 0) {
+    throw new Error('No events were parsed from the event catalog')
+  }
+
+  return catalog
+}
+
+const seedMissingEvents = async () => {
+  const catalog = extractEventCatalog()
+  const { data: existingRows, error: existingErr } = await supabase.from('events').select('slug')
+  if (existingErr) throw existingErr
+
+  const existingSlugs = new Set((existingRows || []).map((row: any) => String(row.slug || '').toLowerCase()))
+  const missingRowsBySlug = new Map<string, any>()
+
+  for (const event of catalog) {
+    const slug = slugify(event.name)
+    if (existingSlugs.has(slug) || missingRowsBySlug.has(slug)) {
+      continue
+    }
+
+    missingRowsBySlug.set(slug, {
+      name: event.name,
+      slug,
+      description: '',
+      category: event.category,
+      main_category: event.mainCategory,
+      registration_open: false,
+      checkin_enabled: false,
+      is_floated: false,
+      is_live_tomorrow: false,
+      status: 'upcoming',
+      capacity: null,
+      prize_info: null,
+    })
+  }
+
+  const missingRows = Array.from(missingRowsBySlug.values())
+
+  if (missingRows.length === 0) {
+    console.log(`Event catalog already seeded (${catalog.length} events)`)
+    return
+  }
+
+  const { error: insertErr } = await supabase.from('events').insert(missingRows as any)
+  if (insertErr) throw insertErr
+
+  console.log(`Seeded ${missingRows.length} missing events from the catalog (${catalog.length} total catalog events)`)
+}
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
@@ -855,6 +950,7 @@ app.post('/api/admin/events', async (req, res) => {
       end_time,
       venue,
       capacity,
+      is_live_tomorrow,
     } = req.body
 
     if (!name || !category || !date || !time_slot || !venue) {
@@ -874,6 +970,7 @@ app.post('/api/admin/events', async (req, res) => {
         end_time,
         venue,
         capacity,
+        is_live_tomorrow: is_live_tomorrow ?? false,
       } as any)
       .select('*')
       .single()
@@ -902,6 +999,7 @@ app.put('/api/admin/events/:id', async (req, res) => {
       registration_open,
       checkin_enabled,
       is_floated,
+      is_live_tomorrow,
       status,
     } = req.body
 
@@ -918,6 +1016,7 @@ app.put('/api/admin/events/:id', async (req, res) => {
       registration_open,
       checkin_enabled,
       is_floated,
+      is_live_tomorrow,
       status,
     }
 
@@ -1182,7 +1281,16 @@ app.get('/api/users/:email/registrations', async (req, res) => {
   }
 })
 
-const port = PORT
-app.listen(port, () => {
-  console.log(`API server listening on http://localhost:${port}`)
-})
+const bootstrap = async () => {
+  try {
+    await seedMissingEvents()
+  } catch (err: any) {
+    console.error('Failed to seed event catalog:', err?.message || err)
+  }
+
+  app.listen(PORT, () => {
+    console.log(`API server listening on http://localhost:${PORT}`)
+  })
+}
+
+bootstrap()

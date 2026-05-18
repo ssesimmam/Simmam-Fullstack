@@ -68,23 +68,36 @@ interface DataContextType {
   refreshData: () => Promise<void>; // New refresh function
 }
 
-const DataContext = createContext<DataContextType | undefined>(undefined);
+const noopAsync = async () => undefined;
 
-// Helper to initialize admin events from static data
-const initializeEvents = (): AdminEvent[] => {
-  return initialEvents.map((e, index) => ({
-    ...e,
-    id: `event-${index}`,
-    is_floated: true,
-    is_live_tomorrow: false,
-    registration_open: true,
-    checkin_enabled: false,
-    status: 'upcoming',
-    participantCount: Math.floor(Math.random() * 150) + 20, // Random mock count
-    prizeInfo: 'Trophy + Certificate',
-    result: undefined
-  }));
-};
+const defaultDataContext: DataContextType = {
+  events: [],
+  houses: initialHouses.map((h) => ({
+    ...h,
+    points2026: h.points2026 ?? h.points2025 ?? 0,
+  })),
+  participants: [],
+  updateEvent: () => undefined,
+  addEvent: () => undefined,
+  deleteEvent: () => undefined,
+  updateHouse: () => undefined,
+  updateParticipant: () => undefined,
+  addParticipant: () => undefined,
+  updateHousePoints: () => undefined,
+  pointsHistory: [],
+  findAdminEventByName: () => undefined,
+  isRegistrationAllowed: () => false,
+  isCheckInAllowed: () => false,
+  settings: {
+    festivalStatus: 'pre',
+    registrationsOpen: true,
+    coordinatorAssignments: {},
+  },
+  updateSettings: () => undefined,
+  refreshData: noopAsync,
+}
+
+const DataContext = createContext<DataContextType>(defaultDataContext);
 
 const mapEventStatus = (status?: string): AdminEvent['status'] => {
   if (status === 'live' || status === 'ongoing') return 'ongoing';
@@ -93,93 +106,92 @@ const mapEventStatus = (status?: string): AdminEvent['status'] => {
   return 'upcoming';
 };
 
+const readCachedValue = <T,>(key: string): T | null => {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : null
+  } catch {
+    return null
+  }
+}
+
+const writeCachedValue = <T,>(key: string, value: T): void => {
+  if (typeof window === 'undefined') return
+
+  localStorage.setItem(key, JSON.stringify(value))
+}
+
+export const mapRemoteEventToAdminEvent = (
+  remoteEvent: Awaited<ReturnType<typeof fetchAdminEvents>>[number],
+  fallback?: AdminEvent,
+  order = 0,
+): AdminEvent => ({
+  ...(fallback || initialEvents[0]),
+  id: remoteEvent.id,
+  name: remoteEvent.name,
+  category: remoteEvent.category || fallback?.category || initialEvents[0].category,
+  mainCategory: (remoteEvent.main_category as any) || fallback?.mainCategory || initialEvents[0].mainCategory,
+  venue: remoteEvent.venue || fallback?.venue || (initialEvents[0] as any).venue,
+  time: remoteEvent.time_slot || fallback?.time || initialEvents[0].time,
+  date: remoteEvent.date || (fallback as any)?.date || (initialEvents[0] as any).date,
+  is_floated: remoteEvent.is_floated ?? fallback?.is_floated ?? true,
+  is_live_tomorrow: remoteEvent.is_live_tomorrow ?? fallback?.is_live_tomorrow ?? false,
+  registration_open: remoteEvent.registration_open ?? fallback?.registration_open ?? true,
+  checkin_enabled: remoteEvent.checkin_enabled ?? fallback?.checkin_enabled ?? false,
+  status: mapEventStatus(remoteEvent.status || fallback?.status),
+  participantCount: remoteEvent.capacity ?? fallback?.participantCount ?? 0,
+  prizeInfo: remoteEvent.prize_info || fallback?.prizeInfo || 'Trophy + Certificate',
+  result: fallback?.result,
+  icon: fallback?.icon || initialEvents[0].icon,
+  rules: fallback?.rules || initialEvents[0].rules,
+  description: remoteEvent.description || fallback?.description || initialEvents[0].description,
+  order: fallback?.order ?? order + 1,
+})
+
+export async function resolvePersistedEventId(event: AdminEvent): Promise<string> {
+  if (!event.id.startsWith('event-')) {
+    return event.id
+  }
+
+  const remoteEvents = await fetchAdminEvents()
+  const remoteMatch = remoteEvents.find((candidate) => candidate.name.toLowerCase() === event.name.toLowerCase())
+
+  return remoteMatch?.id || event.id
+}
+
 const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>>): AdminEvent[] => {
-  const fallback = initialEvents[0];
-  
-  const mappedInitial = initialEvents.map((staticEvent, index) => {
-    const remoteEvent = remoteEvents.find((re) => re.name.toLowerCase() === staticEvent.name.toLowerCase());
+  const orderByName = new Map(initialEvents.map((event, index) => [event.name.toLowerCase(), index]))
+  const fallbackByName = new Map(initialEvents.map((event) => [event.name.toLowerCase(), event]))
 
-    if (remoteEvent) {
-      return {
-        ...staticEvent,
-        id: remoteEvent.id,
-        name: remoteEvent.name,
-        category: remoteEvent.category || staticEvent.category,
-        mainCategory: (remoteEvent.main_category as any) || staticEvent.mainCategory,
-        venue: remoteEvent.venue || (staticEvent as any).venue,
-        time: remoteEvent.time_slot || staticEvent.time,
-        date: remoteEvent.date || (staticEvent as any).date,
-        is_floated: remoteEvent.is_floated ?? true,
-        is_live_tomorrow: false,
-        registration_open: remoteEvent.registration_open ?? true,
-        checkin_enabled: remoteEvent.checkin_enabled ?? false,
-        status: mapEventStatus(remoteEvent.status),
-        participantCount: remoteEvent.capacity ?? 0,
-        prizeInfo: remoteEvent.prize_info || 'Trophy + Certificate',
-        result: undefined,
-        icon: staticEvent.icon,
-        rules: staticEvent.rules,
-        description: remoteEvent.description || staticEvent.description,
-        order: (staticEvent as any).order ?? index + 1,
-      };
-    }
-
-    return {
-      ...staticEvent,
-      id: `event-${index}`,
-      is_floated: false,
-      is_live_tomorrow: false,
-      registration_open: false,
-      checkin_enabled: false,
-      status: 'upcoming',
-      participantCount: 0,
-      prizeInfo: 'Trophy + Certificate',
-      result: undefined,
-    };
-  });
-
-  const newRemoteEvents = remoteEvents
-    .filter((re) => !initialEvents.some((staticEvent) => staticEvent.name.toLowerCase() === re.name.toLowerCase()))
-    .map((remoteEvent, index) => ({
-      ...fallback,
-      id: remoteEvent.id,
-      name: remoteEvent.name,
-      category: remoteEvent.category || fallback.category,
-      mainCategory: (remoteEvent.main_category as any) || fallback.mainCategory,
-      venue: remoteEvent.venue || (fallback as any).venue,
-      time: remoteEvent.time_slot || undefined,
-      date: remoteEvent.date || undefined,
-      is_floated: remoteEvent.is_floated ?? true,
-      is_live_tomorrow: false,
-      registration_open: remoteEvent.registration_open ?? true,
-      checkin_enabled: remoteEvent.checkin_enabled ?? false,
-      status: mapEventStatus(remoteEvent.status),
-      participantCount: remoteEvent.capacity ?? 0,
-      prizeInfo: remoteEvent.prize_info || 'Trophy + Certificate',
-      result: undefined,
-      description: remoteEvent.description || fallback.description,
-      order: 1000 + index,
-    }));
-
-  return [...mappedInitial, ...newRemoteEvents];
+  return [...remoteEvents]
+    .sort((left, right) => {
+      const leftOrder = orderByName.get(left.name.toLowerCase()) ?? 1000
+      const rightOrder = orderByName.get(right.name.toLowerCase()) ?? 1000
+      return leftOrder - rightOrder || left.name.localeCompare(right.name)
+    })
+    .map((remoteEvent, index) => mapRemoteEventToAdminEvent(remoteEvent, fallbackByName.get(remoteEvent.name.toLowerCase()), index))
 };
 
 // Participants are populated from the admin API; remove built-in mock generation.
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [events, setEvents] = useState<AdminEvent[]>(() => initializeEvents());
+  const [events, setEvents] = useState<AdminEvent[]>(() => readCachedValue<AdminEvent[]>('simmam_events') || []);
   const [houses, setHouses] = useState<House[]>(() =>
-    initialHouses.map((h) => ({
+    readCachedValue<House[]>('simmam_houses') || initialHouses.map((h) => ({
       ...h,
       points2026: h.points2026 ?? h.points2025 ?? 0,
     })),
   );
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [settings, setSettings] = useState<AdminSettings>({
-    festivalStatus: 'pre',
-    registrationsOpen: true,
-    coordinatorAssignments: {},
-  });
+  const [participants, setParticipants] = useState<Participant[]>(() => readCachedValue<Participant[]>('simmam_participants') || []);
+  const [settings, setSettings] = useState<AdminSettings>(() =>
+    readCachedValue<AdminSettings>('simmam_settings') || {
+      festivalStatus: 'pre',
+      registrationsOpen: true,
+      coordinatorAssignments: {},
+    },
+  );
   const [pointsHistory, setPointsHistory] = useState<PointTransaction[]>([]);
 
   useEffect(() => {
@@ -188,8 +200,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const storedParticipants = localStorage.getItem('simmam_participants');
     const storedSettings = localStorage.getItem('simmam_settings');
     const storedPointsHistory = localStorage.getItem('simmam_points_history');
-
-    const initialAdminEvents = initializeEvents();
 
     if (storedEvents) {
       const parsedEvents = JSON.parse(storedEvents);
@@ -202,7 +212,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
       setEvents(reattachedEvents);
     } else {
-      setEvents(initialAdminEvents);
+      setEvents([]);
     }
 
     if (storedHouses) {
@@ -225,64 +235,70 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
-    try {
-      const [remoteEvents, remoteHouses, remoteLeaderboard, remoteSettings, remoteRegistrations] = await Promise.all([
-        fetchAdminEvents(),
-        fetchAdminHouses(),
-        fetchLeaderboard(),
-        fetchAdminSettings(),
-        fetchAdminRegistrations(),
-      ])
+    const eventsJob = fetchAdminEvents()
+      .then((remoteEvents) => {
+        if (remoteEvents.length > 0) {
+          const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents)
+          setEvents(mappedEvents)
+          writeCachedValue('simmam_events', mappedEvents)
+        }
+      })
+      .catch((err) => console.error('Failed to refresh events from API:', err))
 
-      if (remoteEvents.length > 0) {
-        const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents);
-        setEvents(mappedEvents);
-        localStorage.setItem('simmam_events', JSON.stringify(mappedEvents));
-      }
+    const housesJob = Promise.all([fetchAdminHouses(), fetchLeaderboard()])
+      .then(([remoteHouses, remoteLeaderboard]) => {
+        if (remoteHouses.length > 0) {
+          const leaderboardPointsByName = new Map(
+            remoteLeaderboard.map((item) => [item.house_name.toLowerCase(), Number(item.total_points ?? item.points ?? 0)]),
+          )
 
-      if (remoteHouses.length > 0) {
-        const leaderboardPointsByName = new Map(
-          remoteLeaderboard.map((item) => [item.house_name.toLowerCase(), Number(item.total_points ?? item.points ?? 0)]),
-        );
+          const mappedHouses = initialHouses.map((house) => {
+            const remoteHouse = remoteHouses.find((candidate) => candidate.name.toLowerCase() === house.name.toLowerCase())
+            const points2026 = leaderboardPointsByName.get(house.name.toLowerCase()) ?? Number(remoteHouse?.points ?? house.points2026 ?? 0)
 
-        const mappedHouses = initialHouses.map((house) => {
-          const remoteHouse = remoteHouses.find((candidate) => candidate.name.toLowerCase() === house.name.toLowerCase());
-          const points2026 = leaderboardPointsByName.get(house.name.toLowerCase()) ?? Number(remoteHouse?.points ?? house.points2026 ?? 0);
+            return {
+              ...house,
+              accent: remoteHouse?.accent || house.accent,
+              points2026,
+            }
+          })
 
-          return {
-            ...house,
-            accent: remoteHouse?.accent || house.accent,
-            points2026,
-          };
-        });
+          setHouses(mappedHouses)
+          writeCachedValue('simmam_houses', mappedHouses)
+        }
+      })
+      .catch((err) => console.error('Failed to refresh houses from API:', err))
 
-        setHouses(mappedHouses);
-        localStorage.setItem('simmam_houses', JSON.stringify(mappedHouses));
-      }
+    const registrationsJob = fetchAdminRegistrations()
+      .then((remoteRegistrations) => {
+        if (Array.isArray(remoteRegistrations)) {
+          const mappedParticipants = remoteRegistrations.map((row) => ({
+            id: row.registration_id,
+            name: row.participant_name,
+            regNo: row.reg_no || '',
+            email: row.email,
+            house: row.house || 'Unknown',
+            event: row.event_name,
+            status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
+            checkIn: !!row.checked_in,
+            certificate: false,
+          }))
+          setParticipants(mappedParticipants)
+          writeCachedValue('simmam_participants', mappedParticipants)
+        }
+      })
+      .catch((err) => console.error('Failed to refresh registrations from API:', err))
 
-      if (Array.isArray(remoteRegistrations)) {
-        const mappedParticipants = remoteRegistrations.map((row) => ({
-          id: row.registration_id,
-          name: row.participant_name,
-          regNo: row.reg_no || '',
-          email: row.email,
-          house: row.house || 'Unknown',
-          event: row.event_name,
-          status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
-          checkIn: !!row.checked_in,
-          certificate: false,
-        }))
-        setParticipants(mappedParticipants)
-        localStorage.setItem('simmam_participants', JSON.stringify(mappedParticipants))
-      }
+    const settingsJob = fetchAdminSettings()
+      .then((remoteSettings) => {
+        if (remoteSettings) {
+          setSettings(remoteSettings)
+          writeCachedValue('simmam_settings', remoteSettings)
+        }
+      })
+      .catch((err) => console.error('Failed to refresh settings from API:', err))
 
-      if (remoteSettings) {
-        setSettings(remoteSettings);
-        localStorage.setItem('simmam_settings', JSON.stringify(remoteSettings));
-      }
-    } catch (err) {
-      console.error('Failed to refresh data from API:', err);
-    }
+    await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob])
   }, []);
 
   useEffect(() => {
@@ -308,39 +324,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [refreshData]);
 
   const updateEvent = (updatedEvent: AdminEvent) => {
-    const newEvents = events.map(e => e.id === updatedEvent.id ? updatedEvent : e);
+    const newEvents = events.map((event) => {
+      const idMatches = event.id === updatedEvent.id
+      const nameMatches = event.name.toLowerCase() === updatedEvent.name.toLowerCase()
+      return idMatches || nameMatches ? updatedEvent : event
+    })
     setEvents(newEvents);
-    localStorage.setItem('simmam_events', JSON.stringify(newEvents));
+    writeCachedValue('simmam_events', newEvents);
   };
 
   const addEvent = (newEvent: AdminEvent) => {
     const updatedEvents = [...events, newEvent];
     setEvents(updatedEvents);
-    localStorage.setItem('simmam_events', JSON.stringify(updatedEvents));
+    writeCachedValue('simmam_events', updatedEvents);
   };
 
   const deleteEvent = (eventId: string) => {
-    const updatedEvents = events.filter((event) => event.id !== eventId);
+    const updatedEvents = events.filter((event) => event.id !== eventId && event.name.toLowerCase() !== eventId.toLowerCase());
     setEvents(updatedEvents);
-    localStorage.setItem('simmam_events', JSON.stringify(updatedEvents));
+    writeCachedValue('simmam_events', updatedEvents);
   };
 
   const updateHouse = (updatedHouse: House) => {
     const newHouses = houses.map(h => h.name === updatedHouse.name ? updatedHouse : h);
     setHouses(newHouses);
-    localStorage.setItem('simmam_houses', JSON.stringify(newHouses));
+    writeCachedValue('simmam_houses', newHouses);
   };
 
   const updateParticipant = (updatedParticipant: Participant) => {
     const newParticipants = participants.map(p => p.id === updatedParticipant.id ? updatedParticipant : p);
     setParticipants(newParticipants);
-    localStorage.setItem('simmam_participants', JSON.stringify(newParticipants));
+    writeCachedValue('simmam_participants', newParticipants);
   };
 
   const addParticipant = (newParticipant: Participant) => {
     const updatedParticipants = [...participants, newParticipant];
     setParticipants(updatedParticipants);
-    localStorage.setItem('simmam_participants', JSON.stringify(updatedParticipants));
+    writeCachedValue('simmam_participants', updatedParticipants);
   };
 
   const updateHousePoints = (houseName: string, points: number, reason?: string, issuedBy: string = 'Admin') => {
@@ -354,7 +374,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return h;
     });
     setHouses(newHouses);
-    localStorage.setItem('simmam_houses', JSON.stringify(newHouses));
+    writeCachedValue('simmam_houses', newHouses);
 
     if (reason || points < 0) {
       const newTransaction: PointTransaction = {
@@ -367,13 +387,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       };
       const newHistory = [newTransaction, ...pointsHistory];
       setPointsHistory(newHistory);
-      localStorage.setItem('simmam_points_history', JSON.stringify(newHistory));
+      writeCachedValue('simmam_points_history', newHistory);
     }
   };
 
   const updateSettings = (newSettings: any) => {
     setSettings(newSettings);
-    localStorage.setItem('simmam_settings', JSON.stringify(newSettings));
+    writeCachedValue('simmam_settings', newSettings);
   };
 
   const findAdminEventByName = (name: string): AdminEvent | undefined => {
@@ -416,9 +436,5 @@ export function DataProvider({ children }: { children: ReactNode }) {
 }
 
 export function useData() {
-  const context = useContext(DataContext);
-  if (context === undefined) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
+  return useContext(DataContext);
 }
