@@ -100,7 +100,6 @@ function EventsPage() {
     if (!form.time.trim()) return 'Event Time is required'
     if (!form.venue.trim()) return 'Event Venue is required'
     if (!form.maxParticipants.trim()) return 'Maximum Participants is required'
-    if (!form.registrationDeadline) return 'Registration Deadline is required'
     if (!form.rules.trim()) return 'Event Rules are required'
     return null
   }
@@ -368,7 +367,16 @@ function EventsPage() {
           </DialogHeader>
           <EventFormFields form={form} setForm={setForm} />
           <div className="flex justify-end">
-            <Button className="bg-white text-black hover:bg-gray-200" onClick={handleCreate}>
+            <Button
+              type="button"
+              className="bg-white text-black hover:bg-gray-200"
+              onPointerDown={() => console.log('Create pointer down', { form })}
+              onClick={() => {
+                console.log('Create clicked', { form })
+                toast('Creating...')
+                void handleCreate()
+              }}
+            >
               Create Event
             </Button>
           </div>
@@ -382,7 +390,16 @@ function EventsPage() {
           </DialogHeader>
           <EventFormFields form={form} setForm={setForm} />
           <div className="flex justify-end">
-            <Button className="bg-white text-black hover:bg-gray-200" onClick={handleUpdate}>
+            <Button
+              type="button"
+              className="bg-white text-black hover:bg-gray-200"
+              onPointerDown={() => console.log('Save pointer down', { editingEvent, form })}
+              onClick={() => {
+                console.log('Save clicked', { editingEvent, form })
+                toast('Saving...')
+                void handleUpdate()
+              }}
+            >
               Save Changes
             </Button>
           </div>
