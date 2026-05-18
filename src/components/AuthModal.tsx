@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { ArrowRight, Check, Hash, LogIn, Mail, Shield, User, X } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, Check, LogIn, Mail, Shield, X } from 'lucide-react'
 
 import {
   getUser,
+  clearUser,
   isRegisteredForEvent,
   registerForEvent,
   saveUser,
   type UserProfile,
 } from '@/lib/registrationStore'
+import { fetchUserProfileByEmail } from '@/lib/apiClient'
 
 export type RegistrationEvent = {
   id: string
@@ -33,40 +36,43 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const existingUser = getUser()
   const [step, setStep] = useState<Step>(existingUser ? 'confirm' : 'login')
   const [formEmail, setFormEmail] = useState(existingUser?.email ?? '')
-  const [formName, setFormName] = useState(existingUser?.name ?? '')
-  const [formRegNo, setFormRegNo] = useState(existingUser?.registerNumber ?? '')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const handleLoginSubmit = (eventSubmit: React.FormEvent) => {
+  const handleLoginSubmit = async (eventSubmit: React.FormEvent) => {
     eventSubmit.preventDefault()
     setFormError('')
 
-    if (!formEmail.trim() || !formEmail.includes('@')) {
+    if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) {
       setFormError('A valid email address is required.')
       return
     }
 
-    if (!formName.trim()) {
-      setFormError('Full name is required.')
-      return
-    }
+    setSubmitting(true)
+    try {
+      const result = await fetchUserProfileByEmail(formEmail.trim())
+      if (!result.user) {
+        setFormError('No profile found for that email. Please sign up first.')
+        return
+      }
 
-    if (!formRegNo.trim()) {
-      setFormError('Register number is required.')
-      return
-    }
+      const newUser: UserProfile = {
+        email: result.user.email.toLowerCase(),
+        name: result.user.name,
+        picture: result.user.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(result.user.name)}`,
+        registerNumber: result.user.register_number || '',
+        mobileNumber: result.user.mobile_number,
+        house: result.user.house || '',
+      }
 
-    const newUser: UserProfile = {
-      email: formEmail.trim().toLowerCase(),
-      name: formName.trim(),
-      picture: `https://api.dicebear.com/8.x/initials/svg?seed=${formName.trim()}`,
-      registerNumber: formRegNo.trim().toUpperCase(),
-      house: existingUser?.house ?? '',
+      clearUser()
+      saveUser(newUser)
+      setStep('confirm')
+    } catch (error: any) {
+      setFormError(error?.message || 'Unable to sign in right now.')
+    } finally {
+      setSubmitting(false)
     }
-
-    saveUser(newUser)
-    setStep('confirm')
   }
 
   const handleConfirmSubmit = async () => {
@@ -159,51 +165,21 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                 <form onSubmit={handleLoginSubmit} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="mb-1 flex items-center gap-2">
                     <LogIn className="h-4 w-4 text-[#D4AF37]" />
-                    <h2 className="font-display text-xl font-bold text-white">Sign In</h2>
+                    <h2 className="font-display text-xl font-bold text-white">Login</h2>
                   </div>
-                  <p className="mb-6 text-sm text-white/45">Enter your details once to register for all events easily.</p>
+                  <p className="mb-6 text-sm text-white/45">Enter your Saveetha email to continue registering for events.</p>
 
-                  <div className="mb-6 space-y-4">
-                    <div>
-                      <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
-                        <input
-                          type="email"
-                          value={formEmail}
-                          onChange={(e) => setFormEmail(e.target.value)}
-                          placeholder="student@example.com"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
-                        <input
-                          type="text"
-                          value={formName}
-                          onChange={(e) => setFormName(e.target.value)}
-                          placeholder="Enter your full name"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Register Number</label>
-                      <div className="relative">
-                        <Hash className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
-                        <input
-                          type="text"
-                          value={formRegNo}
-                          onChange={(e) => setFormRegNo(e.target.value)}
-                          placeholder="e.g. 7376221CS123"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm uppercase text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
-                        />
-                      </div>
+                  <div className="mb-6">
+                    <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
+                      <input
+                        type="email"
+                        value={formEmail}
+                        onChange={(e) => setFormEmail(e.target.value)}
+                        placeholder="192421111.simats@saveetha.com"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
+                      />
                     </div>
                   </div>
 
@@ -217,6 +193,17 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                   >
                     Continue <ArrowRight className="h-4 w-4" />
                   </button>
+
+                  <div className="mt-4 text-center text-xs text-white/35">
+                    New here?{' '}
+                    <Link
+                      to="/profile"
+                      search={{ signup: '1' }}
+                      className="font-semibold text-[#D4AF37] transition hover:text-[#f3c95b]"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
                 </form>
               )}
 

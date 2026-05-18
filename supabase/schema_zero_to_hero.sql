@@ -38,12 +38,16 @@ create table if not exists users (
   name text not null,
   email citext not null unique,
   register_number text,
+  mobile_number text,
   picture_url text,
   house text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint users_email_format_chk check (position('@' in email::text) > 1)
 );
+
+alter table if exists users
+  add column if not exists mobile_number text;
 
 create table if not exists houses (
   id uuid primary key default gen_random_uuid(),

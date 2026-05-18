@@ -9,12 +9,10 @@ import {
   ChevronRight,
   Calendar,
   User,
-  Settings,
 } from "lucide-react";
 import { getUser, isRegisteredForEvent } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useData } from "@/lib/store";
-import { UserSetupModal } from "./UserSetupModal";
 
 type DisplayEvent = {
   id: string;
@@ -126,7 +124,6 @@ export function EventsShowtime() {
   const [user, setUser] = useState(getUser);
   const [registrationTick, setRegistrationTick] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [showSetupModal, setShowSetupModal] = useState(false);
   const dateScrollRef = useRef<HTMLDivElement>(null);
 
   const refreshUser = () => {
@@ -250,25 +247,16 @@ export function EventsShowtime() {
                 MY SCHEDULE →
               </Link>
             </div>
-            <button
-              id="edit-profile-shortcut-btn"
-              onClick={() => setShowSetupModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/40 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition"
-            >
-              <Settings className="w-3 h-3" />
-              Edit Profile
-            </button>
           </div>
         ) : (
           <div className="mt-4">
-            <button
-              id="setup-profile-btn"
-              onClick={() => setShowSetupModal(true)}
+            <Link
+              to="/profile"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition"
             >
               <User className="w-3.5 h-3.5" />
-              Set Up Profile &amp; Dashboard
-            </button>
+              Log In
+            </Link>
           </div>
         )}
       </div>
@@ -411,13 +399,6 @@ export function EventsShowtime() {
         />
       )}
 
-      {/* ── User Setup Modal ────────────────────────────────── */}
-      {showSetupModal && (
-        <UserSetupModal
-          onSave={refreshUser}
-          onClose={() => setShowSetupModal(false)}
-        />
-      )}
     </div>
   );
 }

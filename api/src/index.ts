@@ -18,12 +18,35 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 
 const app = express()
-app.use(
-  cors({
-    origin: FRONTEND_URL ? [FRONTEND_URL, 'http://localhost:5173'] : true,
-    credentials: false,
-  }),
+const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
+const allowedOrigins = new Set(
+  [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:8080', 'http://127.0.0.1:5173', 'http://127.0.0.1:8080'].filter(
+    (value): value is string => Boolean(value),
+  ),
 )
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true)
+      return
+    }
+
+    if (allowedOrigins.has(origin) || localDevOriginPattern.test(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error(`CORS blocked origin: ${origin}`))
+  },
+  credentials: false,
+  optionsSuccessStatus: 204,
+}
+
+app.use(
+  cors(corsOptions),
+)
+app.options('*', cors(corsOptions))
 app.use(express.json())
 
 const slugify = (value: string) =>
@@ -49,6 +72,11 @@ const DEFAULT_ADMIN_SETTINGS = {
   registrations_open: true,
   coordinator_assignments: {},
 }
+
+let adminSettingsTableMissing = false
+
+const isMissingAdminSettingsTableError = (error: any) =>
+  error?.code === 'PGRST205' || error?.message?.includes('admin_settings')
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
@@ -140,6 +168,16 @@ let inMemoryAdminSettings = {
 
 app.get('/api/admin/settings', async (_req, res) => {
   try {
+    if (adminSettingsTableMissing) {
+      return res.json({
+        settings: {
+          festivalStatus: inMemoryAdminSettings.festival_status,
+          registrationsOpen: inMemoryAdminSettings.registrations_open,
+          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+        },
+      })
+    }
+
     const { data, error } = await supabase
       .from('admin_settings')
       .select('festival_status,registrations_open,coordinator_assignments')
@@ -150,8 +188,8 @@ app.get('/api/admin/settings', async (_req, res) => {
       if (error.code === 'PGRST116') {
         return res.json({ settings: DEFAULT_ADMIN_SETTINGS })
       }
-      if (error.code === 'PGRST205' || error.message?.includes('admin_settings')) {
-        console.warn('Table admin_settings not found, falling back to in-memory settings.')
+      if (isMissingAdminSettingsTableError(error)) {
+        adminSettingsTableMissing = true
         return res.json({
           settings: {
             festivalStatus: inMemoryAdminSettings.festival_status,
@@ -192,6 +230,21 @@ app.post('/api/admin/settings', async (req, res) => {
       coordinator_assignments: coordinatorAssignments || {},
     }
 
+    if (adminSettingsTableMissing) {
+      inMemoryAdminSettings = {
+        festival_status: festivalStatus,
+        registrations_open: registrationsOpen,
+        coordinator_assignments: coordinatorAssignments || {},
+      }
+      return res.json({
+        settings: {
+          festivalStatus: inMemoryAdminSettings.festival_status,
+          registrationsOpen: inMemoryAdminSettings.registrations_open,
+          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+        },
+      })
+    }
+
     const { data, error } = await supabase
       .from('admin_settings')
       .upsert(payload, { onConflict: 'id' })
@@ -199,8 +252,8 @@ app.post('/api/admin/settings', async (req, res) => {
       .single()
 
     if (error) {
-      if (error.code === 'PGRST205' || error.message?.includes('admin_settings')) {
-        console.warn('Table admin_settings not found, updating in-memory settings.')
+      if (isMissingAdminSettingsTableError(error)) {
+        adminSettingsTableMissing = true
         inMemoryAdminSettings = {
           festival_status: festivalStatus,
           registrations_open: registrationsOpen,
@@ -323,7 +376,7 @@ app.get('/api/admin/users', async (req, res) => {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
 
-    let query = supabase.from('users').select('id,name,email,register_number,house,created_at').order('created_at', { ascending: false })
+    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,house,created_at').order('created_at', { ascending: false })
     if (house) query = query.eq('house', house)
 
     const { data, error } = await query.limit(500)
@@ -343,7 +396,7 @@ app.get('/api/admin/users', async (req, res) => {
       user_id: row.id,
       name: row.name,
       email: row.email,
-      mobile_number: '',
+      mobile_number: row.mobile_number || '',
       house: row.house || '',
       register_number: row.register_number || '',
       created_at: row.created_at,
@@ -362,7 +415,7 @@ app.get('/api/admin/users/:id', async (req, res) => {
 
     const { data: user, error: userErr } = await supabase
       .from('users')
-      .select('id,name,email,register_number,house,created_at')
+      .select('id,name,email,mobile_number,register_number,house,created_at')
       .eq('id', id)
       .single()
 
@@ -370,7 +423,6 @@ app.get('/api/admin/users/:id', async (req, res) => {
       if (userErr.code === 'PGRST116') return res.status(404).json({ error: 'user_not_found' })
       throw userErr
     }
-
     const { data: registrations, error: regErr } = await supabase
       .from('registrations')
       .select('id,status,registered_at,events(name,date,time_slot)')
@@ -384,7 +436,7 @@ app.get('/api/admin/users/:id', async (req, res) => {
         user_id: user.id,
         name: user.name,
         email: user.email,
-        mobile_number: '',
+        mobile_number: user.mobile_number || '',
         house: user.house || '',
         register_number: user.register_number || '',
         created_at: user.created_at,
@@ -400,6 +452,18 @@ app.get('/api/admin/users/:id', async (req, res) => {
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const { data: registrations, error: regErr } = await supabase.from('registrations').select('id').eq('user_id', id)
+    if (regErr) throw regErr
+
+    const registrationIds = (registrations || []).map((row: any) => row.id)
+    if (registrationIds.length > 0) {
+      const { error: checkinErr } = await supabase.from('checkins').delete().in('registration_id', registrationIds)
+      if (checkinErr) throw checkinErr
+
+      const { error: deleteRegsErr } = await supabase.from('registrations').delete().eq('user_id', id)
+      if (deleteRegsErr) throw deleteRegsErr
+    }
+
     const { error } = await supabase.from('users').delete().eq('id', id)
     if (error) throw error
     res.json({ ok: true })
@@ -412,11 +476,12 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 app.put('/api/admin/users/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { name, email, register_number, house, picture_url } = req.body
+    const { name, email, mobile_number, register_number, house, picture_url } = req.body
 
     const payload: any = {}
     if (name) payload.name = name
     if (email) payload.email = String(email).toLowerCase()
+    if (mobile_number !== undefined) payload.mobile_number = mobile_number
     if (register_number) payload.register_number = register_number
     if (house) payload.house = house
     if (picture_url) payload.picture_url = picture_url
@@ -454,8 +519,7 @@ app.get('/api/admin/registrations', async (req, res) => {
       .order('registered_at', { ascending: false })
       .limit(1000)
 
-    if (error) throw error
-
+        if (error) throw error
     const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
     if (checkinsErr) throw checkinsErr
     const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
@@ -514,7 +578,6 @@ app.post('/api/admin/registrations', async (req, res) => {
       }
       resolvedEventId = eventRow.id
     }
-
     const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration', {
       p_email: String(email).toLowerCase(),
       p_name: name,
@@ -664,6 +727,22 @@ app.put('/api/admin/registrations/:id', async (req, res) => {
         checked_in: (checkinData || []).length > 0,
       },
     })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.delete('/api/admin/registrations/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { error: checkinErr } = await supabase.from('checkins').delete().eq('registration_id', id)
+    if (checkinErr) throw checkinErr
+
+    const { error } = await supabase.from('registrations').delete().eq('id', id)
+    if (error) throw error
+
+    res.json({ ok: true })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })
@@ -915,6 +994,18 @@ app.post('/api/admin/checkin', async (req, res) => {
   }
 })
 
+app.delete('/api/admin/checkin/:registration_id', async (req, res) => {
+  try {
+    const { registration_id } = req.params
+    const { error } = await supabase.from('checkins').delete().eq('registration_id', registration_id)
+    if (error) throw error
+    res.json({ ok: true })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 app.get('/api/admin/attendance-report', async (_req, res) => {
   try {
     const { data: eventRegs, error: regErr } = await supabase
@@ -957,7 +1048,8 @@ app.get('/api/admin/attendance-report', async (_req, res) => {
 // Upsert user profile
 app.post('/api/users/upsert', async (req, res) => {
   try {
-    const { email, name, register_number, house, picture_url } = req.body
+    const { email, name, mobile_number, register_number, house, picture_url } = req.body
+    const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
 
     if (!email || !name) {
       return res.status(400).json({ error: 'email and name required' })
@@ -969,6 +1061,7 @@ app.post('/api/users/upsert', async (req, res) => {
         {
           email: String(email).toLowerCase(),
           name,
+          mobile_number: normalizedMobileNumber,
           register_number,
           house,
           picture_url,
@@ -1044,7 +1137,7 @@ app.post('/api/registrations', async (req, res) => {
 app.get('/api/users/:email/registrations', async (req, res) => {
   try {
     const email = (req.params.email || '').toLowerCase()
-    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,house,register_number').eq('email', email).limit(1)
+    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)
     if (userErr) throw userErr
     const user = Array.isArray(userData) ? userData[0] : userData
     if (!user) return res.json({ user: null, registrations: [] })

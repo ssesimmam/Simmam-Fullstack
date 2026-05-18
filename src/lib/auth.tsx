@@ -6,25 +6,18 @@ import { ROLE_PERMISSIONS } from '@/types/admin'
 const MOCK_USERS: AdminUser[] = [
   {
     id: '1',
-    name: 'Event Coordinator',
-    email: 'coordinator@simmam.com',
-    role: 'coordinator',
-    assignedEvent: 'Basketball',
-  },
-  {
-    id: '2',
     name: 'Registration Team',
     email: 'reg@s.com',
     role: 'reg_team',
   },
   {
-    id: '3',
+    id: '2',
     name: 'Core Team Member',
     email: 'core@s.com',
     role: 'core_team',
   },
   {
-    id: '4',
+    id: '3',
     name: 'Developer Admin',
     email: 'dev@s.com',
     role: 'developer_admin',
@@ -50,7 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem('simmam_admin_user')
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser))
+        const parsed = JSON.parse(storedUser)
+        if (parsed?.role === 'coordinator') {
+          localStorage.removeItem('simmam_admin_user')
+        } else {
+          setUser(parsed)
+        }
       } catch (error) {
         localStorage.removeItem('simmam_admin_user')
       }

@@ -110,9 +110,31 @@ export async function fetchUserRegistrations(email: string): Promise<ApiRegistra
   return payload.registrations || []
 }
 
+export async function fetchUserProfileByEmail(email: string): Promise<{
+  user: {
+    email: string
+    name: string
+    mobile_number?: string
+    register_number?: string
+    house?: string
+    picture_url?: string
+  } | null
+}> {
+  const encoded = encodeURIComponent(email.trim().toLowerCase())
+  return request<{ user: {
+    email: string
+    name: string
+    mobile_number?: string
+    register_number?: string
+    house?: string
+    picture_url?: string
+  } | null }>(`/users/${encoded}/registrations`)
+}
+
 export async function upsertUserProfile(payload: {
   email: string
   name: string
+  mobile_number?: string
   register_number?: string
   house?: string
   picture_url?: string

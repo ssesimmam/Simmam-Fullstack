@@ -21,18 +21,6 @@ const MENU_ITEMS = {
       icon: LayoutDashboard,
     },
   ],
-  coordinator: [
-    {
-      title: 'Leaderboard',
-      href: '/admin/leaderboard',
-      icon: Trophy,
-    },
-    {
-      title: 'Participants',
-      href: '/admin/participants',
-      icon: Users,
-    },
-  ],
   core_team: [
     {
       title: 'Leaderboard',
@@ -60,11 +48,6 @@ const MENU_ITEMS = {
       title: 'Check-In',
       href: '/admin/checkin',
       icon: CheckCircle,
-    },
-    {
-      title: 'Registrations',
-      href: '/admin/registrations',
-      icon: Shield,
     },
   ],
   developer_admin: [
@@ -117,7 +100,7 @@ export default function AdminSidebar() {
   if (!user) return null
 
   const getMenuItems = () => {
-    const baseItems = MENU_ITEMS.all
+    const baseItems = user.role === 'reg_team' ? [] : MENU_ITEMS.all
     const roleItems = MENU_ITEMS[user.role] || []
     return [...baseItems, ...roleItems]
   }

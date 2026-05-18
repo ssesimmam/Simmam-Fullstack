@@ -51,7 +51,6 @@ export type AdminUserRow = {
   user_id: string
   name: string
   email: string
-  mobile_number: string
   house: string
   register_number: string
   created_at: string
@@ -153,6 +152,14 @@ export async function fetchAdminUserDetails(userId: string): Promise<{ user: Adm
 
 export async function deleteAdminUser(userId: string): Promise<void> {
   await adminRequest(`/users/${encodeURIComponent(userId)}`, { method: 'DELETE' })
+}
+
+export async function deleteAdminRegistration(registrationId: string): Promise<void> {
+  await adminRequest(`/registrations/${encodeURIComponent(registrationId)}`, { method: 'DELETE' })
+}
+
+export async function removeAdminCheckin(registrationId: string): Promise<void> {
+  await adminRequest(`/checkin/${encodeURIComponent(registrationId)}`, { method: 'DELETE' })
 }
 
 export async function updateAdminUser(userId: string, payload: {

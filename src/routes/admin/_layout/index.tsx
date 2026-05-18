@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Calendar, CheckCircle2, ClipboardList, Users, UserRoundPlus } from 'lucide-react'
 
 import PageHeader from '@/components/admin/shared/PageHeader'
@@ -36,10 +37,17 @@ function DashboardCard({
 
 function AdminDashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
 
   const showOverview = user?.role === 'developer_admin' || user?.role === 'core_team'
+
+  useEffect(() => {
+    if (user?.role === 'reg_team') {
+      navigate({ to: '/admin/checkin', replace: true })
+    }
+  }, [navigate, user?.role])
 
   useEffect(() => {
     void fetchAdminDashboardSummary()
@@ -49,6 +57,10 @@ function AdminDashboard() {
   }, [])
 
   if (!showOverview) {
+    if (user?.role === 'reg_team') {
+      return null
+    }
+
     return (
       <div className="space-y-6">
         <PageHeader title="Admin Dashboard" subtitle={`Welcome back, ${user?.name || 'Admin'}`} />

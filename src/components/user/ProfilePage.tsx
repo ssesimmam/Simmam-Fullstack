@@ -1,17 +1,64 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { User, LogIn } from 'lucide-react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { UserDashboard } from '@/components/UserDashboard'
 import { UserSetupModal } from '@/components/UserSetupModal'
-import { getUser } from '@/lib/registrationStore'
+import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
+import { fetchUserProfileByEmail } from '@/lib/apiClient'
 
 export function ProfilePage() {
   const [user, setUser] = useState(getUser)
   const [showSetupModal, setShowSetupModal] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [loggingIn, setLoggingIn] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    setShowSetupModal(params.get('signup') === '1')
+  }, [location.search])
 
   const refreshUser = () => {
     setUser(getUser())
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+
+    if (!loginEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(loginEmail.trim())) {
+      setLoginError('Enter a valid @saveetha.com email address.')
+      return
+    }
+
+    setLoggingIn(true)
+    try {
+      const result = await fetchUserProfileByEmail(loginEmail)
+      if (!result.user) {
+        setLoginError('No profile found. Please sign up first.')
+        return
+      }
+
+      const profile: UserProfile = {
+        email: result.user.email.toLowerCase(),
+        name: result.user.name,
+        picture: result.user.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(result.user.name)}`,
+        registerNumber: result.user.register_number || '',
+        mobileNumber: result.user.mobile_number,
+        house: result.user.house || '',
+      }
+
+      saveUser(profile)
+      setUser(profile)
+    } catch (error: any) {
+      setLoginError(error?.message || 'Unable to log in right now.')
+    } finally {
+      setLoggingIn(false)
+    }
   }
 
   return (
@@ -38,7 +85,6 @@ export function ProfilePage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <UserDashboard
                 user={user}
-                onEditProfile={() => setShowSetupModal(true)}
                 onSignOut={() => setUser(null)}
               />
             </div>
@@ -47,17 +93,36 @@ export function ProfilePage() {
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">
                 <User className="h-10 w-10 text-[#D4AF37]" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">Not Signed In</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">Login Required</h2>
               <p className="text-white/40 text-sm mb-8">
-                Set up your profile once to access your full SIMMAM 2026 dashboard.
+                Login with your Saveetha email to access your SIMMAM 2026 dashboard.
               </p>
-              <button
-                onClick={() => setShowSetupModal(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[oklch(0.55_0.22_27)] to-[#D4AF37] text-black font-bold hover:scale-105 hover:shadow-[0_0_30px_#D4AF3740] transition-all"
-              >
-                <LogIn className="w-5 h-5" />
-                Set Up Profile & Dashboard
-              </button>
+              <form onSubmit={handleLogin} className="space-y-3">
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="192421111.simats@saveetha.com"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
+                  />
+                </div>
+                {loginError && <p className="text-xs text-red-400">{loginError}</p>}
+                <button
+                  type="submit"
+                  disabled={loggingIn}
+                  className="inline-flex w-full items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[oklch(0.55_0.22_27)] to-[#D4AF37] text-black font-bold hover:scale-105 hover:shadow-[0_0_30px_#D4AF3740] transition-all disabled:opacity-60"
+                >
+                  <LogIn className="w-5 h-5" />
+                  {loggingIn ? 'Logging in...' : 'Login'}
+                </button>
+              </form>
+              <div className="mt-4 text-sm text-white/40">
+                New user?{' '}
+                <Link to="/profile" search={{ signup: '1' }} className="text-[#D4AF37] hover:text-[#f3c95b]">
+                  Sign Up
+                </Link>
+              </div>
             </div>
           )}
         </div>
@@ -68,7 +133,10 @@ export function ProfilePage() {
       {showSetupModal && (
         <UserSetupModal
           onSave={refreshUser}
-          onClose={() => setShowSetupModal(false)}
+          onClose={() => {
+            setShowSetupModal(false)
+            void navigate({ to: '/profile', replace: true })
+          }}
         />
       )}
     </div>

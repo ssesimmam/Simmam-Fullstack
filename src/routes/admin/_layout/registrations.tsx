@@ -125,7 +125,7 @@ function RegistrationsPage() {
           <table className="w-full text-sm">
             <thead className="bg-black/40 text-gray-400">
               <tr>
-                <th className="text-left p-3">User ID</th>
+                <th className="text-left p-3">Register No</th>
                 <th className="text-left p-3">Participant Name</th>
                 <th className="text-left p-3">Event Name</th>
                 <th className="text-left p-3">Registration Date</th>
@@ -148,7 +148,7 @@ function RegistrationsPage() {
               ) : (
                 rows.map((row) => (
                   <tr key={row.registration_id} className="border-t border-[#222] text-white/90">
-                    <td className="p-3 font-mono text-xs text-gray-400">{row.user_id?.slice(0, 8)}...</td>
+                    <td className="p-3 font-mono text-xs text-gray-400">{row.reg_no || '-'}</td>
                     <td className="p-3">{row.participant_name}</td>
                     <td className="p-3">{row.event_name}</td>
                     <td className="p-3 text-gray-400">{row.registration_date ? new Date(row.registration_date).toLocaleString() : '-'}</td>

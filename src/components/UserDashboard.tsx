@@ -4,7 +4,6 @@ import {
   Clock,
   LogOut,
   MapPin,
-  Pencil,
   Sparkles,
   User,
 } from 'lucide-react'
@@ -265,11 +264,10 @@ function StatCard({ count, label, accentColor, loading }: StatCardProps) {
 
 interface UserDashboardProps {
   user: UserProfile
-  onEditProfile: () => void
   onSignOut: () => void
 }
 
-export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardProps) {
+export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
   const { participants, houses } = useData()
   const [activeTab, setActiveTab] = useState<Tab>('registered')
   const [registrations, setRegistrations] = useState<Registration[]>([])
@@ -365,15 +363,6 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
 
           {/* Actions */}
           <div className="shrink-0 flex flex-col sm:flex-row items-end sm:items-center gap-2">
-            <button
-              id="edit-profile-btn"
-              onClick={onEditProfile}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/50 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit Profile
-            </button>
-
             {confirmSignOut ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-white/40">Clear all data?</span>

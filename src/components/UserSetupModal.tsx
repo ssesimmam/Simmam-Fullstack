@@ -14,6 +14,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
 
   const [formName, setFormName] = useState(existing?.name ?? '')
   const [formRegNo, setFormRegNo] = useState(existing?.registerNumber ?? '')
+  const [formMobile, setFormMobile] = useState(existing?.mobileNumber ?? '')
   const [formEmail, setFormEmail] = useState(existing?.email ?? '')
   const [formHouse, setFormHouse] = useState(existing?.house ?? '')
   const [error, setError] = useState('')
@@ -25,7 +26,9 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
 
     if (!formName.trim()) { setError('Full name is required.'); return }
     if (!formRegNo.trim()) { setError('Register number is required.'); return }
-    if (!formEmail.trim() || !formEmail.includes('@')) { setError('A valid SIMATS email is required.'); return }
+    if (!formMobile.trim()) { setError('Mobile number is required.'); return }
+    if (!/^\d{10}$/.test(formMobile.trim())) { setError('Mobile number must be 10 digits.'); return }
+    if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) { setError('Email must end with @saveetha.com.'); return }
     if (!formHouse) { setError('Please select your house.'); return }
 
     setSubmitting(true)
@@ -36,6 +39,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
       name: formName.trim(),
       picture: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(formName.trim())}`,
       registerNumber: formRegNo.trim().toUpperCase(),
+      mobileNumber: formMobile.trim(),
       house: formHouse,
     }
 
@@ -132,8 +136,27 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
                       type="text"
                       value={formRegNo}
                       onChange={(e) => setFormRegNo(e.target.value)}
-                      placeholder="e.g. 7376221CS123"
+                      placeholder="e.g. 192421111"
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm uppercase text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile Number */}
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
+                    Mobile Number
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
+                    <input
+                      id="setup-mobile"
+                      type="tel"
+                      inputMode="numeric"
+                      value={formMobile}
+                      onChange={(e) => setFormMobile(e.target.value.replace(/\D/g, ''))}
+                      placeholder="9876543210"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
                     />
                   </div>
                 </div>
@@ -141,7 +164,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
                 {/* SIMATS Email */}
                 <div>
                   <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
-                    SIMATS Email
+                    Saveetha Email
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
@@ -150,10 +173,11 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
                       type="email"
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
-                      placeholder="student@simats.edu"
+                      placeholder="192421111.simats@saveetha.com"
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
                     />
                   </div>
+                  <p className="mt-1 text-[10px] text-white/30">Only `@saveetha.com` addresses are accepted.</p>
                 </div>
 
                 {/* House Selection */}

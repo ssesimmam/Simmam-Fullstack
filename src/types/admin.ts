@@ -1,11 +1,11 @@
-export type AdminRole = 'coordinator' | 'core_team' | 'reg_team' | 'developer_admin'
+export type AdminRole = 'core_team' | 'reg_team' | 'developer_admin'
 
 export interface AdminUser {
   id: string
   name: string
   email: string
   role: AdminRole
-  assignedEvent?: string // for coordinator role
+  assignedEvent?: string
 }
 
 export interface Permission {
@@ -14,10 +14,6 @@ export interface Permission {
 }
 
 export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
-  coordinator: [
-    { resource: 'participants', actions: ['read'] },
-    { resource: 'leaderboard', actions: ['read'] },
-  ],
   core_team: [
     { resource: 'participants', actions: ['read'] },
     { resource: 'leaderboard', actions: ['read'] },
@@ -26,7 +22,6 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   ],
   reg_team: [
     { resource: 'checkin', actions: ['read', 'create', 'update'] },
-    { resource: 'registrations', actions: ['read'] },
   ],
   developer_admin: [
     { resource: 'events', actions: ['read', 'create', 'update', 'delete'] },

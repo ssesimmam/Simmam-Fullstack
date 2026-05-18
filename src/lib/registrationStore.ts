@@ -3,6 +3,7 @@ import { createRegistration, fetchUserRegistrations, upsertUserProfile } from '@
 export type UserProfile = {
   email: string
   name: string
+  mobileNumber?: string
   picture: string
   registerNumber: string
   house: string
@@ -41,6 +42,7 @@ export function saveUser(user: UserProfile): void {
   void upsertUserProfile({
     email: user.email,
     name: user.name,
+    mobile_number: user.mobileNumber,
     register_number: user.registerNumber,
     house: user.house,
     picture_url: user.picture,

@@ -18,7 +18,6 @@ import type { AdminRole } from '@/types/admin'
 const SAMPLE_ADMIN_ACCOUNTS: Record<AdminRole, string> = {
   developer_admin: 'dev@s.com',
   core_team: 'core@s.com',
-  coordinator: 'coordinator@simmam.com',
   reg_team: 'reg@s.com',
 }
 
@@ -120,7 +119,6 @@ function LoginPage() {
                     <SelectContent>
                       <SelectItem value="developer_admin">Developer Admin</SelectItem>
                       <SelectItem value="core_team">Core Team</SelectItem>
-                      <SelectItem value="coordinator">Coordinator</SelectItem>
                       <SelectItem value="reg_team">Registration Team</SelectItem>
                     </SelectContent>
                   </Select>
@@ -166,7 +164,6 @@ function LoginPage() {
                 <ul className="mt-3 space-y-1 text-xs">
                   <li><span className="font-medium text-white">Developer Admin:</span> dev@s.com</li>
                   <li><span className="font-medium text-white">Core Team:</span> core@s.com</li>
-                  <li><span className="font-medium text-white">Coordinator:</span> coordinator@simmam.com</li>
                   <li><span className="font-medium text-white">Registration Team:</span> reg@s.com</li>
                 </ul>
               </div>

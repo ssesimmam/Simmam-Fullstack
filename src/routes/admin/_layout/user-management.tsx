@@ -145,7 +145,7 @@ function UserManagementPage() {
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search users by ID, name or email"
+              placeholder="Search users by register no, name or email"
               className="pl-10 bg-black border-[#333] text-white"
             />
           </div>
@@ -183,10 +183,9 @@ function UserManagementPage() {
           <table className="w-full text-sm">
             <thead className="bg-black/40 text-gray-400">
               <tr>
-                <th className="text-left p-3">User ID</th>
+                <th className="text-left p-3">Register No</th>
                 <th className="text-left p-3">Name</th>
                 <th className="text-left p-3">Email Address</th>
-                <th className="text-left p-3">Mobile Number</th>
                 <th className="text-left p-3">House</th>
                 <th className="text-right p-3">Actions</th>
               </tr>
@@ -194,23 +193,22 @@ function UserManagementPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-gray-500">
+                  <td colSpan={5} className="p-4 text-gray-500">
                     Loading users...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-gray-500">
+                  <td colSpan={5} className="p-4 text-gray-500">
                     No users found.
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
                   <tr key={user.user_id} className="border-t border-[#222] text-white/90">
-                    <td className="p-3 font-mono text-xs text-gray-400">{user.user_id.slice(0, 8)}...</td>
+                    <td className="p-3 font-mono text-xs text-gray-400">{user.register_number || '-'}</td>
                     <td className="p-3">{user.name}</td>
                     <td className="p-3 text-gray-300">{user.email}</td>
-                    <td className="p-3 text-gray-400">{user.mobile_number || '-'}</td>
                     <td className="p-3">{user.house || '-'}</td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-2">
@@ -265,8 +263,8 @@ function UserManagementPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div className="bg-black border border-[#333] rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">User ID</p>
-                  <p className="font-mono mt-1">{selectedUserDetails.user.user_id}</p>
+                  <p className="text-gray-500 text-xs">Register No</p>
+                  <p className="font-mono mt-1">{selectedUserDetails.user.register_number || '-'}</p>
                 </div>
                 <div className="bg-black border border-[#333] rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Name</p>

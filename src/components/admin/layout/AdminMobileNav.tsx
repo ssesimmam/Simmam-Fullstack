@@ -27,18 +27,6 @@ const MENU_ITEMS = {
       icon: LayoutDashboard,
     },
   ],
-  coordinator: [
-    {
-      title: 'Participants',
-      href: '/admin/participants',
-      icon: Users,
-    },
-    {
-      title: 'Leaderboard',
-      href: '/admin/leaderboard',
-      icon: Trophy,
-    },
-  ],
   core_team: [
     {
       title: 'Participants',
@@ -66,11 +54,6 @@ const MENU_ITEMS = {
       title: 'Check-In',
       href: '/admin/checkin',
       icon: CheckCircle,
-    },
-    {
-      title: 'Registrations',
-      href: '/admin/registrations',
-      icon: Shield,
     },
   ],
   developer_admin: [
@@ -123,7 +106,7 @@ export default function AdminMobileNav() {
   if (!user) return null
 
   const getMenuItems = () => {
-    const baseItems = MENU_ITEMS.all
+    const baseItems = user.role === 'reg_team' ? [] : MENU_ITEMS.all
     const roleItems = (MENU_ITEMS as any)[user.role] || []
     return [...baseItems, ...roleItems]
   }

@@ -78,8 +78,19 @@ function LivePage() {
           ) : (
             <div className="space-y-4">
               {tomorrowEvents.map((event) => {
-                // Find matching showtime event to get venue, timing, etc.
-                const showtime = showtimeEvents.find(s => s.name === event.name);
+                // Prefer admin-managed schedule values, fall back to the legacy showtime map.
+                const showtime = showtimeEvents.find((s) => s.name === event.name);
+                const eventDate = (event as any).date || showtime?.date || '';
+                const timeSlot = (event as any).time || showtime?.timeSlot || 'TBA';
+                const endTime = (event as any).end_time || showtime?.endTime || 'TBA';
+                const venue = event.venue || showtime?.venue || 'Venue TBA';
+                const dayLabel = eventDate
+                  ? new Date(`${eventDate}T12:00:00`).toLocaleDateString('en-IN', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    }).toUpperCase()
+                  : showtime?.dayLabel || 'Tomorrow';
 
                 return (
                   <div
@@ -90,10 +101,10 @@ function LivePage() {
                     <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-1 shrink-0 sm:w-32">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-[#D4AF37]/70 shrink-0" />
-                        <span className="text-sm font-bold text-white">{showtime?.timeSlot || 'TBA'}</span>
+                        <span className="text-sm font-bold text-white">{timeSlot}</span>
                       </div>
-                      <span className="text-xs text-white/40">to {showtime?.endTime || 'TBA'}</span>
-                      <span className="text-[10px] text-[#D4AF37]/50 mt-1">{showtime?.dayLabel || 'Tomorrow'}</span>
+                      <span className="text-xs text-white/40">to {endTime}</span>
+                      <span className="text-[10px] text-[#D4AF37]/50 mt-1">{dayLabel}</span>
                     </div>
 
                     {/* Divider */}
@@ -113,7 +124,7 @@ function LivePage() {
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50">
                         <span className="flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          {showtime?.venue || 'Venue TBA'}
+                          {venue}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] font-semibold">
                           {event.category}

@@ -5,7 +5,7 @@ import { CheckCircle, Search } from 'lucide-react'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
-import { checkInRegistration, fetchAdminRegistrations, fetchAttendanceReport } from '@/lib/adminApi'
+import { checkInRegistration, fetchAdminRegistrations, fetchAttendanceReport, removeAdminCheckin } from '@/lib/adminApi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -78,6 +78,21 @@ function CheckInPage() {
     }
   }
 
+  const handleRemoveAttendance = async (registrationId: string) => {
+    if (!hasPermission('checkin', 'delete')) {
+      toast.error('You do not have permission to edit attendance')
+      return
+    }
+
+    try {
+      await removeAdminCheckin(registrationId)
+      toast.success('Attendance removed successfully')
+      await handleSearch()
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to remove attendance')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -121,7 +136,7 @@ function CheckInPage() {
             <thead className="bg-black/40 text-gray-400">
               <tr>
                 <th className="text-left p-3">Check-In ID</th>
-                <th className="text-left p-3">User ID</th>
+                <th className="text-left p-3">Register No</th>
                 <th className="text-left p-3">Participant Name</th>
                 <th className="text-left p-3">Event Name</th>
                 <th className="text-left p-3">Attendance Status</th>
@@ -141,11 +156,20 @@ function CheckInPage() {
                 rows.map((row) => (
                   <tr key={row.registration_id} className="border-t border-[#222] text-white/90">
                     <td className="p-3 font-mono text-xs text-gray-400">CHK-{row.registration_id.slice(0, 8)}</td>
-                    <td className="p-3 font-mono text-xs text-gray-400">{row.user_id.slice(0, 8)}...</td>
+                    <td className="p-3 font-mono text-xs text-gray-400">{row.reg_no || '-'}</td>
                     <td className="p-3">{row.participant_name}</td>
                     <td className="p-3">{row.event_name}</td>
                     <td className="p-3">
-                      <span className="text-amber-400 text-xs uppercase tracking-wide">Pending</span>
+                      {row.checked_in ? (
+                        <button
+                          className="inline-flex items-center gap-1.5 text-green-400 text-xs uppercase tracking-wide font-bold"
+                          onClick={() => handleRemoveAttendance(row.registration_id)}
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" /> Checked In - Remove
+                        </button>
+                      ) : (
+                        <span className="text-amber-400 text-xs uppercase tracking-wide">Pending</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="flex justify-end">

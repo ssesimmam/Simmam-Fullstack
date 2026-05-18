@@ -7,6 +7,7 @@ import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
 import {
   checkInRegistration,
+  removeAdminCheckin,
   fetchAdminRegistrations,
   fetchAttendanceReport,
 } from '@/lib/adminApi'
@@ -89,6 +90,21 @@ function CheckInPage() {
     }
   }
 
+  const handleRemoveAttendance = async (registrationId: string) => {
+    if (!hasPermission('checkin', 'delete')) {
+      toast.error('You do not have permission to edit attendance')
+      return
+    }
+
+    try {
+      await removeAdminCheckin(registrationId)
+      toast.success('Attendance removed successfully')
+      await loadData()
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to remove attendance')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -163,9 +179,12 @@ function CheckInPage() {
 
                 <div className="shrink-0 ml-4">
                   {row.checked_in ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 text-xs font-bold uppercase tracking-wide">
-                      <CheckCircle className="w-3.5 h-3.5" /> Checked In
-                    </span>
+                    <button
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 text-xs font-bold uppercase tracking-wide"
+                      onClick={() => handleRemoveAttendance(row.registration_id)}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Checked In - Remove
+                    </button>
                   ) : (
                     <button
                       className="px-4 py-2 bg-white hover:bg-gray-200 text-black text-xs font-bold rounded-lg transition"

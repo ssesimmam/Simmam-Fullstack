@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
 import { useData, AdminEvent, type Participant } from '@/lib/store'
-import { createAdminEvent, updateAdminEvent, createAdminParticipant, updateAdminParticipant } from '@/lib/adminApi'
+import { createAdminEvent, updateAdminEvent, createAdminParticipant, updateAdminParticipant, deleteAdminRegistration, checkInRegistration, removeAdminCheckin } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useState } from 'react'
@@ -45,7 +45,7 @@ export const Route = createFileRoute('/admin/_layout/data-entry')({
 
 function DataEntryPage() {
   const { user } = useAuth()
-  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant } = useData()
+  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant, refreshData } = useData()
   const [activeTab, setActiveTab] = useState<'events' | 'participants' | 'live'>('events')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -211,6 +211,15 @@ function DataEntryPage() {
         house: editingParticipant.house,
       })
 
+      const wasCheckedIn = !!result.checked_in
+      if (editingParticipant.checkIn !== wasCheckedIn) {
+        if (editingParticipant.checkIn) {
+          await checkInRegistration(editingParticipant.id)
+        } else {
+          await removeAdminCheckin(editingParticipant.id).catch(() => undefined)
+        }
+      }
+
       // Map API response back to Participant shape
       const mapped: Participant = {
         id: result.registration_id,
@@ -220,12 +229,13 @@ function DataEntryPage() {
         house: result.house || editingParticipant.house,
         event: result.event_name,
         status: (result.registration_status as any) || editingParticipant.status,
-        checkIn: !!result.checked_in,
+        checkIn: editingParticipant.checkIn,
         certificate: false,
       }
 
       updateParticipant(mapped)
       setEditingParticipant(null)
+      void refreshData()
       toast.success('Participant updated successfully')
     } catch (error: any) {
       setEditingParticipant(null)
@@ -235,11 +245,11 @@ function DataEntryPage() {
 
   const handleDeleteParticipant = async (participant: Participant) => {
     try {
-      await updateAdminParticipant(participant.id, { status: 'waitlisted' })
-      updateParticipant({ ...participant, status: 'waitlisted' })
-      toast.success(`${participant.name} moved to waitlisted`)
+      await deleteAdminRegistration(participant.id)
+      void refreshData()
+      toast.success(`${participant.name} deleted successfully`)
     } catch (error: any) {
-      toast.error(error?.message || `Failed to move ${participant.name} to waitlisted`)
+      toast.error(error?.message || `Failed to delete ${participant.name}`)
     }
   }
 
@@ -299,7 +309,6 @@ function DataEntryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Data Entry"
         subtitle="Manual data editing — developer admin only"
       />
 
@@ -410,16 +419,24 @@ function DataEntryPage() {
                   onClick={() => toggleEvent(event.id)}
                   className="w-full flex items-center justify-between p-4 hover:bg-black transition"
                 >
-                  <div className="text-left">
-                    <div className="text-white font-medium">{event.name}</div>
-                    <div className="text-gray-500 text-sm">
-                      {event.category} • <span className="capitalize">{event.status}</span> • {event.participantCount} participants
+                  <div className="flex items-center justify-between gap-4 flex-1 text-left">
+                    <div>
+                      <div className="text-white font-medium">{event.name}</div>
+                      <div className="text-gray-500 text-sm">
+                        {event.category} • <span className="capitalize">{event.status}</span> • {event.participantCount} participants
+                      </div>
+                    </div>
+                    <div className="hidden md:block text-right text-xs text-gray-500">
+                      <div>
+                        {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'}
+                      </div>
+                      <div>{event.time || 'Time TBA'}</div>
                     </div>
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-5 h-5 text-gray-500 shrink-0" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
+                    <ChevronRight className="w-5 h-5 text-gray-500 shrink-0" />
                   )}
                 </button>
 
@@ -783,7 +800,7 @@ function DataEntryPage() {
                                       <button
                                         className="p-1.5 text-gray-500 hover:text-red-400 transition"
                                         onClick={() => handleDeleteParticipant(participant)}
-                                        title="Move to waitlisted"
+                                        title="Delete registration"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -831,6 +848,9 @@ function DataEntryPage() {
                   <div>
                     <div className="text-white font-medium text-sm">{event.name}</div>
                     <div className="text-gray-500 text-xs">{event.category} • <span className="capitalize">{event.status}</span></div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'} • {event.time || 'Time TBA'}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium ${event.is_live_tomorrow ? 'text-green-400' : 'text-gray-600'}`}>
