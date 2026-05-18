@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Edit, Plus, Search, Trash2, XCircle } from 'lucide-react'
+import { Edit, Plus, Search, Trash2, XCircle, CheckCircle2 } from 'lucide-react'
 
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
@@ -165,13 +165,28 @@ function EventsPage() {
     }
   }
 
-  const handleCloseRegistration = async (event: AdminEvent) => {
+  const handleToggleRegistration = async (event: AdminEvent) => {
     try {
-      await closeAdminEventRegistration(event.id)
+      const payload = { registration_open: !event.registration_open }
+      if (event.id.startsWith('event-')) {
+        await createAdminEvent({
+          name: event.name,
+          description: event.description || '',
+          category: event.category,
+          main_category: event.mainCategory,
+          date: (event as any).date || new Date().toISOString().split('T')[0],
+          time_slot: event.time || 'TBA',
+          venue: event.venue || 'TBA',
+          capacity: event.participantCount || 100,
+          ...payload
+        })
+      } else {
+        await updateAdminEvent(event.id, payload)
+      }
       await refreshData()
-      toast.success(`Registration closed for ${event.name}`)
+      toast.success(`Registration ${event.registration_open ? 'closed' : 'opened'} for ${event.name}`)
     } catch (error: any) {
-      toast.error(error?.message || 'Unable to close registration')
+      toast.error(error?.message || 'Failed to toggle registration')
     }
   }
 
@@ -251,17 +266,24 @@ function EventsPage() {
 
                       {canManage && (
                         <>
-                          {event.registration_open && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-                              onClick={() => handleCloseRegistration(event)}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Close Registration
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={event.registration_open ? "border-amber-500/40 text-amber-400 hover:bg-amber-500/10" : "border-green-500/40 text-green-400 hover:bg-green-500/10"}
+                            onClick={() => handleToggleRegistration(event)}
+                          >
+                            {event.registration_open ? (
+                              <>
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Close Registration
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Open Registration
+                              </>
+                            )}
+                          </Button>
 
                           <Button
                             variant="outline"

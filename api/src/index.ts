@@ -1057,6 +1057,13 @@ app.get('/api/users/:email/registrations', async (req, res) => {
 
     if (regErr) throw regErr
 
+    const regIds = (regs || []).map((r: any) => r.id)
+    let checkedInSet = new Set<string>()
+    if (regIds.length > 0) {
+      const { data: checkins } = await supabase.from('checkins').select('registration_id').in('registration_id', regIds)
+      checkedInSet = new Set((checkins || []).map((c: any) => c.registration_id))
+    }
+
     const registrations = (regs || []).map((row: any) => ({
       registration_id: row.id,
       event_id: row.event_id,
@@ -1069,6 +1076,7 @@ app.get('/api/users/:email/registrations', async (req, res) => {
       ticket_code: row.ticket_code,
       status: row.status,
       registered_at: row.registered_at,
+      checked_in: checkedInSet.has(row.id),
     }))
 
     res.json({
