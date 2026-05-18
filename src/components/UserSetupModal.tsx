@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
+import { fetchUserProfileByEmail } from '@/lib/apiClient'
 import { useData } from '@/lib/store'
 
 interface UserSetupModalProps {
@@ -34,8 +35,28 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
     setSubmitting(true)
     await new Promise((r) => setTimeout(r, 400))
 
+    const normalizedEmail = formEmail.trim().toLowerCase()
+
+    try {
+      const backendProfile = await fetchUserProfileByEmail(normalizedEmail)
+      if (!existing && backendProfile.user) {
+        setError('This email is already registered. Please log in instead.')
+        setSubmitting(false)
+        return
+      }
+      if (existing && existing.email !== normalizedEmail && backendProfile.user) {
+        setError('This email is already registered. Please use a different email or log in.')
+        setSubmitting(false)
+        return
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Unable to verify email registration status.')
+      setSubmitting(false)
+      return
+    }
+
     const user: UserProfile = {
-      email: formEmail.trim().toLowerCase(),
+      email: normalizedEmail,
       name: formName.trim(),
       picture: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(formName.trim())}`,
       registerNumber: formRegNo.trim().toUpperCase(),
