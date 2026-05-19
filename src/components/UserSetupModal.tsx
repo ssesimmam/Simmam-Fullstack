@@ -33,8 +33,6 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
     if (!formHouse) { setError('Please select your house.'); return }
 
     setSubmitting(true)
-    await new Promise((r) => setTimeout(r, 400))
-
     const normalizedEmail = formEmail.trim().toLowerCase()
 
     try {
