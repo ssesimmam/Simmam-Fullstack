@@ -4,6 +4,8 @@ import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
+import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
+import { cacheMiddleware } from './middleware/cacheMiddleware'
 
 dotenv.config()
 
@@ -50,6 +52,13 @@ app.use(
 )
 app.options('*', cors(corsOptions))
 app.use(express.json())
+
+// Clear any in-memory rate limiter counts when server starts (useful during dev/test)
+try {
+  resetRateLimitCounts()
+} catch (e) {
+  // ignore
+}
 
 const slugify = (value: string) =>
   value
@@ -178,7 +187,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 // Get events
-app.get('/api/events', async (req, res) => {
+app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => {
   try {
     const category = req.query.category as string | undefined
     const date = req.query.date as string | undefined
@@ -198,7 +207,7 @@ app.get('/api/events', async (req, res) => {
 })
 
 // Get houses
-app.get('/api/houses', async (_req, res) => {
+app.get('/api/houses', publicLimiter, cacheMiddleware(300), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('houses').select('*').order('name', { ascending: true })
     if (error) throw error
@@ -209,7 +218,7 @@ app.get('/api/houses', async (_req, res) => {
   }
 })
 
-app.get('/api/announcements', async (_req, res) => {
+app.get('/api/announcements', publicLimiter, cacheMiddleware(120), async (_req, res) => {
   try {
     const { data, error } = await supabase
       .from('announcements')
@@ -234,7 +243,7 @@ app.get('/api/announcements', async (_req, res) => {
   }
 })
 
-app.get('/api/rules', async (_req, res) => {
+app.get('/api/rules', publicLimiter, cacheMiddleware(120), async (_req, res) => {
   try {
     const { data, error } = await supabase
       .from('rules_and_regulations')
@@ -260,7 +269,7 @@ app.get('/api/rules', async (_req, res) => {
 })
 
 // Leaderboard
-app.get('/api/leaderboard', async (_req, res) => {
+app.get('/api/leaderboard', publicLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('leaderboard').select('*')
     if (error) throw error
@@ -272,7 +281,7 @@ app.get('/api/leaderboard', async (_req, res) => {
 })
 
 // Admin leaderboard
-app.get('/api/admin/leaderboard', async (_req, res) => {
+app.get('/api/admin/leaderboard', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('leaderboard').select('*').order('total_points', { ascending: false })
     if (error) throw error
@@ -283,7 +292,7 @@ app.get('/api/admin/leaderboard', async (_req, res) => {
   }
 })
 
-app.get('/api/admin/events', async (_req, res) => {
+app.get('/api/admin/events', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true }).order('time_slot', { ascending: true })
     if (error) throw error
@@ -294,7 +303,7 @@ app.get('/api/admin/events', async (_req, res) => {
   }
 })
 
-app.get('/api/admin/houses', async (_req, res) => {
+app.get('/api/admin/houses', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('houses').select('*').order('name', { ascending: true })
     if (error) throw error
@@ -359,7 +368,7 @@ app.get('/api/admin/settings', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/settings', async (req, res) => {
+app.post('/api/admin/settings', adminLimiter, async (req, res) => {
   try {
     const { festivalStatus, registrationsOpen, coordinatorAssignments } = req.body
 
@@ -428,7 +437,7 @@ app.post('/api/admin/settings', async (req, res) => {
   }
 })
 
-app.post('/api/admin/leaderboard/adjust', async (req, res) => {
+app.post('/api/admin/leaderboard/adjust', adminLimiter, async (req, res) => {
   try {
     const { house_id, points, reason } = req.body
 
@@ -554,7 +563,7 @@ app.get('/api/admin/users', async (req, res) => {
   }
 })
 
-app.post('/api/admin/users', async (req, res) => {
+app.post('/api/admin/users', adminLimiter, async (req, res) => {
   try {
     const { name, email, mobile_number, register_number, house, picture_url } = req.body
 
@@ -612,7 +621,7 @@ app.get('/api/admin/announcements', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/announcements', async (req, res) => {
+app.post('/api/admin/announcements', adminLimiter, async (req, res) => {
   try {
     const { title, body, pinned, starts_at, ends_at } = req.body
 
@@ -656,7 +665,7 @@ app.get('/api/admin/rules', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/rules', async (req, res) => {
+app.post('/api/admin/rules', adminLimiter, async (req, res) => {
   try {
     const { title, body, pinned, starts_at, ends_at } = req.body
 
@@ -684,7 +693,7 @@ app.post('/api/admin/rules', async (req, res) => {
   }
 })
 
-app.put('/api/admin/rules/:id', async (req, res) => {
+app.put('/api/admin/rules/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { title, body, pinned, starts_at, ends_at } = req.body
@@ -719,7 +728,7 @@ app.put('/api/admin/rules/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/rules/:id', async (req, res) => {
+app.delete('/api/admin/rules/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('rules_and_regulations').delete().eq('id', id)
@@ -731,7 +740,7 @@ app.delete('/api/admin/rules/:id', async (req, res) => {
   }
 })
 
-app.put('/api/admin/announcements/:id', async (req, res) => {
+app.put('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { title, body, pinned, starts_at, ends_at } = req.body
@@ -765,7 +774,7 @@ app.put('/api/admin/announcements/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/announcements/:id', async (req, res) => {
+app.delete('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('announcements').delete().eq('id', id)
@@ -817,7 +826,7 @@ app.get('/api/admin/users/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/users/:id', async (req, res) => {
+app.delete('/api/admin/users/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { data: registrations, error: regErr } = await supabase.from('registrations').select('id').eq('user_id', id)
@@ -841,7 +850,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   }
 })
 
-app.put('/api/admin/users/:id', async (req, res) => {
+app.put('/api/admin/users/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { name, email, mobile_number, register_number, house, picture_url } = req.body
@@ -925,7 +934,7 @@ app.get('/api/admin/registrations', async (req, res) => {
   }
 })
 
-app.post('/api/admin/registrations', async (req, res) => {
+app.post('/api/admin/registrations', adminLimiter, async (req, res) => {
   try {
     const { email, name, register_number, house, event_id, event_name } = req.body
     if (!email || !name || (!event_id && !event_name)) {
@@ -1002,7 +1011,7 @@ app.post('/api/admin/registrations', async (req, res) => {
   }
 })
 
-app.put('/api/admin/registrations/:id', async (req, res) => {
+app.put('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { status, event_id, event_name, email, name, register_number, house } = req.body
@@ -1101,7 +1110,7 @@ app.put('/api/admin/registrations/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/registrations/:id', async (req, res) => {
+app.delete('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error: checkinErr } = await supabase.from('checkins').delete().eq('registration_id', id)
@@ -1211,7 +1220,7 @@ app.get('/api/admin/registrations/export.csv', async (req, res) => {
 })
 
 // Admin events CRUD
-app.post('/api/admin/events', async (req, res) => {
+app.post('/api/admin/events', adminLimiter, async (req, res) => {
   try {
     const {
       name,
@@ -1256,7 +1265,7 @@ app.post('/api/admin/events', async (req, res) => {
   }
 })
 
-app.put('/api/admin/events/:id', async (req, res) => {
+app.put('/api/admin/events/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const {
@@ -1304,7 +1313,7 @@ app.put('/api/admin/events/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/events/:id', async (req, res) => {
+app.delete('/api/admin/events/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('events').delete().eq('id', id)
@@ -1316,7 +1325,7 @@ app.delete('/api/admin/events/:id', async (req, res) => {
   }
 })
 
-app.post('/api/admin/events/:id/close-registration', async (req, res) => {
+app.post('/api/admin/events/:id/close-registration', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { data, error } = await supabase
@@ -1334,7 +1343,7 @@ app.post('/api/admin/events/:id/close-registration', async (req, res) => {
 })
 
 // Attendance/check-in
-app.post('/api/admin/checkin', async (req, res) => {
+app.post('/api/admin/checkin', adminLimiter, async (req, res) => {
   try {
     const { registration_id, device_info } = req.body
     if (!registration_id) {
@@ -1366,7 +1375,7 @@ app.post('/api/admin/checkin', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/checkin/:registration_id', async (req, res) => {
+app.delete('/api/admin/checkin/:registration_id', adminLimiter, async (req, res) => {
   try {
     const { registration_id } = req.params
     const { error } = await supabase.from('checkins').delete().eq('registration_id', registration_id)
@@ -1418,7 +1427,7 @@ app.get('/api/admin/attendance-report', async (_req, res) => {
 })
 
 // Upsert user profile
-app.post('/api/users/upsert', async (req, res) => {
+app.post('/api/users/upsert', authLimiter, async (req, res) => {
   try {
     const { email, name, mobile_number, register_number, house, picture_url } = req.body
     const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
@@ -1452,7 +1461,7 @@ app.post('/api/users/upsert', async (req, res) => {
 })
 
 // Create registration: upsert user then insert registration
-app.post('/api/registrations', async (req, res) => {
+app.post('/api/registrations', registrationLimiter, async (req, res) => {
   try {
     const { email, name, register_number, house, event_id, event_name } = req.body
     if (!email || !name || (!event_id && !event_name)) {
@@ -1506,7 +1515,7 @@ app.post('/api/registrations', async (req, res) => {
 })
 
 // Get user's registrations
-app.get('/api/users/:email/registrations', async (req, res) => {
+app.get('/api/users/:email/registrations', publicLimiter, cacheMiddleware(60), async (req, res) => {
   try {
     const email = (req.params.email || '').toLowerCase()
     const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)

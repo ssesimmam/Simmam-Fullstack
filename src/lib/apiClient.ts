@@ -12,6 +12,7 @@ export type ApiEvent = {
   registration_open?: boolean
   checkin_enabled?: boolean
   is_floated?: boolean
+  is_live_tomorrow?: boolean
   status?: string
   capacity?: number | null
   prize_info?: string | null

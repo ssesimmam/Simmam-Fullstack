@@ -1,0 +1,119 @@
+import { Request, Response, NextFunction } from 'express'
+import IORedis from 'ioredis'
+
+// In-memory store for development (replace with Redis for production)
+const requestCounts: Record<string, { count: number; resetTime: number }> = {}
+
+// Redis client (optional). If REDIS_URL is set, use Redis for counters across instances.
+const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || ''
+let redis: any = null
+if (redisUrl) {
+  try {
+    redis = new IORedis(redisUrl)
+    redis.on('error', (e: any) => console.error('Redis error', e))
+  } catch (e) {
+    console.error('Failed to create Redis client', e)
+    redis = null
+  }
+}
+
+function getClientIp(req: any): string {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown'
+}
+
+function getRouteKey(req: any): string {
+  const routePath = req?.route?.path ? String(req.route.path) : req.path || 'unknown'
+  return `${req.method || 'GET'}:${routePath}`
+}
+
+export function createSimpleLimiter(bucket: string, windowMs: number, max: number, message: string) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const key = `${bucket}:${getClientIp(req)}:${getRouteKey(req)}`
+    const now = Date.now()
+
+    // If Redis is available, use it for atomic increments with expiry so counts are shared across instances.
+    if (redis) {
+      try {
+        const r = redis.multi()
+        r.incr(key)
+        r.pttl(key)
+        const execRes = await r.exec()
+        const incrRes = execRes?.[0]
+        const pttlRes = execRes?.[1]
+        const count = Number(incrRes?.[1] ?? 0)
+        let pttl = Number(pttlRes?.[1] ?? -1)
+        if (pttl < 0) {
+          // set TTL
+          await redis.pexpire(key, windowMs)
+          pttl = windowMs
+        }
+        if (count > max) {
+          const retryAfterSeconds = Math.ceil(pttl / 1000)
+          res.setHeader('Retry-After', String(retryAfterSeconds))
+          res.setHeader('RateLimit-Remaining', '0')
+          return res.status(429).json({ error: message })
+        }
+        res.setHeader('RateLimit-Remaining', String(Math.max(0, max - count)))
+        return next()
+      } catch (e) {
+        console.error('Redis rate limiter error, falling back to memory', e)
+        // fallthrough to in-memory
+      }
+    }
+
+    // In-memory fallback (single-instance)
+    if (!requestCounts[key]) {
+      requestCounts[key] = { count: 1, resetTime: now + windowMs }
+    }
+    if (now > requestCounts[key].resetTime) {
+      requestCounts[key] = { count: 1, resetTime: now + windowMs }
+    }
+    requestCounts[key].count++
+    if (requestCounts[key].count > max) {
+      const retryAfterSeconds = Math.ceil((requestCounts[key].resetTime - now) / 1000)
+      res.setHeader('Retry-After', String(retryAfterSeconds))
+      res.setHeader('RateLimit-Remaining', '0')
+      return res.status(429).json({ error: message })
+    }
+    res.setHeader('RateLimit-Remaining', String(Math.max(0, max - requestCounts[key].count)))
+    next()
+  }
+}
+
+// Public endpoints: 600 requests per 15 min per IP per route
+export const publicLimiter = createSimpleLimiter(
+  'public',
+  15 * 60 * 1000,
+  600,
+  'Too many requests, please try again later'
+)
+
+// Auth/Write endpoints: 120 requests per 15 min per IP per route
+export const authLimiter = createSimpleLimiter(
+  'auth',
+  15 * 60 * 1000,
+  120,
+  'Too many auth attempts, please try again later'
+)
+
+// Registration endpoint: 20 per hour per IP per route
+export const registrationLimiter = createSimpleLimiter(
+  'registration',
+  60 * 60 * 1000,
+  20,
+  'Registration limit exceeded, try again in 1 hour'
+)
+
+// Admin endpoints: 1200 per 15 min per IP per route.
+// Admin dashboard polls multiple resources periodically, so this needs a higher ceiling.
+export const adminLimiter = createSimpleLimiter(
+  'admin',
+  15 * 60 * 1000,
+  1200,
+  'Admin request limit exceeded'
+)
+
+export function resetRateLimitCounts() {
+  for (const k of Object.keys(requestCounts)) delete requestCounts[k]
+}
+
