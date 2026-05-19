@@ -30,6 +30,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }>
   Tech: { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
   "Non-Tech": { bg: "bg-pink-500/10", text: "text-pink-400", dot: "bg-pink-400" },
   Sports: { bg: "bg-green-500/10", text: "text-green-400", dot: "bg-green-400" },
+  "Cultural Fest": { bg: "bg-amber-500/10", text: "text-amber-300", dot: "bg-amber-300" },
 };
 
 function getCategoryStyle(cat: string) {

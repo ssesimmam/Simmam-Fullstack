@@ -175,6 +175,28 @@ const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fe
     .map((remoteEvent, index) => mapRemoteEventToAdminEvent(remoteEvent, fallbackByName.get(remoteEvent.name.toLowerCase()), index))
 };
 
+const createStaticAdminEvents = (): AdminEvent[] => {
+  return initialEvents.map((event, index) => ({
+    id: `static-${index}-${event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+    name: event.name,
+    category: event.category,
+    mainCategory: event.mainCategory,
+    icon: event.icon,
+    rules: event.rules,
+    date: '',
+    venue: 'TBD',
+    time: 'TBD',
+    is_floated: true,
+    is_live_tomorrow: false,
+    registration_open: true,
+    checkin_enabled: false,
+    status: 'upcoming',
+    participantCount: 0,
+    prizeInfo: 'Trophy + Certificate',
+    result: undefined,
+  }))
+}
+
 // Participants are populated from the admin API; remove built-in mock generation.
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -236,15 +258,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
+    const fallbackEvents = createStaticAdminEvents()
     const eventsJob = fetchAdminEvents()
       .then((remoteEvents) => {
         if (remoteEvents.length > 0) {
           const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents)
           setEvents(mappedEvents)
           writeCachedValue('simmam_events', mappedEvents)
+        } else {
+          setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
+          writeCachedValue('simmam_events', fallbackEvents)
         }
       })
-      .catch((err) => console.error('Failed to refresh events from API:', err))
+      .catch((err) => {
+        console.error('Failed to refresh events from API:', err)
+        setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
+        writeCachedValue('simmam_events', fallbackEvents)
+      })
 
     const housesJob = Promise.all([fetchAdminHouses(), fetchLeaderboard()])
       .then(([remoteHouses, remoteLeaderboard]) => {

@@ -38,7 +38,7 @@ export default function AdminHeader() {
               <button
                 onClick={() => {
                   logout()
-                  navigate({ to: '/admin/login', replace: true })
+                  navigate({ to: '/wch1925/login', replace: true })
                 }}
                 className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors"
               >

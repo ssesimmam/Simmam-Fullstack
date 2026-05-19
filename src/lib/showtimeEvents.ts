@@ -2,7 +2,7 @@ export type ShowtimeEvent = {
   id: string
   name: string
   category: string
-  mainCategory: 'Tech' | 'Non-Tech' | 'Sports'
+  mainCategory: 'Tech' | 'Non-Tech' | 'Sports' | 'Cultural Fest'
   date: string
   timeSlot: string
   endTime: string

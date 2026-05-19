@@ -17,7 +17,7 @@ import type { LucideIcon } from "lucide-react";
 export type Event = {
   name: string;
   category: string;
-  mainCategory: "Tech" | "Non-Tech" | "Sports";
+  mainCategory: "Tech" | "Non-Tech" | "Sports" | "Cultural Fest";
   icon: LucideIcon;
   rules: string[];
 };
@@ -719,100 +719,261 @@ export const allEvents: Event[] = [
   {
     name: "Solo Dance",
     category: "Dance",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Music,
     rules: ["Individual performance only", "Time limit must be followed", "Judging on expression and coordination"]
   },
   {
     name: "Duo Dance",
     category: "Dance",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Music,
     rules: ["Two participants only", "Time limit strictly followed", "Judging on synchronization"]
   },
   {
     name: "Group Dance",
     category: "Dance",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Music,
     rules: ["Team size as specified", "Props must be safe", "Judging on coordination and creativity"]
   },
   {
     name: "Classical Dance",
     category: "Dance",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Music,
     rules: ["Classical style only", "Time limit applies", "Judging on expression and technique"]
   },
   {
     name: "Street Dance / Hip-Hop",
     category: "Dance",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Music,
     rules: ["Street style only", "No unsafe stunts", "Judging on energy and originality"]
   },
   {
     name: "Solo Singing",
     category: "Music",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Mic2,
     rules: ["Individual participation only", "Time limit must be followed", "Judging on pitch and clarity"]
   },
   {
     name: "Duet Singing",
     category: "Music",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Mic2,
     rules: ["Two participants only", "Maintain coordination", "Judging on harmony"]
   },
   {
     name: "Battle of Bands",
     category: "Music",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Mic2,
     rules: ["Team performance only", "Follow time limit", "Judging on overall performance"]
   },
   {
     name: "Instrumental Music",
     category: "Music",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Mic2,
     rules: ["Instruments allowed only", "Time limit applies", "Judging on skill and rhythm"]
   },
   {
     name: "Rap Battle / Beatboxing",
     category: "Music",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Mic2,
     rules: ["Original performance preferred", "No offensive language", "Judging on flow and creativity"]
   },
   {
-    name: "Skit (Social Awareness)",
+    name: "Skit / Short Play",
     category: "Theatre",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Drama,
-    rules: ["Theme must be relevant", "Time limit strictly followed", "Judging on message and acting"]
+    rules: ["Scripts must avoid personal attacks", "Time limit strictly enforced", "Judging on message and acting"]
   },
   {
     name: "Mime",
     category: "Theatre",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Drama,
-    rules: ["No spoken words allowed", "Use expressions clearly", "Judging on presentation"]
+    rules: ["Mime participants cannot speak", "Use expressions clearly", "Judging on presentation"]
   },
   {
     name: "Mono Acting",
     category: "Theatre",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Drama,
     rules: ["Individual performance only", "Stay within time limit", "Judging on expression"]
   },
   {
     name: "Improv Acting",
     category: "Theatre",
-    mainCategory: "Non-Tech",
+    mainCategory: "Cultural Fest",
     icon: Drama,
     rules: ["Topic given on the spot", "No preparation time", "Judging on spontaneity"]
+  },
+  {
+    name: "Folk Theme Group Dance with Property",
+    category: "Main Stage Theme Dance",
+    mainCategory: "Cultural Fest",
+    icon: Sparkles,
+    rules: ["Performances must follow the approved theme", "Use only approved props", "Judges’ decisions are final"]
+  },
+  {
+    name: "Western Theme Group Dance",
+    category: "Main Stage Theme Dance",
+    mainCategory: "Cultural Fest",
+    icon: Sparkles,
+    rules: ["Performances must follow the approved theme", "Exceeding time limits may lead to disqualification", "Judges’ decisions are final"]
+  },
+  {
+    name: "Replica Theme Group Dance",
+    category: "Main Stage Theme Dance",
+    mainCategory: "Cultural Fest",
+    icon: Sparkles,
+    rules: ["Performances must follow the approved theme", "Exceeding time limits may lead to disqualification", "Judges’ decisions are final"]
+  },
+  {
+    name: "AGNIYAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "DRONAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "MARUTAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "RUDRAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "SURYAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "VAJRAS Ramp Walk",
+    category: "Ramp Walk Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity"]
+  },
+  {
+    name: "AGNIYAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "DRONAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "MARUTAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "RUDRAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "SURYAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "VAJRAS Replica Theme",
+    category: "Replica Themes",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "Ethnic Day Group Dance",
+    category: "Off Stage Events",
+    mainCategory: "Cultural Fest",
+    icon: Music,
+    rules: ["Proper costumes and choreography required", "No vulgar performances allowed", "Participants must report before call time"]
+  },
+  {
+    name: "Ethnic Day Ramp Walk (Traditional)",
+    category: "Off Stage Events",
+    mainCategory: "Cultural Fest",
+    icon: Music,
+    rules: ["Proper costumes and choreography required", "No vulgar performances allowed", "Participants must report before call time"]
+  },
+  {
+    name: "Mismatch Day Ramp Walk",
+    category: "Off Stage Events",
+    mainCategory: "Cultural Fest",
+    icon: Music,
+    rules: ["Theme should be followed", "No vulgarity", "Time limit: 3-5 mins"]
+  },
+  {
+    name: "Cosplay Contest",
+    category: "Special Cultural Events",
+    mainCategory: "Cultural Fest",
+    icon: Palette,
+    rules: ["Dangerous props prohibited", "Costumes must follow decency norms", "Judges’ decisions are final"]
+  },
+  {
+    name: "Acapella",
+    category: "Music",
+    mainCategory: "Cultural Fest",
+    icon: Mic2,
+    rules: ["No lip-syncing", "Originality and rhythm are judged", "Time limits must be followed"]
+  },
+  {
+    name: "Karaoke",
+    category: "Music",
+    mainCategory: "Cultural Fest",
+    icon: Mic2,
+    rules: ["No lip-syncing", "Originality and rhythm are judged", "Time limits must be followed"]
+  },
+  {
+    name: "Dance Battle",
+    category: "Dance",
+    mainCategory: "Cultural Fest",
+    icon: Music,
+    rules: ["Proper costumes and choreography required", "Synchronization and creativity are judged", "No vulgar performances allowed"]
+  },
+  {
+    name: "Freeze Dance",
+    category: "Dance",
+    mainCategory: "Cultural Fest",
+    icon: Music,
+    rules: ["Proper costumes and choreography required", "Synchronization and creativity are judged", "No vulgar performances allowed"]
   },
   {
     name: "Ad Zap",

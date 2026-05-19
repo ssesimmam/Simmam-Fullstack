@@ -39,7 +39,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/_layout/data-entry')({
+export const Route = createFileRoute('/wch1925/_layout/data-entry')({
   component: DataEntryPage,
 })
 

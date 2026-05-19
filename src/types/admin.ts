@@ -38,14 +38,14 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
 }
 
 export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
-  '/admin/events': [{ resource: 'events', actions: ['read'] }],
-  '/admin/participants': [{ resource: 'participants', actions: ['read'] }],
-  '/admin/checkin': [{ resource: 'checkin', actions: ['read'] }],
-  '/admin/data-entry': [{ resource: 'data-entry', actions: ['read'] }],
-  '/admin/leaderboard': [{ resource: 'leaderboard', actions: ['read'] }],
-  '/admin/settings': [{ resource: 'settings', actions: ['read'] }],
-  '/admin/user-management': [{ resource: 'users', actions: ['read'] }],
-  '/admin/registrations': [{ resource: 'registrations', actions: ['read'] }],
-  '/admin/announcements': [{ resource: 'announcements', actions: ['read'] }],
-  '/admin/rules': [{ resource: 'rules', actions: ['read'] }],
+  '/wch1925/events': [{ resource: 'events', actions: ['read'] }],
+  '/wch1925/participants': [{ resource: 'participants', actions: ['read'] }],
+  '/wch1925/checkin': [{ resource: 'checkin', actions: ['read'] }],
+  '/wch1925/data-entry': [{ resource: 'data-entry', actions: ['read'] }],
+  '/wch1925/leaderboard': [{ resource: 'leaderboard', actions: ['read'] }],
+  '/wch1925/settings': [{ resource: 'settings', actions: ['read'] }],
+  '/wch1925/user-management': [{ resource: 'users', actions: ['read'] }],
+  '/wch1925/registrations': [{ resource: 'registrations', actions: ['read'] }],
+  '/wch1925/announcements': [{ resource: 'announcements', actions: ['read'] }],
+  '/wch1925/rules': [{ resource: 'rules', actions: ['read'] }],
 }

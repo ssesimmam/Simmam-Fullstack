@@ -6,7 +6,7 @@ import { SectionHeader } from "./Dashboard";
 import { useData, type AdminEvent } from "../lib/store";
 import { fetchAnnouncements, fetchRules, type ApiAnnouncement, type ApiRule } from "../lib/apiClient";
 
-const categories = ["All", "Tech", "Non-Tech", "Sports"];
+const categories = ["All", "Tech", "Non-Tech", "Sports", "Cultural Fest"];
 
 export function Events() {
   const { events } = useData();

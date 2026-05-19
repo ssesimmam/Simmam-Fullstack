@@ -7,7 +7,7 @@ import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight } from 'lucide-react'
 
-export const Route = createFileRoute('/admin/_layout/participants')({
+export const Route = createFileRoute('/wch1925/_layout/participants')({
   component: ParticipantsPage,
 })
 

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import adminSupabase from '@/lib/adminSupabase'
 
-export const Route = createFileRoute('/admin/login')({
+export const Route = createFileRoute('/wch1925/login')({
   beforeLoad: ({ location }) => {
     const storedUser = getStoredAdminUser()
     if (storedUser) {
@@ -111,7 +111,7 @@ function LoginPage() {
       const { error: authError } = await adminSupabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/admin/login`,
+          redirectTo: `${window.location.origin}/wch1925/login`,
         },
       })
       if (authError) {

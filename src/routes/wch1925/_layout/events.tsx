@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/_layout/events')({
+export const Route = createFileRoute('/wch1925/_layout/events')({
   component: EventsPage,
 })
 

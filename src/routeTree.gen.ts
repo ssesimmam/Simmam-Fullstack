@@ -18,24 +18,24 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserIndexRouteImport } from './routes/user/index'
+import { Route as Wch1925LoginRouteImport } from './routes/wch1925/login'
+import { Route as Wch1925LayoutRouteImport } from './routes/wch1925/_layout'
 import { Route as UserProfileRouteImport } from './routes/user/profile'
 import { Route as UserMyScheduleRouteImport } from './routes/user/my-schedule'
 import { Route as UserLayoutRouteImport } from './routes/user/_layout'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
-import { Route as AdminLayoutRouteImport } from './routes/admin/_layout'
-import { Route as AdminLayoutIndexRouteImport } from './routes/admin/_layout/index'
-import { Route as AdminLayoutUserManagementRouteImport } from './routes/admin/_layout/user-management'
-import { Route as AdminLayoutSettingsRouteImport } from './routes/admin/_layout/settings'
-import { Route as AdminLayoutRulesRouteImport } from './routes/admin/_layout/rules'
-import { Route as AdminLayoutRegistrationsRouteImport } from './routes/admin/_layout/registrations'
-import { Route as AdminLayoutParticipantsRouteImport } from './routes/admin/_layout/participants'
-import { Route as AdminLayoutLeaderboardRouteImport } from './routes/admin/_layout/leaderboard'
-import { Route as AdminLayoutHousesRouteImport } from './routes/admin/_layout/houses'
-import { Route as AdminLayoutEventsRouteImport } from './routes/admin/_layout/events'
-import { Route as AdminLayoutDataEntryRouteImport } from './routes/admin/_layout/data-entry'
-import { Route as AdminLayoutCheckinRouteImport } from './routes/admin/_layout/checkin'
-import { Route as AdminLayoutAnnouncementsRouteImport } from './routes/admin/_layout/announcements'
-import { Route as AdminLayoutCheckinNewRouteImport } from './routes/admin/_layout/checkin.new'
+import { Route as Wch1925LayoutIndexRouteImport } from './routes/wch1925/_layout/index'
+import { Route as Wch1925LayoutUserManagementRouteImport } from './routes/wch1925/_layout/user-management'
+import { Route as Wch1925LayoutSettingsRouteImport } from './routes/wch1925/_layout/settings'
+import { Route as Wch1925LayoutRulesRouteImport } from './routes/wch1925/_layout/rules'
+import { Route as Wch1925LayoutRegistrationsRouteImport } from './routes/wch1925/_layout/registrations'
+import { Route as Wch1925LayoutParticipantsRouteImport } from './routes/wch1925/_layout/participants'
+import { Route as Wch1925LayoutLeaderboardRouteImport } from './routes/wch1925/_layout/leaderboard'
+import { Route as Wch1925LayoutHousesRouteImport } from './routes/wch1925/_layout/houses'
+import { Route as Wch1925LayoutEventsRouteImport } from './routes/wch1925/_layout/events'
+import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
+import { Route as Wch1925LayoutCheckinRouteImport } from './routes/wch1925/_layout/checkin'
+import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925/_layout/announcements'
+import { Route as Wch1925LayoutCheckinNewRouteImport } from './routes/wch1925/_layout/checkin.new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -82,6 +82,16 @@ const UserIndexRoute = UserIndexRouteImport.update({
   path: '/user/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Wch1925LoginRoute = Wch1925LoginRouteImport.update({
+  id: '/wch1925/login',
+  path: '/wch1925/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Wch1925LayoutRoute = Wch1925LayoutRouteImport.update({
+  id: '/wch1925/_layout',
+  path: '/wch1925',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UserProfileRoute = UserProfileRouteImport.update({
   id: '/user/profile',
   path: '/user/profile',
@@ -97,83 +107,75 @@ const UserLayoutRoute = UserLayoutRouteImport.update({
   path: '/user',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin/login',
-  path: '/admin/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminLayoutRoute = AdminLayoutRouteImport.update({
-  id: '/admin/_layout',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminLayoutIndexRoute = AdminLayoutIndexRouteImport.update({
+const Wch1925LayoutIndexRoute = Wch1925LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutUserManagementRoute =
-  AdminLayoutUserManagementRouteImport.update({
+const Wch1925LayoutUserManagementRoute =
+  Wch1925LayoutUserManagementRouteImport.update({
     id: '/user-management',
     path: '/user-management',
-    getParentRoute: () => AdminLayoutRoute,
+    getParentRoute: () => Wch1925LayoutRoute,
   } as any)
-const AdminLayoutSettingsRoute = AdminLayoutSettingsRouteImport.update({
+const Wch1925LayoutSettingsRoute = Wch1925LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutRulesRoute = AdminLayoutRulesRouteImport.update({
+const Wch1925LayoutRulesRoute = Wch1925LayoutRulesRouteImport.update({
   id: '/rules',
   path: '/rules',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutRegistrationsRoute =
-  AdminLayoutRegistrationsRouteImport.update({
+const Wch1925LayoutRegistrationsRoute =
+  Wch1925LayoutRegistrationsRouteImport.update({
     id: '/registrations',
     path: '/registrations',
-    getParentRoute: () => AdminLayoutRoute,
+    getParentRoute: () => Wch1925LayoutRoute,
   } as any)
-const AdminLayoutParticipantsRoute = AdminLayoutParticipantsRouteImport.update({
-  id: '/participants',
-  path: '/participants',
-  getParentRoute: () => AdminLayoutRoute,
-} as any)
-const AdminLayoutLeaderboardRoute = AdminLayoutLeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => AdminLayoutRoute,
-} as any)
-const AdminLayoutHousesRoute = AdminLayoutHousesRouteImport.update({
+const Wch1925LayoutParticipantsRoute =
+  Wch1925LayoutParticipantsRouteImport.update({
+    id: '/participants',
+    path: '/participants',
+    getParentRoute: () => Wch1925LayoutRoute,
+  } as any)
+const Wch1925LayoutLeaderboardRoute =
+  Wch1925LayoutLeaderboardRouteImport.update({
+    id: '/leaderboard',
+    path: '/leaderboard',
+    getParentRoute: () => Wch1925LayoutRoute,
+  } as any)
+const Wch1925LayoutHousesRoute = Wch1925LayoutHousesRouteImport.update({
   id: '/houses',
   path: '/houses',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutEventsRoute = AdminLayoutEventsRouteImport.update({
+const Wch1925LayoutEventsRoute = Wch1925LayoutEventsRouteImport.update({
   id: '/events',
   path: '/events',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutDataEntryRoute = AdminLayoutDataEntryRouteImport.update({
+const Wch1925LayoutDataEntryRoute = Wch1925LayoutDataEntryRouteImport.update({
   id: '/data-entry',
   path: '/data-entry',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutCheckinRoute = AdminLayoutCheckinRouteImport.update({
+const Wch1925LayoutCheckinRoute = Wch1925LayoutCheckinRouteImport.update({
   id: '/checkin',
   path: '/checkin',
-  getParentRoute: () => AdminLayoutRoute,
+  getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const AdminLayoutAnnouncementsRoute =
-  AdminLayoutAnnouncementsRouteImport.update({
+const Wch1925LayoutAnnouncementsRoute =
+  Wch1925LayoutAnnouncementsRouteImport.update({
     id: '/announcements',
     path: '/announcements',
-    getParentRoute: () => AdminLayoutRoute,
+    getParentRoute: () => Wch1925LayoutRoute,
   } as any)
-const AdminLayoutCheckinNewRoute = AdminLayoutCheckinNewRouteImport.update({
+const Wch1925LayoutCheckinNewRoute = Wch1925LayoutCheckinNewRouteImport.update({
   id: '/new',
   path: '/new',
-  getParentRoute: () => AdminLayoutCheckinRoute,
+  getParentRoute: () => Wch1925LayoutCheckinRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -185,25 +187,25 @@ export interface FileRoutesByFullPath {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/admin': typeof AdminLayoutRouteWithChildren
-  '/admin/login': typeof AdminLoginRoute
   '/user': typeof UserLayoutRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
+  '/wch1925': typeof Wch1925LayoutRouteWithChildren
+  '/wch1925/login': typeof Wch1925LoginRoute
   '/user/': typeof UserIndexRoute
-  '/admin/announcements': typeof AdminLayoutAnnouncementsRoute
-  '/admin/checkin': typeof AdminLayoutCheckinRouteWithChildren
-  '/admin/data-entry': typeof AdminLayoutDataEntryRoute
-  '/admin/events': typeof AdminLayoutEventsRoute
-  '/admin/houses': typeof AdminLayoutHousesRoute
-  '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
-  '/admin/participants': typeof AdminLayoutParticipantsRoute
-  '/admin/registrations': typeof AdminLayoutRegistrationsRoute
-  '/admin/rules': typeof AdminLayoutRulesRoute
-  '/admin/settings': typeof AdminLayoutSettingsRoute
-  '/admin/user-management': typeof AdminLayoutUserManagementRoute
-  '/admin/': typeof AdminLayoutIndexRoute
-  '/admin/checkin/new': typeof AdminLayoutCheckinNewRoute
+  '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
+  '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/events': typeof Wch1925LayoutEventsRoute
+  '/wch1925/houses': typeof Wch1925LayoutHousesRoute
+  '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
+  '/wch1925/participants': typeof Wch1925LayoutParticipantsRoute
+  '/wch1925/registrations': typeof Wch1925LayoutRegistrationsRoute
+  '/wch1925/rules': typeof Wch1925LayoutRulesRoute
+  '/wch1925/settings': typeof Wch1925LayoutSettingsRoute
+  '/wch1925/user-management': typeof Wch1925LayoutUserManagementRoute
+  '/wch1925/': typeof Wch1925LayoutIndexRoute
+  '/wch1925/checkin/new': typeof Wch1925LayoutCheckinNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -214,23 +216,23 @@ export interface FileRoutesByTo {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/admin/login': typeof AdminLoginRoute
   '/user': typeof UserIndexRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
-  '/admin/announcements': typeof AdminLayoutAnnouncementsRoute
-  '/admin/checkin': typeof AdminLayoutCheckinRouteWithChildren
-  '/admin/data-entry': typeof AdminLayoutDataEntryRoute
-  '/admin/events': typeof AdminLayoutEventsRoute
-  '/admin/houses': typeof AdminLayoutHousesRoute
-  '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
-  '/admin/participants': typeof AdminLayoutParticipantsRoute
-  '/admin/registrations': typeof AdminLayoutRegistrationsRoute
-  '/admin/rules': typeof AdminLayoutRulesRoute
-  '/admin/settings': typeof AdminLayoutSettingsRoute
-  '/admin/user-management': typeof AdminLayoutUserManagementRoute
-  '/admin': typeof AdminLayoutIndexRoute
-  '/admin/checkin/new': typeof AdminLayoutCheckinNewRoute
+  '/wch1925/login': typeof Wch1925LoginRoute
+  '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
+  '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/events': typeof Wch1925LayoutEventsRoute
+  '/wch1925/houses': typeof Wch1925LayoutHousesRoute
+  '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
+  '/wch1925/participants': typeof Wch1925LayoutParticipantsRoute
+  '/wch1925/registrations': typeof Wch1925LayoutRegistrationsRoute
+  '/wch1925/rules': typeof Wch1925LayoutRulesRoute
+  '/wch1925/settings': typeof Wch1925LayoutSettingsRoute
+  '/wch1925/user-management': typeof Wch1925LayoutUserManagementRoute
+  '/wch1925': typeof Wch1925LayoutIndexRoute
+  '/wch1925/checkin/new': typeof Wch1925LayoutCheckinNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -242,25 +244,25 @@ export interface FileRoutesById {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/admin/_layout': typeof AdminLayoutRouteWithChildren
-  '/admin/login': typeof AdminLoginRoute
   '/user/_layout': typeof UserLayoutRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
+  '/wch1925/_layout': typeof Wch1925LayoutRouteWithChildren
+  '/wch1925/login': typeof Wch1925LoginRoute
   '/user/': typeof UserIndexRoute
-  '/admin/_layout/announcements': typeof AdminLayoutAnnouncementsRoute
-  '/admin/_layout/checkin': typeof AdminLayoutCheckinRouteWithChildren
-  '/admin/_layout/data-entry': typeof AdminLayoutDataEntryRoute
-  '/admin/_layout/events': typeof AdminLayoutEventsRoute
-  '/admin/_layout/houses': typeof AdminLayoutHousesRoute
-  '/admin/_layout/leaderboard': typeof AdminLayoutLeaderboardRoute
-  '/admin/_layout/participants': typeof AdminLayoutParticipantsRoute
-  '/admin/_layout/registrations': typeof AdminLayoutRegistrationsRoute
-  '/admin/_layout/rules': typeof AdminLayoutRulesRoute
-  '/admin/_layout/settings': typeof AdminLayoutSettingsRoute
-  '/admin/_layout/user-management': typeof AdminLayoutUserManagementRoute
-  '/admin/_layout/': typeof AdminLayoutIndexRoute
-  '/admin/_layout/checkin/new': typeof AdminLayoutCheckinNewRoute
+  '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/_layout/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
+  '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/_layout/events': typeof Wch1925LayoutEventsRoute
+  '/wch1925/_layout/houses': typeof Wch1925LayoutHousesRoute
+  '/wch1925/_layout/leaderboard': typeof Wch1925LayoutLeaderboardRoute
+  '/wch1925/_layout/participants': typeof Wch1925LayoutParticipantsRoute
+  '/wch1925/_layout/registrations': typeof Wch1925LayoutRegistrationsRoute
+  '/wch1925/_layout/rules': typeof Wch1925LayoutRulesRoute
+  '/wch1925/_layout/settings': typeof Wch1925LayoutSettingsRoute
+  '/wch1925/_layout/user-management': typeof Wch1925LayoutUserManagementRoute
+  '/wch1925/_layout/': typeof Wch1925LayoutIndexRoute
+  '/wch1925/_layout/checkin/new': typeof Wch1925LayoutCheckinNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -273,25 +275,25 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
-    | '/admin'
-    | '/admin/login'
     | '/user'
     | '/user/my-schedule'
     | '/user/profile'
+    | '/wch1925'
+    | '/wch1925/login'
     | '/user/'
-    | '/admin/announcements'
-    | '/admin/checkin'
-    | '/admin/data-entry'
-    | '/admin/events'
-    | '/admin/houses'
-    | '/admin/leaderboard'
-    | '/admin/participants'
-    | '/admin/registrations'
-    | '/admin/rules'
-    | '/admin/settings'
-    | '/admin/user-management'
-    | '/admin/'
-    | '/admin/checkin/new'
+    | '/wch1925/announcements'
+    | '/wch1925/checkin'
+    | '/wch1925/data-entry'
+    | '/wch1925/events'
+    | '/wch1925/houses'
+    | '/wch1925/leaderboard'
+    | '/wch1925/participants'
+    | '/wch1925/registrations'
+    | '/wch1925/rules'
+    | '/wch1925/settings'
+    | '/wch1925/user-management'
+    | '/wch1925/'
+    | '/wch1925/checkin/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -302,23 +304,23 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
-    | '/admin/login'
     | '/user'
     | '/user/my-schedule'
     | '/user/profile'
-    | '/admin/announcements'
-    | '/admin/checkin'
-    | '/admin/data-entry'
-    | '/admin/events'
-    | '/admin/houses'
-    | '/admin/leaderboard'
-    | '/admin/participants'
-    | '/admin/registrations'
-    | '/admin/rules'
-    | '/admin/settings'
-    | '/admin/user-management'
-    | '/admin'
-    | '/admin/checkin/new'
+    | '/wch1925/login'
+    | '/wch1925/announcements'
+    | '/wch1925/checkin'
+    | '/wch1925/data-entry'
+    | '/wch1925/events'
+    | '/wch1925/houses'
+    | '/wch1925/leaderboard'
+    | '/wch1925/participants'
+    | '/wch1925/registrations'
+    | '/wch1925/rules'
+    | '/wch1925/settings'
+    | '/wch1925/user-management'
+    | '/wch1925'
+    | '/wch1925/checkin/new'
   id:
     | '__root__'
     | '/'
@@ -329,25 +331,25 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
-    | '/admin/_layout'
-    | '/admin/login'
     | '/user/_layout'
     | '/user/my-schedule'
     | '/user/profile'
+    | '/wch1925/_layout'
+    | '/wch1925/login'
     | '/user/'
-    | '/admin/_layout/announcements'
-    | '/admin/_layout/checkin'
-    | '/admin/_layout/data-entry'
-    | '/admin/_layout/events'
-    | '/admin/_layout/houses'
-    | '/admin/_layout/leaderboard'
-    | '/admin/_layout/participants'
-    | '/admin/_layout/registrations'
-    | '/admin/_layout/rules'
-    | '/admin/_layout/settings'
-    | '/admin/_layout/user-management'
-    | '/admin/_layout/'
-    | '/admin/_layout/checkin/new'
+    | '/wch1925/_layout/announcements'
+    | '/wch1925/_layout/checkin'
+    | '/wch1925/_layout/data-entry'
+    | '/wch1925/_layout/events'
+    | '/wch1925/_layout/houses'
+    | '/wch1925/_layout/leaderboard'
+    | '/wch1925/_layout/participants'
+    | '/wch1925/_layout/registrations'
+    | '/wch1925/_layout/rules'
+    | '/wch1925/_layout/settings'
+    | '/wch1925/_layout/user-management'
+    | '/wch1925/_layout/'
+    | '/wch1925/_layout/checkin/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -359,11 +361,11 @@ export interface RootRouteChildren {
   MyScheduleRoute: typeof MyScheduleRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
-  AdminLayoutRoute: typeof AdminLayoutRouteWithChildren
-  AdminLoginRoute: typeof AdminLoginRoute
   UserLayoutRoute: typeof UserLayoutRoute
   UserMyScheduleRoute: typeof UserMyScheduleRoute
   UserProfileRoute: typeof UserProfileRoute
+  Wch1925LayoutRoute: typeof Wch1925LayoutRouteWithChildren
+  Wch1925LoginRoute: typeof Wch1925LoginRoute
   UserIndexRoute: typeof UserIndexRoute
 }
 
@@ -432,6 +434,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wch1925/login': {
+      id: '/wch1925/login'
+      path: '/wch1925/login'
+      fullPath: '/wch1925/login'
+      preLoaderRoute: typeof Wch1925LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wch1925/_layout': {
+      id: '/wch1925/_layout'
+      path: '/wch1925'
+      fullPath: '/wch1925'
+      preLoaderRoute: typeof Wch1925LayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/user/profile': {
       id: '/user/profile'
       path: '/user/profile'
@@ -453,157 +469,143 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/admin/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/_layout': {
-      id: '/admin/_layout'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminLayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/_layout/': {
-      id: '/admin/_layout/'
+    '/wch1925/_layout/': {
+      id: '/wch1925/_layout/'
       path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminLayoutIndexRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/'
+      preLoaderRoute: typeof Wch1925LayoutIndexRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/user-management': {
-      id: '/admin/_layout/user-management'
+    '/wch1925/_layout/user-management': {
+      id: '/wch1925/_layout/user-management'
       path: '/user-management'
-      fullPath: '/admin/user-management'
-      preLoaderRoute: typeof AdminLayoutUserManagementRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/user-management'
+      preLoaderRoute: typeof Wch1925LayoutUserManagementRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/settings': {
-      id: '/admin/_layout/settings'
+    '/wch1925/_layout/settings': {
+      id: '/wch1925/_layout/settings'
       path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminLayoutSettingsRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/settings'
+      preLoaderRoute: typeof Wch1925LayoutSettingsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/rules': {
-      id: '/admin/_layout/rules'
+    '/wch1925/_layout/rules': {
+      id: '/wch1925/_layout/rules'
       path: '/rules'
-      fullPath: '/admin/rules'
-      preLoaderRoute: typeof AdminLayoutRulesRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/rules'
+      preLoaderRoute: typeof Wch1925LayoutRulesRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/registrations': {
-      id: '/admin/_layout/registrations'
+    '/wch1925/_layout/registrations': {
+      id: '/wch1925/_layout/registrations'
       path: '/registrations'
-      fullPath: '/admin/registrations'
-      preLoaderRoute: typeof AdminLayoutRegistrationsRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/registrations'
+      preLoaderRoute: typeof Wch1925LayoutRegistrationsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/participants': {
-      id: '/admin/_layout/participants'
+    '/wch1925/_layout/participants': {
+      id: '/wch1925/_layout/participants'
       path: '/participants'
-      fullPath: '/admin/participants'
-      preLoaderRoute: typeof AdminLayoutParticipantsRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/participants'
+      preLoaderRoute: typeof Wch1925LayoutParticipantsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/leaderboard': {
-      id: '/admin/_layout/leaderboard'
+    '/wch1925/_layout/leaderboard': {
+      id: '/wch1925/_layout/leaderboard'
       path: '/leaderboard'
-      fullPath: '/admin/leaderboard'
-      preLoaderRoute: typeof AdminLayoutLeaderboardRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/leaderboard'
+      preLoaderRoute: typeof Wch1925LayoutLeaderboardRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/houses': {
-      id: '/admin/_layout/houses'
+    '/wch1925/_layout/houses': {
+      id: '/wch1925/_layout/houses'
       path: '/houses'
-      fullPath: '/admin/houses'
-      preLoaderRoute: typeof AdminLayoutHousesRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/houses'
+      preLoaderRoute: typeof Wch1925LayoutHousesRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/events': {
-      id: '/admin/_layout/events'
+    '/wch1925/_layout/events': {
+      id: '/wch1925/_layout/events'
       path: '/events'
-      fullPath: '/admin/events'
-      preLoaderRoute: typeof AdminLayoutEventsRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/events'
+      preLoaderRoute: typeof Wch1925LayoutEventsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/data-entry': {
-      id: '/admin/_layout/data-entry'
+    '/wch1925/_layout/data-entry': {
+      id: '/wch1925/_layout/data-entry'
       path: '/data-entry'
-      fullPath: '/admin/data-entry'
-      preLoaderRoute: typeof AdminLayoutDataEntryRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/data-entry'
+      preLoaderRoute: typeof Wch1925LayoutDataEntryRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/checkin': {
-      id: '/admin/_layout/checkin'
+    '/wch1925/_layout/checkin': {
+      id: '/wch1925/_layout/checkin'
       path: '/checkin'
-      fullPath: '/admin/checkin'
-      preLoaderRoute: typeof AdminLayoutCheckinRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/checkin'
+      preLoaderRoute: typeof Wch1925LayoutCheckinRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/announcements': {
-      id: '/admin/_layout/announcements'
+    '/wch1925/_layout/announcements': {
+      id: '/wch1925/_layout/announcements'
       path: '/announcements'
-      fullPath: '/admin/announcements'
-      preLoaderRoute: typeof AdminLayoutAnnouncementsRouteImport
-      parentRoute: typeof AdminLayoutRoute
+      fullPath: '/wch1925/announcements'
+      preLoaderRoute: typeof Wch1925LayoutAnnouncementsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
     }
-    '/admin/_layout/checkin/new': {
-      id: '/admin/_layout/checkin/new'
+    '/wch1925/_layout/checkin/new': {
+      id: '/wch1925/_layout/checkin/new'
       path: '/new'
-      fullPath: '/admin/checkin/new'
-      preLoaderRoute: typeof AdminLayoutCheckinNewRouteImport
-      parentRoute: typeof AdminLayoutCheckinRoute
+      fullPath: '/wch1925/checkin/new'
+      preLoaderRoute: typeof Wch1925LayoutCheckinNewRouteImport
+      parentRoute: typeof Wch1925LayoutCheckinRoute
     }
   }
 }
 
-interface AdminLayoutCheckinRouteChildren {
-  AdminLayoutCheckinNewRoute: typeof AdminLayoutCheckinNewRoute
+interface Wch1925LayoutCheckinRouteChildren {
+  Wch1925LayoutCheckinNewRoute: typeof Wch1925LayoutCheckinNewRoute
 }
 
-const AdminLayoutCheckinRouteChildren: AdminLayoutCheckinRouteChildren = {
-  AdminLayoutCheckinNewRoute: AdminLayoutCheckinNewRoute,
+const Wch1925LayoutCheckinRouteChildren: Wch1925LayoutCheckinRouteChildren = {
+  Wch1925LayoutCheckinNewRoute: Wch1925LayoutCheckinNewRoute,
 }
 
-const AdminLayoutCheckinRouteWithChildren =
-  AdminLayoutCheckinRoute._addFileChildren(AdminLayoutCheckinRouteChildren)
+const Wch1925LayoutCheckinRouteWithChildren =
+  Wch1925LayoutCheckinRoute._addFileChildren(Wch1925LayoutCheckinRouteChildren)
 
-interface AdminLayoutRouteChildren {
-  AdminLayoutAnnouncementsRoute: typeof AdminLayoutAnnouncementsRoute
-  AdminLayoutCheckinRoute: typeof AdminLayoutCheckinRouteWithChildren
-  AdminLayoutDataEntryRoute: typeof AdminLayoutDataEntryRoute
-  AdminLayoutEventsRoute: typeof AdminLayoutEventsRoute
-  AdminLayoutHousesRoute: typeof AdminLayoutHousesRoute
-  AdminLayoutLeaderboardRoute: typeof AdminLayoutLeaderboardRoute
-  AdminLayoutParticipantsRoute: typeof AdminLayoutParticipantsRoute
-  AdminLayoutRegistrationsRoute: typeof AdminLayoutRegistrationsRoute
-  AdminLayoutRulesRoute: typeof AdminLayoutRulesRoute
-  AdminLayoutSettingsRoute: typeof AdminLayoutSettingsRoute
-  AdminLayoutUserManagementRoute: typeof AdminLayoutUserManagementRoute
-  AdminLayoutIndexRoute: typeof AdminLayoutIndexRoute
+interface Wch1925LayoutRouteChildren {
+  Wch1925LayoutAnnouncementsRoute: typeof Wch1925LayoutAnnouncementsRoute
+  Wch1925LayoutCheckinRoute: typeof Wch1925LayoutCheckinRouteWithChildren
+  Wch1925LayoutDataEntryRoute: typeof Wch1925LayoutDataEntryRoute
+  Wch1925LayoutEventsRoute: typeof Wch1925LayoutEventsRoute
+  Wch1925LayoutHousesRoute: typeof Wch1925LayoutHousesRoute
+  Wch1925LayoutLeaderboardRoute: typeof Wch1925LayoutLeaderboardRoute
+  Wch1925LayoutParticipantsRoute: typeof Wch1925LayoutParticipantsRoute
+  Wch1925LayoutRegistrationsRoute: typeof Wch1925LayoutRegistrationsRoute
+  Wch1925LayoutRulesRoute: typeof Wch1925LayoutRulesRoute
+  Wch1925LayoutSettingsRoute: typeof Wch1925LayoutSettingsRoute
+  Wch1925LayoutUserManagementRoute: typeof Wch1925LayoutUserManagementRoute
+  Wch1925LayoutIndexRoute: typeof Wch1925LayoutIndexRoute
 }
 
-const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
-  AdminLayoutAnnouncementsRoute: AdminLayoutAnnouncementsRoute,
-  AdminLayoutCheckinRoute: AdminLayoutCheckinRouteWithChildren,
-  AdminLayoutDataEntryRoute: AdminLayoutDataEntryRoute,
-  AdminLayoutEventsRoute: AdminLayoutEventsRoute,
-  AdminLayoutHousesRoute: AdminLayoutHousesRoute,
-  AdminLayoutLeaderboardRoute: AdminLayoutLeaderboardRoute,
-  AdminLayoutParticipantsRoute: AdminLayoutParticipantsRoute,
-  AdminLayoutRegistrationsRoute: AdminLayoutRegistrationsRoute,
-  AdminLayoutRulesRoute: AdminLayoutRulesRoute,
-  AdminLayoutSettingsRoute: AdminLayoutSettingsRoute,
-  AdminLayoutUserManagementRoute: AdminLayoutUserManagementRoute,
-  AdminLayoutIndexRoute: AdminLayoutIndexRoute,
+const Wch1925LayoutRouteChildren: Wch1925LayoutRouteChildren = {
+  Wch1925LayoutAnnouncementsRoute: Wch1925LayoutAnnouncementsRoute,
+  Wch1925LayoutCheckinRoute: Wch1925LayoutCheckinRouteWithChildren,
+  Wch1925LayoutDataEntryRoute: Wch1925LayoutDataEntryRoute,
+  Wch1925LayoutEventsRoute: Wch1925LayoutEventsRoute,
+  Wch1925LayoutHousesRoute: Wch1925LayoutHousesRoute,
+  Wch1925LayoutLeaderboardRoute: Wch1925LayoutLeaderboardRoute,
+  Wch1925LayoutParticipantsRoute: Wch1925LayoutParticipantsRoute,
+  Wch1925LayoutRegistrationsRoute: Wch1925LayoutRegistrationsRoute,
+  Wch1925LayoutRulesRoute: Wch1925LayoutRulesRoute,
+  Wch1925LayoutSettingsRoute: Wch1925LayoutSettingsRoute,
+  Wch1925LayoutUserManagementRoute: Wch1925LayoutUserManagementRoute,
+  Wch1925LayoutIndexRoute: Wch1925LayoutIndexRoute,
 }
 
-const AdminLayoutRouteWithChildren = AdminLayoutRoute._addFileChildren(
-  AdminLayoutRouteChildren,
+const Wch1925LayoutRouteWithChildren = Wch1925LayoutRoute._addFileChildren(
+  Wch1925LayoutRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -615,11 +617,11 @@ const rootRouteChildren: RootRouteChildren = {
   MyScheduleRoute: MyScheduleRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
-  AdminLayoutRoute: AdminLayoutRouteWithChildren,
-  AdminLoginRoute: AdminLoginRoute,
   UserLayoutRoute: UserLayoutRoute,
   UserMyScheduleRoute: UserMyScheduleRoute,
   UserProfileRoute: UserProfileRoute,
+  Wch1925LayoutRoute: Wch1925LayoutRouteWithChildren,
+  Wch1925LoginRoute: Wch1925LoginRoute,
   UserIndexRoute: UserIndexRoute,
 }
 export const routeTree = rootRouteImport
