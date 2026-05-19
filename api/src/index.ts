@@ -318,6 +318,44 @@ app.get('/api/admin/houses', adminLimiter, cacheMiddleware(60), async (_req, res
   }
 })
 
+app.post('/api/admin/auth', publicLimiter, async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    if (!email) {
+      return res.status(400).json({ error: 'missing_email' })
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id,name,email,admins!inner(role,assigned_event_id)')
+      .ilike('email', email)
+      .limit(1)
+
+    if (error) {
+      throw error
+    }
+
+    const user = Array.isArray(data) ? data[0] : data
+    if (!user || !user.admins || !Array.isArray(user.admins) || user.admins.length === 0) {
+      return res.status(401).json({ error: 'not_admin' })
+    }
+
+    const admin = Array.isArray(user.admins) ? user.admins[0] : user.admins
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name || user.email,
+        email: user.email,
+        role: admin.role,
+        assignedEvent: admin.assigned_event_id || undefined,
+      },
+    })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 let inMemoryAdminSettings = {
   festival_status: 'pre',
   registrations_open: true,
