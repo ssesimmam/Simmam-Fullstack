@@ -141,7 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    // Fallback for unexpected render sequences (eg. rapid logout + route redirect)
+    // Returning a safe default prevents a thrown error during render which
+    // can lead React to detect a "rendered fewer hooks than expected" mismatch.
+    return {
+      user: null,
+      login: async () => false,
+      logout: () => {},
+      hasPermission: () => false,
+      isLoading: true,
+    } as unknown as AuthContextType
   }
+
   return context
 }

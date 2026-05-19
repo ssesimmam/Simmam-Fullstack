@@ -31,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     { resource: 'settings', actions: ['read', 'update'] },
     { resource: 'users', actions: ['read', 'create', 'delete'] },
     { resource: 'announcements', actions: ['read', 'create', 'delete'] },
+    { resource: 'rules', actions: ['read', 'create', 'delete'] },
     { resource: 'registrations', actions: ['read', 'export'] },
   ],
 }
@@ -44,4 +45,5 @@ export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/admin/user-management': [{ resource: 'users', actions: ['read'] }],
   '/admin/registrations': [{ resource: 'registrations', actions: ['read'] }],
   '/admin/announcements': [{ resource: 'announcements', actions: ['read'] }],
+  '/admin/rules': [{ resource: 'rules', actions: ['read'] }],
 }

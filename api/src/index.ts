@@ -234,6 +234,31 @@ app.get('/api/announcements', async (_req, res) => {
   }
 })
 
+app.get('/api/rules', async (_req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('rules_and_regulations')
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) throw error
+
+    const now = new Date().toISOString()
+    const activeRules = (data || []).filter((item: any) => {
+      const startsAt = item.starts_at ? new Date(item.starts_at).toISOString() : ''
+      const endsAt = item.ends_at ? new Date(item.ends_at).toISOString() : ''
+      return (!startsAt || startsAt <= now) && (!endsAt || endsAt >= now)
+    })
+
+    res.json({ data: activeRules })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 // Leaderboard
 app.get('/api/leaderboard', async (_req, res) => {
   try {
@@ -615,6 +640,97 @@ app.post('/api/admin/announcements', async (req, res) => {
   }
 })
 
+app.get('/api/admin/rules', async (_req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('rules_and_regulations')
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) throw error
+    res.json({ data: data || [] })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.post('/api/admin/rules', async (req, res) => {
+  try {
+    const { title, body, pinned, starts_at, ends_at } = req.body
+
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'title required' })
+    }
+
+    const { data, error } = await supabase
+      .from('rules_and_regulations')
+      .insert({
+        title: String(title).trim(),
+        body: body ? String(body).trim() : null,
+        pinned: !!pinned,
+        starts_at: starts_at || null,
+        ends_at: ends_at || null,
+      })
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .single()
+
+    if (error) throw error
+    res.status(201).json({ data })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.put('/api/admin/rules/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { title, body, pinned, starts_at, ends_at } = req.body
+
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'title required' })
+    }
+
+    const { data, error } = await supabase
+      .from('rules_and_regulations')
+      .update({
+        title: String(title).trim(),
+        body: body ? String(body).trim() : null,
+        pinned: !!pinned,
+        starts_at: starts_at || null,
+        ends_at: ends_at || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data) {
+      return res.status(404).json({ error: 'rule_not_found' })
+    }
+
+    res.json({ data })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.delete('/api/admin/rules/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { error } = await supabase.from('rules_and_regulations').delete().eq('id', id)
+    if (error) throw error
+    res.json({ ok: true })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 app.put('/api/admin/announcements/:id', async (req, res) => {
   try {
     const { id } = req.params
@@ -634,10 +750,14 @@ app.put('/api/admin/announcements/:id', async (req, res) => {
         ends_at: ends_at || null,
       })
       .eq('id', id)
-      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
-      .single()
+      .select('id,title,body,pinned,starts_at,ends_at,created_by,created_at,updated_at')
+      .maybeSingle()
 
     if (error) throw error
+    if (!data) {
+      return res.status(404).json({ error: 'announcement_not_found' })
+    }
+
     res.json({ data })
   } catch (err: any) {
     console.error(err)

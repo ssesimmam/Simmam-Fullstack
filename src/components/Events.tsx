@@ -4,7 +4,7 @@ import { Tilt3D } from "./Tilt3D";
 import { Bell, BookOpen, X, Search } from "lucide-react";
 import { SectionHeader } from "./Dashboard";
 import { useData, type AdminEvent } from "../lib/store";
-import { fetchAnnouncements, type ApiAnnouncement } from "../lib/apiClient";
+import { fetchAnnouncements, fetchRules, type ApiAnnouncement, type ApiRule } from "../lib/apiClient";
 
 const categories = ["All", "Tech", "Non-Tech", "Sports"];
 
@@ -16,12 +16,39 @@ export function Events() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [announcements, setAnnouncements] = useState<ApiAnnouncement[]>([]);
+  const [rules, setRules] = useState<ApiRule[]>([]);
 
   useEffect(() => {
     void fetchAnnouncements()
       .then(setAnnouncements)
       .catch(() => setAnnouncements([]));
+
+    void fetchRules()
+      .then(setRules)
+      .catch(() => setRules([]));
   }, []);
+
+  useEffect(() => {
+    try {
+      if (typeof BroadcastChannel === 'undefined') return
+      const bc = new BroadcastChannel('simmam-content')
+      bc.onmessage = (ev) => {
+        const data = ev.data
+        if (!data) return
+        if (data.type === 'rules') {
+          void fetchRules().then(setRules).catch(() => {})
+        }
+        if (data.type === 'announcements') {
+          void fetchAnnouncements().then(setAnnouncements).catch(() => {})
+        }
+      }
+      return () => {
+        try { bc.close() } catch (_) {}
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }, [])
 
   const list = events.filter((e) => {
     const matchesCategory = filter === "All" || e.mainCategory === filter;
@@ -29,12 +56,6 @@ export function Events() {
       e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.category.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
-  });
-
-  const rulesAndRegulations = announcements.filter((item) => {
-    const title = (item.title || "").toLowerCase();
-    const body = (item.body || "").toLowerCase();
-    return item.pinned || title.includes("rule") || title.includes("regulation") || body.includes("rule") || body.includes("regulation");
   });
 
   return (
@@ -289,7 +310,7 @@ export function Events() {
               </div>
 
               <div className="space-y-3">
-                {rulesAndRegulations.length > 0 ? rulesAndRegulations.map((item) => (
+                {rules.length > 0 ? rules.map((item) => (
                   <article key={item.id} className="rounded-xl border border-white/10 bg-black/30 p-4">
                     <div className="mb-2 flex items-center gap-2">
                       <h4 className="font-semibold text-foreground">{item.title}</h4>

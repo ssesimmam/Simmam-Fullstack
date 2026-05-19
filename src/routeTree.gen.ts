@@ -26,6 +26,7 @@ import { Route as AdminLayoutRouteImport } from './routes/admin/_layout'
 import { Route as AdminLayoutIndexRouteImport } from './routes/admin/_layout/index'
 import { Route as AdminLayoutUserManagementRouteImport } from './routes/admin/_layout/user-management'
 import { Route as AdminLayoutSettingsRouteImport } from './routes/admin/_layout/settings'
+import { Route as AdminLayoutRulesRouteImport } from './routes/admin/_layout/rules'
 import { Route as AdminLayoutRegistrationsRouteImport } from './routes/admin/_layout/registrations'
 import { Route as AdminLayoutParticipantsRouteImport } from './routes/admin/_layout/participants'
 import { Route as AdminLayoutLeaderboardRouteImport } from './routes/admin/_layout/leaderboard'
@@ -122,6 +123,11 @@ const AdminLayoutSettingsRoute = AdminLayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
+const AdminLayoutRulesRoute = AdminLayoutRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
 const AdminLayoutRegistrationsRoute =
   AdminLayoutRegistrationsRouteImport.update({
     id: '/registrations',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
   '/admin/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/rules': typeof AdminLayoutRulesRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
   '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/': typeof AdminLayoutIndexRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
   '/admin/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/rules': typeof AdminLayoutRulesRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
   '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin': typeof AdminLayoutIndexRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/admin/_layout/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/_layout/participants': typeof AdminLayoutParticipantsRoute
   '/admin/_layout/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/_layout/rules': typeof AdminLayoutRulesRoute
   '/admin/_layout/settings': typeof AdminLayoutSettingsRoute
   '/admin/_layout/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/_layout/': typeof AdminLayoutIndexRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/admin/participants'
     | '/admin/registrations'
+    | '/admin/rules'
     | '/admin/settings'
     | '/admin/user-management'
     | '/admin/'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/admin/participants'
     | '/admin/registrations'
+    | '/admin/rules'
     | '/admin/settings'
     | '/admin/user-management'
     | '/admin'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/admin/_layout/leaderboard'
     | '/admin/_layout/participants'
     | '/admin/_layout/registrations'
+    | '/admin/_layout/rules'
     | '/admin/_layout/settings'
     | '/admin/_layout/user-management'
     | '/admin/_layout/'
@@ -476,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLayoutSettingsRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
+    '/admin/_layout/rules': {
+      id: '/admin/_layout/rules'
+      path: '/rules'
+      fullPath: '/admin/rules'
+      preLoaderRoute: typeof AdminLayoutRulesRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
     '/admin/_layout/registrations': {
       id: '/admin/_layout/registrations'
       path: '/registrations'
@@ -562,6 +581,7 @@ interface AdminLayoutRouteChildren {
   AdminLayoutLeaderboardRoute: typeof AdminLayoutLeaderboardRoute
   AdminLayoutParticipantsRoute: typeof AdminLayoutParticipantsRoute
   AdminLayoutRegistrationsRoute: typeof AdminLayoutRegistrationsRoute
+  AdminLayoutRulesRoute: typeof AdminLayoutRulesRoute
   AdminLayoutSettingsRoute: typeof AdminLayoutSettingsRoute
   AdminLayoutUserManagementRoute: typeof AdminLayoutUserManagementRoute
   AdminLayoutIndexRoute: typeof AdminLayoutIndexRoute
@@ -576,6 +596,7 @@ const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
   AdminLayoutLeaderboardRoute: AdminLayoutLeaderboardRoute,
   AdminLayoutParticipantsRoute: AdminLayoutParticipantsRoute,
   AdminLayoutRegistrationsRoute: AdminLayoutRegistrationsRoute,
+  AdminLayoutRulesRoute: AdminLayoutRulesRoute,
   AdminLayoutSettingsRoute: AdminLayoutSettingsRoute,
   AdminLayoutUserManagementRoute: AdminLayoutUserManagementRoute,
   AdminLayoutIndexRoute: AdminLayoutIndexRoute,

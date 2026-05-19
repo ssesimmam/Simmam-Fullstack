@@ -1,6 +1,8 @@
 import {
   LayoutDashboard,
   CalendarDays,
+  Bell,
+  BookOpen,
   Trophy,
   Shield,
   Users,
@@ -55,6 +57,16 @@ const MENU_ITEMS = {
       title: 'Events',
       href: '/admin/events',
       icon: CalendarDays,
+    },
+    {
+      title: 'Notifications',
+      href: '/admin/announcements',
+      icon: Bell,
+    },
+    {
+      title: 'Rules & Regulations',
+      href: '/admin/rules',
+      icon: BookOpen,
     },
     {
       title: 'Data Entry',

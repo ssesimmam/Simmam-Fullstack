@@ -92,6 +92,18 @@ export type AdminAnnouncementRow = {
   pinned?: boolean
   starts_at?: string | null
   ends_at?: string | null
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type AdminRuleRow = {
+  id: string
+  title: string
+  body?: string | null
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -154,9 +166,14 @@ export async function fetchAdminAnnouncements(): Promise<AdminAnnouncementRow[]>
   return result.data || []
 }
 
+export async function fetchAdminRules(): Promise<AdminRuleRow[]> {
+  const result = await adminRequest<{ data: AdminRuleRow[] }>('/rules')
+  return result.data || []
+}
+
 export async function createAdminAnnouncement(payload: {
   title: string
-  body?: string
+  body?: string | null
   pinned?: boolean
   starts_at?: string | null
   ends_at?: string | null
@@ -168,13 +185,16 @@ export async function createAdminAnnouncement(payload: {
   return result.data
 }
 
-export async function updateAdminAnnouncement(id: string, payload: {
-  title: string
-  body?: string
-  pinned?: boolean
-  starts_at?: string | null
-  ends_at?: string | null
-}): Promise<AdminAnnouncementRow> {
+export async function updateAdminAnnouncement(
+  id: string,
+  payload: {
+    title: string
+    body?: string | null
+    pinned?: boolean
+    starts_at?: string | null
+    ends_at?: string | null
+  },
+): Promise<AdminAnnouncementRow> {
   const result = await adminRequest<{ data: AdminAnnouncementRow }>(`/announcements/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
@@ -184,6 +204,68 @@ export async function updateAdminAnnouncement(id: string, payload: {
 
 export async function deleteAdminAnnouncement(id: string): Promise<void> {
   await adminRequest(`/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export async function createAdminRule(payload: {
+  title: string
+  body?: string | null
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+}): Promise<AdminRuleRow> {
+  const result = await adminRequest<{ data: AdminRuleRow }>('/rules', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('simmam-content')
+      bc.postMessage({ type: 'rules', action: 'create', id: result.data?.id })
+      bc.close()
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return result.data
+}
+
+export async function updateAdminRule(
+  id: string,
+  payload: {
+    title: string
+    body?: string | null
+    pinned?: boolean
+    starts_at?: string | null
+    ends_at?: string | null
+  },
+): Promise<AdminRuleRow> {
+  const result = await adminRequest<{ data: AdminRuleRow }>(`/rules/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('simmam-content')
+      bc.postMessage({ type: 'rules', action: 'update', id: result.data?.id })
+      bc.close()
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return result.data
+}
+
+export async function deleteAdminRule(id: string): Promise<void> {
+  await adminRequest(`/rules/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('simmam-content')
+      bc.postMessage({ type: 'rules', action: 'delete', id })
+      bc.close()
+    }
+  } catch (_) {
+    /* ignore */
+  }
 }
 
 export async function fetchAdminUsers(params?: { search?: string; house?: string }): Promise<AdminUserRow[]> {

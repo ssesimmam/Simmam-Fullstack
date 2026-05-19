@@ -43,6 +43,17 @@ export type ApiAnnouncement = {
   updated_at?: string
 }
 
+export type ApiRule = {
+  id: string
+  title: string
+  body?: string | null
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export type CreateRegistrationPayload = {
   email: string
   name: string
@@ -123,6 +134,11 @@ export async function fetchUserRegistrations(email: string): Promise<ApiRegistra
 
 export async function fetchAnnouncements(): Promise<ApiAnnouncement[]> {
   const payload = await request<{ data: ApiAnnouncement[] }>('/announcements')
+  return payload.data || []
+}
+
+export async function fetchRules(): Promise<ApiRule[]> {
+  const payload = await request<{ data: ApiRule[] }>('/rules')
   return payload.data || []
 }
 
