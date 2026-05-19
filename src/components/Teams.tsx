@@ -2,9 +2,10 @@ import { Phone } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { SectionHeader } from "./Dashboard";
 import { Tilt3D } from "./Tilt3D";
-import { houses } from "@/lib/houses";
+import { useData } from "@/lib/store";
 
 export function Teams() {
+  const { houses } = useData();
   const formatName = (name: string) => name.startsWith("Dr. ") ? "Dr. " + name.substring(4).toUpperCase() : name.toUpperCase();
 
   return (

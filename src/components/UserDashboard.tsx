@@ -4,12 +4,10 @@ import {
   Clock,
   LogOut,
   MapPin,
-  Pencil,
   Sparkles,
   User,
 } from 'lucide-react'
-import { getUserRegistrations, getCheckedInEvents, clearAllUserData, type Registration, type UserProfile } from '@/lib/registrationStore'
-import { houses } from '@/lib/houses'
+import { getUserRegistrations, getCheckedInEvents, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
 import { useData } from '@/lib/store'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -145,6 +143,92 @@ function DashboardEventCard({
   )
 }
 
+function DetailedODCard({
+  eventName,
+  category,
+  venue,
+  date,
+  timeSlot,
+  endTime,
+}: Omit<DashboardEventCardProps, 'variant'>) {
+  const fullDate = date
+    ? new Date(`${date}T12:00:00`).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : 'Date TBD'
+
+  return (
+    <article className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#111] to-[#0a0a0a] p-6 md:p-8 shadow-[0_0_30px_rgba(212,175,55,0.03)] transition-all hover:border-[#D4AF37]/50 hover:shadow-[0_0_40px_rgba(212,175,55,0.08)]">
+      {/* Background decorations */}
+      <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#D4AF37]/5 blur-[80px]" />
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" />
+      
+      <div className="relative z-10">
+        <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between border-b border-white/10 pb-6 gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="inline-flex items-center gap-1.5 rounded border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                OD APPROVED
+              </span>
+              {category && (
+                <span className="inline-flex items-center gap-1 rounded border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]/80">
+                  <Sparkles className="h-3 w-3" /> {category}
+                </span>
+              )}
+            </div>
+            <h3 className="font-display text-2xl md:text-3xl font-black text-white leading-tight">{eventName}</h3>
+            <p className="mt-2 text-sm text-white/40 max-w-lg">
+              This confirms that the student is checked-in and eligible for On-Duty (OD) for the duration of this event.
+            </p>
+          </div>
+          
+          <div className="shrink-0 flex items-center justify-center h-20 w-20 rounded-xl border-2 border-dashed border-[#D4AF37]/20 bg-[#D4AF37]/5 relative overflow-hidden">
+            <span className="absolute inset-0 flex items-center justify-center rotate-[-12deg] text-xs font-black uppercase tracking-widest text-[#D4AF37]/40">
+              Verified
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 rounded-xl bg-black/40 p-5 border border-white/5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#D4AF37]/10 text-[#D4AF37]">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Date</p>
+              <p className="text-sm font-semibold text-white/90">{fullDate}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#D4AF37]/10 text-[#D4AF37]">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Time Slot</p>
+              <p className="text-sm font-semibold text-white/90">{timeSlot || 'TBD'}{endTime ? ` - ${endTime}` : ''}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#D4AF37]/10 text-[#D4AF37]">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Venue</p>
+              <p className="text-sm font-semibold text-white/90">{venue || 'TBD'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
 // ─── Stat Card ─────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
@@ -180,12 +264,11 @@ function StatCard({ count, label, accentColor, loading }: StatCardProps) {
 
 interface UserDashboardProps {
   user: UserProfile
-  onEditProfile: () => void
   onSignOut: () => void
 }
 
-export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardProps) {
-  const { participants } = useData()
+export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
+  const { participants, houses } = useData()
   const [activeTab, setActiveTab] = useState<Tab>('registered')
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
@@ -195,10 +278,16 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
 
   const loadData = useCallback(() => {
     setLoading(true)
-    setTimeout(() => {
-      setRegistrations(getUserRegistrations(user.email))
-      setLoading(false)
-    }, 350)
+    const cached = getUserRegistrations(user.email)
+    setRegistrations(cached)
+    void syncUserRegistrations(user.email)
+      .then((rows) => {
+        setRegistrations(rows)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }, [user.email])
 
   useEffect(() => {
@@ -244,13 +333,6 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
         )}
 
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Avatar */}
-          <img
-            src={user.picture}
-            alt={user.name}
-            className="h-14 w-14 shrink-0 rounded-full border border-white/10 bg-white/10"
-          />
-
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -274,15 +356,6 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
 
           {/* Actions */}
           <div className="shrink-0 flex flex-col sm:flex-row items-end sm:items-center gap-2">
-            <button
-              id="edit-profile-btn"
-              onClick={onEditProfile}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/50 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit Profile
-            </button>
-
             {confirmSignOut ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-white/40">Clear all data?</span>
@@ -434,7 +507,7 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
 
         {/* OD ELIGIBLE */}
         {activeTab === 'od' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {loading ? (
               Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} />)
             ) : odEligibleRegs.length === 0 ? (
@@ -444,7 +517,7 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
               />
             ) : (
               odEligibleRegs.map((reg) => (
-                <DashboardEventCard
+                <DetailedODCard
                   key={reg.eventId}
                   eventName={reg.eventName}
                   category={reg.category}
@@ -452,7 +525,6 @@ export function UserDashboard({ user, onEditProfile, onSignOut }: UserDashboardP
                   date={reg.date}
                   timeSlot={reg.timeSlot}
                   endTime={reg.endTime}
-                  variant="od"
                 />
               ))
             )}

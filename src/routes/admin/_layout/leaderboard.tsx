@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/store'
+import { fetchAdminLeaderboard, adjustAdminLeaderboardPoints, type AdminLeaderboardRow } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Minus, Save, Trophy, TrendingUp, TrendingDown, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,11 +15,28 @@ export const Route = createFileRoute('/admin/_layout/leaderboard')({
 })
 
 function LeaderboardManagement() {
-  const { hasPermission } = useAuth()
-  const { user } = useAuth()
-  const { houses, updateHousePoints, pointsHistory } = useData()
+  const { hasPermission, user } = useAuth()
+  const { houses, updateHousePoints, pointsHistory, refreshData } = useData()
+  const [leaderboardRows, setLeaderboardRows] = useState<AdminLeaderboardRow[]>([])
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true)
   const [pointAdjustments, setPointAdjustments] = useState<Record<string, number>>({})
   const [pointReasons, setPointReasons] = useState<Record<string, string>>({})
+
+  const loadLeaderboard = async () => {
+    setLoadingLeaderboard(true)
+    try {
+      const rows = await fetchAdminLeaderboard()
+      setLeaderboardRows(rows)
+    } catch {
+      setLeaderboardRows([])
+    } finally {
+      setLoadingLeaderboard(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadLeaderboard()
+  }, [])
 
   if (!hasPermission('leaderboard', 'read')) {
     return <AccessDenied />
@@ -33,23 +51,45 @@ function LeaderboardManagement() {
     }))
   }
 
-  const handleSavePoints = (houseName: string) => {
+  const handleSavePoints = async (houseName: string) => {
     const adjustment = pointAdjustments[houseName] || 0
     const reason = pointReasons[houseName] || ''
-    
+
     if (adjustment === 0) return
     if (adjustment < 0 && !reason.trim()) {
-      toast.error(`A reason is required for negative points`)
+      toast.error('A reason is required for negative points')
       return
     }
 
-    updateHousePoints(houseName, adjustment, reason, user?.name)
-    setPointAdjustments(prev => ({ ...prev, [houseName]: 0 }))
-    setPointReasons(prev => ({ ...prev, [houseName]: '' }))
-    toast.success(`Points updated for ${houseName}`)
+    const remoteHouse = leaderboardRows.find((row) => row.house_name.toLowerCase() === houseName.toLowerCase())
+    if (!remoteHouse) {
+      toast.error('Unable to determine house from leaderboard data')
+      return
+    }
+
+    try {
+      await adjustAdminLeaderboardPoints(remoteHouse.house_id, adjustment, reason)
+      // Optimistically update local store so UI reflects change immediately
+      try {
+        updateHousePoints(remoteHouse.house_name, adjustment, reason, user?.name || 'Admin')
+      } catch (e) {
+        // ignore optimistic update failures
+      }
+      await refreshData()
+      setPointAdjustments((prev) => ({ ...prev, [houseName]: 0 }))
+      setPointReasons((prev) => ({ ...prev, [houseName]: '' }))
+      toast.success(`Points updated for ${houseName}`)
+      await loadLeaderboard()
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update leaderboard')
+    }
   }
 
-  const sortedHouses = [...houses].sort((a, b) => b.points2026 - a.points2026)
+  const sortedHouses = [...houses].sort((a, b) => {
+    const aPoints = leaderboardRows.find((row) => row.house_name.toLowerCase() === a.name.toLowerCase())?.total_points ?? a.points2026
+    const bPoints = leaderboardRows.find((row) => row.house_name.toLowerCase() === b.name.toLowerCase())?.total_points ?? b.points2026
+    return bPoints - aPoints
+  })
 
   return (
     <div className="space-y-8 pb-12">
@@ -57,11 +97,17 @@ function LeaderboardManagement() {
         title="Leaderboard Management"
         subtitle="Live scoring and house rankings for SIMMAM 2026"
       />
+      {loadingLeaderboard && (
+        <div className="rounded-lg border border-[#333] bg-[#111] p-3 text-sm text-gray-400">
+          Syncing leaderboard data from the backend...
+        </div>
+      )}
 
       <div className="grid gap-6">
         {sortedHouses.map((house, index) => {
           const adjustment = pointAdjustments[house.name] || 0
-          const finalPoints = house.points2026 + adjustment
+          const currentPoints = leaderboardRows.find((row) => row.house_name.toLowerCase() === house.name.toLowerCase())?.total_points ?? house.points2026
+          const finalPoints = currentPoints + adjustment
           
           return (
             <div 

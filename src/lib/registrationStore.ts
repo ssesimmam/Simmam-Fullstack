@@ -1,6 +1,9 @@
+import { createRegistration, fetchUserRegistrations, upsertUserProfile } from '@/lib/apiClient'
+
 export type UserProfile = {
   email: string
   name: string
+  mobileNumber?: string
   picture: string
   registerNumber: string
   house: string
@@ -16,6 +19,7 @@ export type Registration = {
   category: string
   registeredAt: string
   ticketCode: string
+  checkedIn?: boolean
 }
 
 const USER_KEY = 'simmam_user'
@@ -33,6 +37,18 @@ export function getUser(): UserProfile | null {
 
 export function saveUser(user: UserProfile): void {
   sessionStorage.setItem(USER_KEY, JSON.stringify(user))
+
+  // Keep backend profile in sync, but do not block the UI on this call.
+  void upsertUserProfile({
+    email: user.email,
+    name: user.name,
+    mobile_number: user.mobileNumber,
+    register_number: user.registerNumber,
+    house: user.house,
+    picture_url: user.picture,
+  }).catch(() => {
+    // Silent fallback: the user profile is still available in session storage.
+  })
 }
 
 export function clearUser(): void {
@@ -59,6 +75,25 @@ export function getUserRegistrations(email: string): Registration[] {
   }
 }
 
+export async function syncUserRegistrations(email: string): Promise<Registration[]> {
+  const rows = await fetchUserRegistrations(email)
+  const mapped: Registration[] = rows.map((item) => ({
+    eventId: item.event_id,
+    eventName: item.event_name,
+    date: item.date,
+    timeSlot: item.time_slot,
+    endTime: item.end_time,
+    venue: item.venue,
+    category: item.category,
+    registeredAt: item.registered_at,
+    ticketCode: item.ticket_code,
+    checkedIn: !!item.checked_in,
+  }))
+
+  saveUserRegistrations(email, mapped)
+  return mapped
+}
+
 function saveUserRegistrations(email: string, registrations: Registration[]): void {
   const key = `simmam_regs_${email}`
   localStorage.setItem(key, JSON.stringify(registrations))
@@ -69,17 +104,46 @@ export function isRegistered(email: string, eventId: string): boolean {
   return registrations.some((registration) => registration.eventId === eventId)
 }
 
-export function registerForEvent(
+export function isRegisteredForEvent(email: string, eventId: string | undefined, eventName: string): boolean {
+  const registrations = getUserRegistrations(email)
+  return registrations.some((registration) => {
+    const byId = !!eventId && registration.eventId === eventId
+    const byName = registration.eventName.toLowerCase() === eventName.toLowerCase()
+    return byId || byName
+  })
+}
+
+export async function registerForEvent(
   email: string,
-  event: Omit<Registration, 'registeredAt' | 'ticketCode'>,
-): { success: boolean; alreadyRegistered: boolean } {
+  event: Omit<Registration, 'registeredAt' | 'ticketCode'> & { backendEventId?: string },
+): Promise<{ success: boolean; alreadyRegistered: boolean }> {
   const registrations = getUserRegistrations(email)
 
-  if (registrations.some((registration) => registration.eventId === event.eventId)) {
+  if (
+    registrations.some(
+      (registration) =>
+        registration.eventId === event.eventId ||
+        registration.eventName.toLowerCase() === event.eventName.toLowerCase(),
+    )
+  ) {
     return { success: false, alreadyRegistered: true }
   }
 
-  const ticketCode = generateTicketCode(email, event.eventId)
+  const user = getUser()
+  if (!user) {
+    throw new Error('user_session_missing')
+  }
+
+  const response = await createRegistration({
+    email: user.email,
+    name: user.name,
+    register_number: user.registerNumber,
+    house: user.house,
+    event_id: event.backendEventId,
+    event_name: event.eventName,
+  })
+
+  const ticketCode = response.ticket_code || generateTicketCode(email, event.eventId)
   const newRegistration: Registration = {
     ...event,
     registeredAt: new Date().toISOString(),
@@ -87,6 +151,9 @@ export function registerForEvent(
   }
 
   saveUserRegistrations(email, [...registrations, newRegistration])
+
+  // Fetch authoritative rows from backend after local optimistic update.
+  await syncUserRegistrations(email)
   return { success: true, alreadyRegistered: false }
 }
 

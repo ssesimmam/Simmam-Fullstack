@@ -2,6 +2,7 @@ import { Award, Building2, Crown, Flame, Trophy, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Counter } from "./Counter";
 import { Tilt3D } from "./Tilt3D";
+import { useData } from "@/lib/store";
 
 type Stat = {
   icon: LucideIcon;
@@ -12,18 +13,19 @@ type Stat = {
   accent: "gold" | "red";
 };
 
-import { allEvents } from "@/lib/eventsData";
-
-const stats: Stat[] = [
-  { icon: Users, label: "Total Teams", value: 6, hint: "Agniyas, Dhronas, Marutas, Rudras, Suryas, Vajras", accent: "gold" },
-  { icon: Flame, label: "Total Participants", value: 0, hint: "Across all events", accent: "red" },
-  { icon: Trophy, label: "Total Events", value: 150, hint: "", accent: "gold" },
-  { icon: Building2, label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
-  { icon: Crown, label: "2025 Champion", value: 1, suffix: " — Agniyas", hint: "Last year's overall winners", accent: "gold" },
-  { icon: Award, label: "Highest Score", value: 0, hint: "Agniyas — SIMMAM 2025", accent: "red" },
-];
-
 export function Dashboard() {
+  const { houses, events, participants } = useData();
+  const leader = [...houses].sort((a, b) => Number(b.points2026 ?? b.points2025 ?? 0) - Number(a.points2026 ?? a.points2025 ?? 0))[0];
+
+  const stats: Stat[] = [
+    { icon: Users, label: "Total Teams", value: houses.length, hint: houses.map((house) => house.name).join(", "), accent: "gold" },
+    { icon: Flame, label: "Total Participants", value: participants.length, hint: "Across all events", accent: "red" },
+    { icon: Trophy, label: "Total Events", value: events.length, hint: "Synced from the backend", accent: "gold" },
+    { icon: Building2, label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
+    { icon: Crown, label: "Top House Score", value: leader ? Number(leader.points2026 ?? leader.points2025 ?? 0) : 0, suffix: leader ? ` — ${leader.name}` : "", hint: "Leading the rankings", accent: "gold" },
+    { icon: Award, label: "Highest Score", value: leader ? Number(leader.points2026 ?? leader.points2025 ?? 0) : 0, hint: leader ? `${leader.name} — Current backend total` : "No house data yet", accent: "red" },
+  ];
+
   return (
     <section id="dashboard" className="relative py-24 md:py-32">
       <div className="max-w-7xl mx-auto px-6">

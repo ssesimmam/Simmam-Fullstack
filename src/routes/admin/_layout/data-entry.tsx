@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
-import { useData, AdminEvent, type Participant } from '@/lib/store'
+import { useData, AdminEvent, type Participant, mapRemoteEventToAdminEvent, resolvePersistedEventId } from '@/lib/store'
+import { createAdminEvent, updateAdminEvent, createAdminParticipant, updateAdminParticipant, deleteAdminRegistration, checkInRegistration, removeAdminCheckin } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useState } from 'react'
@@ -44,7 +45,7 @@ export const Route = createFileRoute('/admin/_layout/data-entry')({
 
 function DataEntryPage() {
   const { user } = useAuth()
-  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant } = useData()
+  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant, refreshData } = useData()
   const [activeTab, setActiveTab] = useState<'events' | 'participants' | 'live'>('events')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -54,6 +55,7 @@ function DataEntryPage() {
 
   // Event editing state
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null)
+  const [eventDateError, setEventDateError] = useState<string>('')
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
 
   // Participant editing state
@@ -65,6 +67,7 @@ function DataEntryPage() {
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [newEventName, setNewEventName] = useState('')
   const [newEventCategory, setNewEventCategory] = useState('')
+  const [newEventDate, setNewEventDate] = useState(new Date().toISOString().slice(0, 10))
 
   const [showAddParticipant, setShowAddParticipant] = useState(false)
   const [newPName, setNewPName] = useState('')
@@ -91,24 +94,97 @@ function DataEntryPage() {
     setExpandedEvents(newExpanded)
   }
 
-  const handleUpdateEvent = (e: React.FormEvent) => {
+  const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingEvent) {
-      updateEvent(editingEvent)
+    if (!editingEvent) return
+
+    if (!editingEvent.date) {
+      setEventDateError('Event Date is required')
+      return
+    }
+
+    const payload = {
+      name: editingEvent.name,
+      category: editingEvent.category,
+      description: editingEvent.description,
+      date: editingEvent.date,
+      time_slot: editingEvent.time,
+      venue: editingEvent.venue,
+      capacity: editingEvent.participantCount,
+      registration_open: editingEvent.registration_open,
+      checkin_enabled: editingEvent.checkin_enabled,
+      is_floated: editingEvent.is_floated,
+      status: editingEvent.status,
+    }
+
+    try {
+      const liveEventId = await resolvePersistedEventId(editingEvent)
+      const updated = await updateAdminEvent(liveEventId, payload)
+      updateEvent(mapRemoteEventToAdminEvent(updated as any, editingEvent))
       setEditingEvent(null)
+      void refreshData()
       toast.success('Event updated successfully')
+    } catch (error: any) {
+      setEditingEvent(null)
+      toast.error(error?.message || 'Failed to update event')
     }
   }
 
-  const handleAddEvent = () => {
-    if (!newEventName.trim() || !newEventCategory.trim()) {
-      toast.error('Event name and category are required')
+  const applyLiveToggle = async (event: AdminEvent, nextLiveState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+
+    const updated = await updateAdminEvent(liveEventId, {
+      is_live_tomorrow: nextLiveState,
+      is_floated: nextLiveState ? true : event.is_floated,
+      registration_open: nextLiveState ? true : event.registration_open,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      is_live_tomorrow: nextLiveState,
+      is_floated: nextLiveState ? true : event.is_floated,
+      registration_open: nextLiveState ? true : event.registration_open,
+    })
+    void refreshData()
+  }
+
+  const applyFloatToggle = async (event: AdminEvent, nextFloatState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+    const updated = await updateAdminEvent(liveEventId, {
+      is_floated: nextFloatState,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      is_floated: nextFloatState,
+    })
+    void refreshData()
+  }
+
+  const applyRegistrationToggle = async (event: AdminEvent, nextRegistrationState: boolean) => {
+    const liveEventId = await resolvePersistedEventId(event)
+    const updated = await updateAdminEvent(liveEventId, {
+      registration_open: nextRegistrationState,
+    })
+
+    updateEvent({
+      ...mapRemoteEventToAdminEvent(updated as any, event),
+      registration_open: nextRegistrationState,
+    })
+    void refreshData()
+  }
+
+  const handleAddEvent = async () => {
+    if (!newEventName.trim() || !newEventCategory.trim() || !newEventDate) {
+      toast.error('Event name, category and date are required')
       return
     }
+
     const newEvent: AdminEvent = {
       id: `event-${Date.now()}`,
       name: newEventName.trim(),
       category: newEventCategory.trim(),
+      date: newEventDate,
       icon: events[0]?.icon || (() => null),
       mainCategory: 'Non-Tech',
       rules: [],
@@ -121,7 +197,36 @@ function DataEntryPage() {
       prizeInfo: 'Trophy + Certificate',
       result: undefined,
     }
-    addEvent(newEvent)
+
+    try {
+      const created = await createAdminEvent({
+        name: newEvent.name,
+        description: newEvent.description || '',
+        category: newEvent.category,
+        main_category: newEvent.mainCategory,
+        date: newEvent.date || new Date().toISOString().slice(0, 10),
+        time_slot: newEvent.time || '00:00',
+        venue: newEvent.venue || 'TBD',
+        capacity: 0,
+      })
+
+      addEvent(mapRemoteEventToAdminEvent(created as any, {
+        ...newEvent,
+        id: created.id,
+        is_floated: created.is_floated ?? newEvent.is_floated,
+        registration_open: created.registration_open ?? newEvent.registration_open,
+        checkin_enabled: created.checkin_enabled ?? newEvent.checkin_enabled,
+        status: created.status === 'live' ? 'ongoing' : created.status || newEvent.status,
+        venue: created.venue || newEvent.venue,
+        time: created.time_slot || newEvent.time,
+      } as AdminEvent))
+
+      void refreshData()
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create event')
+      return
+    }
+
     setNewEventName('')
     setNewEventCategory('')
     setShowAddEvent(false)
@@ -148,25 +253,73 @@ function DataEntryPage() {
     setExpandedPHouses(newExpanded)
   }
 
-  const handleUpdateParticipant = (e: React.FormEvent) => {
+  const handleUpdateParticipant = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingParticipant) {
-      updateParticipant(editingParticipant)
+    if (!editingParticipant) return
+
+    try {
+      const result = await updateAdminParticipant(editingParticipant.id, {
+        status: editingParticipant.status,
+        event_name: editingParticipant.event,
+        email: editingParticipant.email,
+        name: editingParticipant.name,
+        register_number: editingParticipant.regNo,
+        house: editingParticipant.house,
+      })
+
+      const wasCheckedIn = !!result.checked_in
+      if (editingParticipant.checkIn !== wasCheckedIn) {
+        if (editingParticipant.checkIn) {
+          await checkInRegistration(editingParticipant.id)
+        } else {
+          await removeAdminCheckin(editingParticipant.id).catch(() => undefined)
+        }
+      }
+
+      // Map API response back to Participant shape
+      const mapped: Participant = {
+        id: result.registration_id,
+        name: result.participant_name,
+        regNo: result.reg_no || '',
+        email: result.email || editingParticipant.email,
+        house: result.house || editingParticipant.house,
+        event: result.event_name,
+        status: (result.registration_status as any) || editingParticipant.status,
+        checkIn: editingParticipant.checkIn,
+        certificate: false,
+      }
+
+      updateParticipant(mapped)
       setEditingParticipant(null)
+      void refreshData()
       toast.success('Participant updated successfully')
+    } catch (error: any) {
+      setEditingParticipant(null)
+      toast.error(error?.message || 'Failed to update participant')
     }
   }
 
-  const handleDeleteParticipant = (participant: Participant) => {
-    updateParticipant({ ...participant, status: 'waitlisted' as const })
-    toast.success(`${participant.name} moved to waitlisted`)
+  const handleDeleteParticipant = async (participant: Participant) => {
+    try {
+      await deleteAdminRegistration(participant.id)
+      void refreshData()
+      toast.success(`${participant.name} deleted successfully`)
+    } catch (error: any) {
+      toast.error(error?.message || `Failed to delete ${participant.name}`)
+    }
   }
 
-  const handleAddParticipant = () => {
+  const handleAddParticipant = async () => {
     if (!newPName.trim() || !newPRegNo.trim() || !newPHouse || !newPEvent) {
       toast.error('Name, Reg No, House, and Event are required')
       return
     }
+
+    if (!newPEmail.trim()) {
+      toast.error('Email is required to persist participants to the backend')
+      return
+    }
+
     const newP: Participant = {
       id: `p-${Date.now()}`,
       name: newPName.trim(),
@@ -178,7 +331,28 @@ function DataEntryPage() {
       checkIn: false,
       certificate: false,
     }
-    addParticipant(newP)
+
+    try {
+      const created = await createAdminParticipant({
+        email: newP.email,
+        name: newP.name,
+        register_number: newP.regNo,
+        house: newP.house,
+        event_name: newP.event,
+      })
+
+      addParticipant({
+        ...newP,
+        id: created.registration_id,
+        event: created.event_name,
+        status: created.registration_status as any,
+        checkIn: !!created.checked_in,
+      })
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to add participant')
+      return
+    }
+
     setNewPName('')
     setNewPRegNo('')
     setNewPEmail('')
@@ -191,7 +365,6 @@ function DataEntryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Data Entry"
         subtitle="Manual data editing — developer admin only"
       />
 
@@ -263,7 +436,7 @@ function DataEntryPage() {
           {showAddEvent && (
             <div className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-4">
               <h4 className="text-white font-medium text-sm">New Event</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-400 text-xs">Event Name</Label>
                   <Input
@@ -280,6 +453,15 @@ function DataEntryPage() {
                     className="bg-black border-[#333] text-white"
                     value={newEventCategory}
                     onChange={(e) => setNewEventCategory(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Event Date</Label>
+                  <Input
+                    type="date"
+                    className="bg-black border-[#333] text-white"
+                    value={newEventDate}
+                    onChange={(e) => setNewEventDate(e.target.value)}
                   />
                 </div>
               </div>
@@ -302,16 +484,24 @@ function DataEntryPage() {
                   onClick={() => toggleEvent(event.id)}
                   className="w-full flex items-center justify-between p-4 hover:bg-black transition"
                 >
-                  <div className="text-left">
-                    <div className="text-white font-medium">{event.name}</div>
-                    <div className="text-gray-500 text-sm">
-                      {event.category} • <span className="capitalize">{event.status}</span> • {event.participantCount} participants
+                  <div className="flex items-center justify-between gap-4 flex-1 text-left">
+                    <div>
+                      <div className="text-white font-medium">{event.name}</div>
+                      <div className="text-gray-500 text-sm">
+                        {event.category} • <span className="capitalize">{event.status}</span> • {event.participantCount} participants
+                      </div>
+                    </div>
+                    <div className="hidden md:block text-right text-xs text-gray-500">
+                      <div>
+                        {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'}
+                      </div>
+                      <div>{event.time || 'Time TBA'}</div>
                     </div>
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-5 h-5 text-gray-500 shrink-0" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
+                    <ChevronRight className="w-5 h-5 text-gray-500 shrink-0" />
                   )}
                 </button>
 
@@ -348,7 +538,10 @@ function DataEntryPage() {
                       <DialogTrigger asChild>
                         <button
                           className="flex items-center gap-2 px-4 py-2 bg-white text-black text-sm font-semibold rounded-lg hover:bg-gray-200 transition"
-                          onClick={() => setEditingEvent(event)}
+                          onClick={() => {
+                            setEditingEvent(event)
+                            setEventDateError('')
+                          }}
                         >
                           <Edit className="w-4 h-4" />
                           Edit Event
@@ -411,6 +604,19 @@ function DataEntryPage() {
                                   onChange={(e) => setEditingEvent({...editingEvent, venue: e.target.value})}
                                   className="bg-gray-800 border-gray-600 text-white"
                                 />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-gray-300">Event Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editingEvent.date || ''}
+                                  onChange={(e) => {
+                                    setEventDateError('')
+                                    setEditingEvent({...editingEvent, date: e.target.value})
+                                  }}
+                                  className="bg-gray-800 border-gray-600 text-white"
+                                />
+                                {eventDateError ? <p className="text-red-400 text-xs mt-1">{eventDateError}</p> : null}
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-gray-300">Time</Label>
@@ -675,7 +881,7 @@ function DataEntryPage() {
                                       <button
                                         className="p-1.5 text-gray-500 hover:text-red-400 transition"
                                         onClick={() => handleDeleteParticipant(participant)}
-                                        title="Move to waitlisted"
+                                        title="Delete registration"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -718,20 +924,34 @@ function DataEntryPage() {
             </div>
 
             <div className="space-y-2">
-              {events.filter(e => e.is_floated).map(event => (
+              {events.map(event => (
                 <div key={event.id} className="flex items-center justify-between p-4 bg-[#111] border border-[#333] rounded-lg hover:bg-black transition">
                   <div>
                     <div className="text-white font-medium text-sm">{event.name}</div>
                     <div className="text-gray-500 text-xs">{event.category} • <span className="capitalize">{event.status}</span></div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'} • {event.time || 'Time TBA'}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium ${event.is_live_tomorrow ? 'text-green-400' : 'text-gray-600'}`}>
-                      {event.is_live_tomorrow ? 'LIVE' : 'OFF'}
-                    </span>
+                    <button
+                      type="button"
+                      className={`text-xs font-medium transition ${event.is_floated ? 'text-[#D4AF37]' : 'text-gray-600'}`}
+                      onClick={() => void applyFloatToggle(event, !event.is_floated)}
+                    >
+                      {event.is_floated ? 'FLOATED' : 'FLOAT OFF'}
+                    </button>
                     <Switch
                       checked={event.is_live_tomorrow}
-                      onCheckedChange={(val) => updateEvent({ ...event, is_live_tomorrow: val })}
+                      onCheckedChange={(val) => void applyLiveToggle(event, val)}
                     />
+                    <button
+                      type="button"
+                      className={`text-xs font-medium transition ${event.registration_open ? 'text-green-400' : 'text-red-400'}`}
+                      onClick={() => void applyRegistrationToggle(event, !event.registration_open)}
+                    >
+                      {event.registration_open ? 'REG OPEN' : 'REG CLOSED'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -951,20 +1171,30 @@ function DataEntryPage() {
                     <Button
                       disabled={!liveParticipantToAdd}
                       className="bg-white text-black font-semibold hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
-                      onClick={() => {
+                          onClick={async () => {
                         const source = participants.find(p => p.id === liveParticipantToAdd)
-                        if (source) {
-                          const newP: Participant = {
-                            ...source,
-                            id: `p-${Date.now()}`,
-                            event: liveSelectedEvent,
-                            status: 'confirmed',
-                            checkIn: false,
+                        if (!source) return
+
+                        try {
+                          const updated = await updateAdminParticipant(source.id, { event_name: liveSelectedEvent, status: 'confirmed' })
+
+                          const mapped: Participant = {
+                            id: updated.registration_id,
+                            name: updated.participant_name,
+                            regNo: updated.reg_no || source.regNo,
+                            email: updated.email || source.email,
+                            house: updated.house || source.house,
+                            event: updated.event_name,
+                            status: (updated.registration_status as any) || 'confirmed',
+                            checkIn: !!updated.checked_in,
                             certificate: false,
                           }
-                          addParticipant(newP)
+
+                          addParticipant(mapped)
                           setLiveParticipantToAdd('')
                           toast.success(`${source.name} assigned to ${liveSelectedEvent}`)
+                        } catch (error: any) {
+                          toast.error(error?.message || 'Failed to assign participant')
                         }
                       }}
                     >

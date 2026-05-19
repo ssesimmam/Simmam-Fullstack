@@ -17,16 +17,25 @@ import { Route as LiveRouteImport } from './routes/live'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserIndexRouteImport } from './routes/user/index'
+import { Route as UserProfileRouteImport } from './routes/user/profile'
+import { Route as UserMyScheduleRouteImport } from './routes/user/my-schedule'
+import { Route as UserLayoutRouteImport } from './routes/user/_layout'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminLayoutRouteImport } from './routes/admin/_layout'
 import { Route as AdminLayoutIndexRouteImport } from './routes/admin/_layout/index'
 import { Route as AdminLayoutUserManagementRouteImport } from './routes/admin/_layout/user-management'
 import { Route as AdminLayoutSettingsRouteImport } from './routes/admin/_layout/settings'
+import { Route as AdminLayoutRulesRouteImport } from './routes/admin/_layout/rules'
+import { Route as AdminLayoutRegistrationsRouteImport } from './routes/admin/_layout/registrations'
 import { Route as AdminLayoutParticipantsRouteImport } from './routes/admin/_layout/participants'
 import { Route as AdminLayoutLeaderboardRouteImport } from './routes/admin/_layout/leaderboard'
+import { Route as AdminLayoutHousesRouteImport } from './routes/admin/_layout/houses'
 import { Route as AdminLayoutEventsRouteImport } from './routes/admin/_layout/events'
 import { Route as AdminLayoutDataEntryRouteImport } from './routes/admin/_layout/data-entry'
 import { Route as AdminLayoutCheckinRouteImport } from './routes/admin/_layout/checkin'
+import { Route as AdminLayoutAnnouncementsRouteImport } from './routes/admin/_layout/announcements'
+import { Route as AdminLayoutCheckinNewRouteImport } from './routes/admin/_layout/checkin.new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -68,6 +77,26 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserIndexRoute = UserIndexRouteImport.update({
+  id: '/user/',
+  path: '/user/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserProfileRoute = UserProfileRouteImport.update({
+  id: '/user/profile',
+  path: '/user/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserMyScheduleRoute = UserMyScheduleRouteImport.update({
+  id: '/user/my-schedule',
+  path: '/user/my-schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserLayoutRoute = UserLayoutRouteImport.update({
+  id: '/user/_layout',
+  path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -94,6 +123,17 @@ const AdminLayoutSettingsRoute = AdminLayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
+const AdminLayoutRulesRoute = AdminLayoutRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
+const AdminLayoutRegistrationsRoute =
+  AdminLayoutRegistrationsRouteImport.update({
+    id: '/registrations',
+    path: '/registrations',
+    getParentRoute: () => AdminLayoutRoute,
+  } as any)
 const AdminLayoutParticipantsRoute = AdminLayoutParticipantsRouteImport.update({
   id: '/participants',
   path: '/participants',
@@ -102,6 +142,11 @@ const AdminLayoutParticipantsRoute = AdminLayoutParticipantsRouteImport.update({
 const AdminLayoutLeaderboardRoute = AdminLayoutLeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
+const AdminLayoutHousesRoute = AdminLayoutHousesRouteImport.update({
+  id: '/houses',
+  path: '/houses',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
 const AdminLayoutEventsRoute = AdminLayoutEventsRouteImport.update({
@@ -119,6 +164,17 @@ const AdminLayoutCheckinRoute = AdminLayoutCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => AdminLayoutRoute,
 } as any)
+const AdminLayoutAnnouncementsRoute =
+  AdminLayoutAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => AdminLayoutRoute,
+  } as any)
+const AdminLayoutCheckinNewRoute = AdminLayoutCheckinNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminLayoutCheckinRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,14 +187,23 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
-  '/admin/checkin': typeof AdminLayoutCheckinRoute
+  '/user': typeof UserLayoutRoute
+  '/user/my-schedule': typeof UserMyScheduleRoute
+  '/user/profile': typeof UserProfileRoute
+  '/user/': typeof UserIndexRoute
+  '/admin/announcements': typeof AdminLayoutAnnouncementsRoute
+  '/admin/checkin': typeof AdminLayoutCheckinRouteWithChildren
   '/admin/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/events': typeof AdminLayoutEventsRoute
+  '/admin/houses': typeof AdminLayoutHousesRoute
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
+  '/admin/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/rules': typeof AdminLayoutRulesRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
   '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/': typeof AdminLayoutIndexRoute
+  '/admin/checkin/new': typeof AdminLayoutCheckinNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,14 +215,22 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/admin/login': typeof AdminLoginRoute
-  '/admin/checkin': typeof AdminLayoutCheckinRoute
+  '/user': typeof UserIndexRoute
+  '/user/my-schedule': typeof UserMyScheduleRoute
+  '/user/profile': typeof UserProfileRoute
+  '/admin/announcements': typeof AdminLayoutAnnouncementsRoute
+  '/admin/checkin': typeof AdminLayoutCheckinRouteWithChildren
   '/admin/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/events': typeof AdminLayoutEventsRoute
+  '/admin/houses': typeof AdminLayoutHousesRoute
   '/admin/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/participants': typeof AdminLayoutParticipantsRoute
+  '/admin/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/rules': typeof AdminLayoutRulesRoute
   '/admin/settings': typeof AdminLayoutSettingsRoute
   '/admin/user-management': typeof AdminLayoutUserManagementRoute
   '/admin': typeof AdminLayoutIndexRoute
+  '/admin/checkin/new': typeof AdminLayoutCheckinNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,14 +244,23 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/admin/_layout': typeof AdminLayoutRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
-  '/admin/_layout/checkin': typeof AdminLayoutCheckinRoute
+  '/user/_layout': typeof UserLayoutRoute
+  '/user/my-schedule': typeof UserMyScheduleRoute
+  '/user/profile': typeof UserProfileRoute
+  '/user/': typeof UserIndexRoute
+  '/admin/_layout/announcements': typeof AdminLayoutAnnouncementsRoute
+  '/admin/_layout/checkin': typeof AdminLayoutCheckinRouteWithChildren
   '/admin/_layout/data-entry': typeof AdminLayoutDataEntryRoute
   '/admin/_layout/events': typeof AdminLayoutEventsRoute
+  '/admin/_layout/houses': typeof AdminLayoutHousesRoute
   '/admin/_layout/leaderboard': typeof AdminLayoutLeaderboardRoute
   '/admin/_layout/participants': typeof AdminLayoutParticipantsRoute
+  '/admin/_layout/registrations': typeof AdminLayoutRegistrationsRoute
+  '/admin/_layout/rules': typeof AdminLayoutRulesRoute
   '/admin/_layout/settings': typeof AdminLayoutSettingsRoute
   '/admin/_layout/user-management': typeof AdminLayoutUserManagementRoute
   '/admin/_layout/': typeof AdminLayoutIndexRoute
+  '/admin/_layout/checkin/new': typeof AdminLayoutCheckinNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -193,14 +275,23 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/admin/login'
+    | '/user'
+    | '/user/my-schedule'
+    | '/user/profile'
+    | '/user/'
+    | '/admin/announcements'
     | '/admin/checkin'
     | '/admin/data-entry'
     | '/admin/events'
+    | '/admin/houses'
     | '/admin/leaderboard'
     | '/admin/participants'
+    | '/admin/registrations'
+    | '/admin/rules'
     | '/admin/settings'
     | '/admin/user-management'
     | '/admin/'
+    | '/admin/checkin/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -212,14 +303,22 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/admin/login'
+    | '/user'
+    | '/user/my-schedule'
+    | '/user/profile'
+    | '/admin/announcements'
     | '/admin/checkin'
     | '/admin/data-entry'
     | '/admin/events'
+    | '/admin/houses'
     | '/admin/leaderboard'
     | '/admin/participants'
+    | '/admin/registrations'
+    | '/admin/rules'
     | '/admin/settings'
     | '/admin/user-management'
     | '/admin'
+    | '/admin/checkin/new'
   id:
     | '__root__'
     | '/'
@@ -232,14 +331,23 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/_layout'
     | '/admin/login'
+    | '/user/_layout'
+    | '/user/my-schedule'
+    | '/user/profile'
+    | '/user/'
+    | '/admin/_layout/announcements'
     | '/admin/_layout/checkin'
     | '/admin/_layout/data-entry'
     | '/admin/_layout/events'
+    | '/admin/_layout/houses'
     | '/admin/_layout/leaderboard'
     | '/admin/_layout/participants'
+    | '/admin/_layout/registrations'
+    | '/admin/_layout/rules'
     | '/admin/_layout/settings'
     | '/admin/_layout/user-management'
     | '/admin/_layout/'
+    | '/admin/_layout/checkin/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -253,6 +361,10 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   AdminLayoutRoute: typeof AdminLayoutRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  UserLayoutRoute: typeof UserLayoutRoute
+  UserMyScheduleRoute: typeof UserMyScheduleRoute
+  UserProfileRoute: typeof UserProfileRoute
+  UserIndexRoute: typeof UserIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -313,6 +425,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/user/': {
+      id: '/user/'
+      path: '/user'
+      fullPath: '/user/'
+      preLoaderRoute: typeof UserIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/profile': {
+      id: '/user/profile'
+      path: '/user/profile'
+      fullPath: '/user/profile'
+      preLoaderRoute: typeof UserProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/my-schedule': {
+      id: '/user/my-schedule'
+      path: '/user/my-schedule'
+      fullPath: '/user/my-schedule'
+      preLoaderRoute: typeof UserMyScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/_layout': {
+      id: '/user/_layout'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -348,6 +488,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLayoutSettingsRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
+    '/admin/_layout/rules': {
+      id: '/admin/_layout/rules'
+      path: '/rules'
+      fullPath: '/admin/rules'
+      preLoaderRoute: typeof AdminLayoutRulesRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
+    '/admin/_layout/registrations': {
+      id: '/admin/_layout/registrations'
+      path: '/registrations'
+      fullPath: '/admin/registrations'
+      preLoaderRoute: typeof AdminLayoutRegistrationsRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
     '/admin/_layout/participants': {
       id: '/admin/_layout/participants'
       path: '/participants'
@@ -360,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/admin/leaderboard'
       preLoaderRoute: typeof AdminLayoutLeaderboardRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
+    '/admin/_layout/houses': {
+      id: '/admin/_layout/houses'
+      path: '/houses'
+      fullPath: '/admin/houses'
+      preLoaderRoute: typeof AdminLayoutHousesRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
     '/admin/_layout/events': {
@@ -383,26 +544,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLayoutCheckinRouteImport
       parentRoute: typeof AdminLayoutRoute
     }
+    '/admin/_layout/announcements': {
+      id: '/admin/_layout/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminLayoutAnnouncementsRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
+    '/admin/_layout/checkin/new': {
+      id: '/admin/_layout/checkin/new'
+      path: '/new'
+      fullPath: '/admin/checkin/new'
+      preLoaderRoute: typeof AdminLayoutCheckinNewRouteImport
+      parentRoute: typeof AdminLayoutCheckinRoute
+    }
   }
 }
 
+interface AdminLayoutCheckinRouteChildren {
+  AdminLayoutCheckinNewRoute: typeof AdminLayoutCheckinNewRoute
+}
+
+const AdminLayoutCheckinRouteChildren: AdminLayoutCheckinRouteChildren = {
+  AdminLayoutCheckinNewRoute: AdminLayoutCheckinNewRoute,
+}
+
+const AdminLayoutCheckinRouteWithChildren =
+  AdminLayoutCheckinRoute._addFileChildren(AdminLayoutCheckinRouteChildren)
+
 interface AdminLayoutRouteChildren {
-  AdminLayoutCheckinRoute: typeof AdminLayoutCheckinRoute
+  AdminLayoutAnnouncementsRoute: typeof AdminLayoutAnnouncementsRoute
+  AdminLayoutCheckinRoute: typeof AdminLayoutCheckinRouteWithChildren
   AdminLayoutDataEntryRoute: typeof AdminLayoutDataEntryRoute
   AdminLayoutEventsRoute: typeof AdminLayoutEventsRoute
+  AdminLayoutHousesRoute: typeof AdminLayoutHousesRoute
   AdminLayoutLeaderboardRoute: typeof AdminLayoutLeaderboardRoute
   AdminLayoutParticipantsRoute: typeof AdminLayoutParticipantsRoute
+  AdminLayoutRegistrationsRoute: typeof AdminLayoutRegistrationsRoute
+  AdminLayoutRulesRoute: typeof AdminLayoutRulesRoute
   AdminLayoutSettingsRoute: typeof AdminLayoutSettingsRoute
   AdminLayoutUserManagementRoute: typeof AdminLayoutUserManagementRoute
   AdminLayoutIndexRoute: typeof AdminLayoutIndexRoute
 }
 
 const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
-  AdminLayoutCheckinRoute: AdminLayoutCheckinRoute,
+  AdminLayoutAnnouncementsRoute: AdminLayoutAnnouncementsRoute,
+  AdminLayoutCheckinRoute: AdminLayoutCheckinRouteWithChildren,
   AdminLayoutDataEntryRoute: AdminLayoutDataEntryRoute,
   AdminLayoutEventsRoute: AdminLayoutEventsRoute,
+  AdminLayoutHousesRoute: AdminLayoutHousesRoute,
   AdminLayoutLeaderboardRoute: AdminLayoutLeaderboardRoute,
   AdminLayoutParticipantsRoute: AdminLayoutParticipantsRoute,
+  AdminLayoutRegistrationsRoute: AdminLayoutRegistrationsRoute,
+  AdminLayoutRulesRoute: AdminLayoutRulesRoute,
   AdminLayoutSettingsRoute: AdminLayoutSettingsRoute,
   AdminLayoutUserManagementRoute: AdminLayoutUserManagementRoute,
   AdminLayoutIndexRoute: AdminLayoutIndexRoute,
@@ -423,6 +617,10 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   AdminLayoutRoute: AdminLayoutRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  UserLayoutRoute: UserLayoutRoute,
+  UserMyScheduleRoute: UserMyScheduleRoute,
+  UserProfileRoute: UserProfileRoute,
+  UserIndexRoute: UserIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

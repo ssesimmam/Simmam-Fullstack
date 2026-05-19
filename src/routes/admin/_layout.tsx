@@ -1,21 +1,31 @@
-import { Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { useAuth, canAccessAdminPath, getStoredAdminUser, getDefaultAdminPath } from '@/lib/auth'
 import AdminLayout from '@/components/admin/layout/AdminLayout'
 
 export const Route = createFileRoute('/admin/_layout')({
+  beforeLoad: ({ location }) => {
+    const storedUser = getStoredAdminUser()
+
+    if (!storedUser) {
+      throw redirect({
+        to: '/admin/login',
+        search: { redirectTo: location.pathname },
+        replace: true,
+      })
+    }
+
+    if (!canAccessAdminPath(storedUser, location.pathname)) {
+      throw redirect({
+        to: getDefaultAdminPath(storedUser),
+        replace: true,
+      })
+    }
+  },
   component: AdminLayoutRoute,
 })
 
 function AdminLayoutRoute() {
   const { user, isLoading } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate({ to: '/admin/login', replace: true })
-    }
-  }, [user, isLoading, navigate])
 
   if (isLoading) {
     return (
@@ -26,10 +36,6 @@ function AdminLayoutRoute() {
         </div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null // Will redirect
   }
 
   return (

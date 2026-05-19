@@ -1,13 +1,13 @@
 import {
   LayoutDashboard,
   CalendarDays,
+  Bell,
+  BookOpen,
   Trophy,
   Shield,
   Users,
-  Megaphone,
   Settings,
   CheckCircle,
-  UserCog,
   Database,
   UsersRound,
 } from 'lucide-react'
@@ -23,18 +23,6 @@ const MENU_ITEMS = {
       icon: LayoutDashboard,
     },
   ],
-  coordinator: [
-    {
-      title: 'Leaderboard',
-      href: '/admin/leaderboard',
-      icon: Trophy,
-    },
-    {
-      title: 'Participants',
-      href: '/admin/participants',
-      icon: Users,
-    },
-  ],
   core_team: [
     {
       title: 'Leaderboard',
@@ -45,6 +33,16 @@ const MENU_ITEMS = {
       title: 'Participants',
       href: '/admin/participants',
       icon: Users,
+    },
+    {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
+    },
+    {
+      title: 'User Management',
+      href: '/admin/user-management',
+      icon: UsersRound,
     },
   ],
   reg_team: [
@@ -59,6 +57,16 @@ const MENU_ITEMS = {
       title: 'Events',
       href: '/admin/events',
       icon: CalendarDays,
+    },
+    {
+      title: 'Notifications',
+      href: '/admin/announcements',
+      icon: Bell,
+    },
+    {
+      title: 'Rules & Regulations',
+      href: '/admin/rules',
+      icon: BookOpen,
     },
     {
       title: 'Data Entry',
@@ -86,6 +94,11 @@ const MENU_ITEMS = {
       icon: UsersRound,
     },
     {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
+    },
+    {
       title: 'Settings',
       href: '/admin/settings',
       icon: Settings,
@@ -99,7 +112,7 @@ export default function AdminSidebar() {
   if (!user) return null
 
   const getMenuItems = () => {
-    const baseItems = MENU_ITEMS.all
+    const baseItems = user.role === 'reg_team' ? [] : MENU_ITEMS.all
     const roleItems = MENU_ITEMS[user.role] || []
     return [...baseItems, ...roleItems]
   }

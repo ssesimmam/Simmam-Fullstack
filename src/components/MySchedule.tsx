@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkles } from 'lucide-react'
 
-import { clearUser, getUser, getUserRegistrations, type Registration } from '@/lib/registrationStore'
+import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type Registration } from '@/lib/registrationStore'
 
 function RegistrationCard({ reg }: { reg: Registration }) {
   const dayLabel = new Date(`${reg.date}T12:00:00`).toLocaleDateString('en-IN', {
@@ -64,13 +64,26 @@ function RegistrationCard({ reg }: { reg: Registration }) {
           </div>
 
           <div className="shrink-0 mt-1 flex flex-col items-center gap-2">
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/8">
-              <Hourglass className="h-6 w-6 animate-pulse text-amber-400" />
-              <div className="absolute inset-0 animate-ping rounded-2xl border border-amber-400/20 opacity-30" />
-            </div>
-            <span className="max-w-[64px] text-center text-[9px] font-bold uppercase tracking-[0.15em] text-amber-400/80 leading-tight">
-              Waiting<br />Check-In
-            </span>
+            {!reg.checkedIn ? (
+              <>
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/8">
+                  <Hourglass className="h-6 w-6 animate-pulse text-amber-400" />
+                  <div className="absolute inset-0 animate-ping rounded-2xl border border-amber-400/20 opacity-30" />
+                </div>
+                <span className="max-w-[64px] text-center text-[9px] font-bold uppercase tracking-[0.15em] text-amber-400/80 leading-tight">
+                  Waiting<br />Check-In
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-green-500/20 bg-green-500/8">
+                  <CheckCircle2 className="h-6 w-6 text-green-400" />
+                </div>
+                <span className="max-w-[64px] text-center text-[9px] font-bold uppercase tracking-[0.15em] text-green-400/80 leading-tight">
+                  Checked In<br />(OD Eligible)
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -96,6 +109,11 @@ export function MySchedule() {
   useEffect(() => {
     if (user) {
       setRegistrations(getUserRegistrations(user.email))
+      void syncUserRegistrations(user.email)
+        .then(setRegistrations)
+        .catch(() => {
+          // Keep cached registrations if API is temporarily unavailable.
+        })
     }
   }, [user])
 

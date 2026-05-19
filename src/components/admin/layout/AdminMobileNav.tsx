@@ -1,14 +1,12 @@
 import {
     CalendarDays,
     LayoutDashboard,
-    Megaphone,
     Menu,
     Settings,
     Shield,
     Trophy,
     Users,
     CheckCircle,
-    UserCog,
     Database,
     UsersRound,
 } from 'lucide-react'
@@ -29,18 +27,6 @@ const MENU_ITEMS = {
       icon: LayoutDashboard,
     },
   ],
-  coordinator: [
-    {
-      title: 'Participants',
-      href: '/admin/participants',
-      icon: Users,
-    },
-    {
-      title: 'Leaderboard',
-      href: '/admin/leaderboard',
-      icon: Trophy,
-    },
-  ],
   core_team: [
     {
       title: 'Participants',
@@ -51,6 +37,16 @@ const MENU_ITEMS = {
       title: 'Leaderboard',
       href: '/admin/leaderboard',
       icon: Trophy,
+    },
+    {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
+    },
+    {
+      title: 'User Management',
+      href: '/admin/user-management',
+      icon: UsersRound,
     },
   ],
   reg_team: [
@@ -92,6 +88,11 @@ const MENU_ITEMS = {
       icon: UsersRound,
     },
     {
+      title: 'Registrations',
+      href: '/admin/registrations',
+      icon: Shield,
+    },
+    {
       title: 'Settings',
       href: '/admin/settings',
       icon: Settings,
@@ -105,7 +106,7 @@ export default function AdminMobileNav() {
   if (!user) return null
 
   const getMenuItems = () => {
-    const baseItems = MENU_ITEMS.all
+    const baseItems = user.role === 'reg_team' ? [] : MENU_ITEMS.all
     const roleItems = (MENU_ITEMS as any)[user.role] || []
     return [...baseItems, ...roleItems]
   }
