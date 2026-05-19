@@ -137,6 +137,7 @@ function CheckInPage() {
               <tr>
                 <th className="text-left p-3">Check-In ID</th>
                 <th className="text-left p-3">Register No</th>
+                <th className="text-left p-3">House</th>
                 <th className="text-left p-3">Participant Name</th>
                 <th className="text-left p-3">Event Name</th>
                 <th className="text-left p-3">Attendance Status</th>
@@ -146,17 +147,18 @@ function CheckInPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-gray-500">Loading...</td>
+                  <td colSpan={7} className="p-4 text-gray-500">Loading...</td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-gray-500">No matching participants found.</td>
+                  <td colSpan={7} className="p-4 text-gray-500">No matching participants found.</td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.registration_id} className="border-t border-[#222] text-white/90">
                     <td className="p-3 font-mono text-xs text-gray-400">CHK-{row.registration_id.slice(0, 8)}</td>
                     <td className="p-3 font-mono text-xs text-gray-400">{row.reg_no || '-'}</td>
+                    <td className="p-3 text-gray-300">{row.house || '-'}</td>
                     <td className="p-3">{row.participant_name}</td>
                     <td className="p-3">{row.event_name}</td>
                     <td className="p-3">

@@ -209,6 +209,31 @@ app.get('/api/houses', async (_req, res) => {
   }
 })
 
+app.get('/api/announcements', async (_req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
+
+    const now = new Date().toISOString()
+    const activeAnnouncements = (data || []).filter((item: any) => {
+      const startsAt = item.starts_at ? new Date(item.starts_at).toISOString() : ''
+      const endsAt = item.ends_at ? new Date(item.ends_at).toISOString() : ''
+      return (!startsAt || startsAt <= now) && (!endsAt || endsAt >= now)
+    })
+
+    res.json({ data: activeAnnouncements })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 // Leaderboard
 app.get('/api/leaderboard', async (_req, res) => {
   try {
@@ -498,6 +523,134 @@ app.get('/api/admin/users', async (req, res) => {
     }))
 
     res.json({ data: users })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.post('/api/admin/users', async (req, res) => {
+  try {
+    const { name, email, mobile_number, register_number, house, picture_url } = req.body
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'name and email required' })
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .upsert(
+        {
+          name,
+          email: String(email).toLowerCase(),
+          mobile_number: mobile_number === undefined || mobile_number === null ? null : String(mobile_number).trim(),
+          register_number: register_number ? String(register_number).trim().toUpperCase() : null,
+          house: house ? String(house).trim() : null,
+          picture_url: picture_url || null,
+        },
+        { onConflict: 'email' },
+      )
+      .select('id,name,email,mobile_number,register_number,house,created_at')
+      .single()
+
+    if (error) throw error
+
+    res.status(201).json({
+      user: {
+        user_id: data.id,
+        name: data.name || '',
+        email: data.email || '',
+        house: data.house || '',
+        register_number: data.register_number || '',
+        created_at: data.created_at,
+      },
+    })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.get('/api/admin/announcements', async (_req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('id,title,body,pinned,starts_at,ends_at,created_by,created_at,updated_at')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) throw error
+    res.json({ data: data || [] })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.post('/api/admin/announcements', async (req, res) => {
+  try {
+    const { title, body, pinned, starts_at, ends_at } = req.body
+
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'title required' })
+    }
+
+    const { data, error } = await supabase
+      .from('announcements')
+      .insert({
+        title: String(title).trim(),
+        body: body ? String(body).trim() : null,
+        pinned: !!pinned,
+        starts_at: starts_at || null,
+        ends_at: ends_at || null,
+      })
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .single()
+
+    if (error) throw error
+    res.status(201).json({ data })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.put('/api/admin/announcements/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { title, body, pinned, starts_at, ends_at } = req.body
+
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'title required' })
+    }
+
+    const { data, error } = await supabase
+      .from('announcements')
+      .update({
+        title: String(title).trim(),
+        body: body ? String(body).trim() : null,
+        pinned: !!pinned,
+        starts_at: starts_at || null,
+        ends_at: ends_at || null,
+      })
+      .eq('id', id)
+      .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
+      .single()
+
+    if (error) throw error
+    res.json({ data })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.delete('/api/admin/announcements/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { error } = await supabase.from('announcements').delete().eq('id', id)
+    if (error) throw error
+    res.json({ ok: true })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })

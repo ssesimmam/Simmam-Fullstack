@@ -85,6 +85,17 @@ export type AdminLeaderboardRow = {
   total_points: number
 }
 
+export type AdminAnnouncementRow = {
+  id: string
+  title: string
+  body?: string | null
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export async function fetchAdminLeaderboard(): Promise<AdminLeaderboardRow[]> {
   const result = await adminRequest<{ data: AdminLeaderboardRow[] }>('/leaderboard')
   return result.data || []
@@ -138,6 +149,43 @@ export async function fetchAdminDashboardSummary(): Promise<AdminDashboardSummar
   return adminRequest<AdminDashboardSummary>('/dashboard-summary')
 }
 
+export async function fetchAdminAnnouncements(): Promise<AdminAnnouncementRow[]> {
+  const result = await adminRequest<{ data: AdminAnnouncementRow[] }>('/announcements')
+  return result.data || []
+}
+
+export async function createAdminAnnouncement(payload: {
+  title: string
+  body?: string
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+}): Promise<AdminAnnouncementRow> {
+  const result = await adminRequest<{ data: AdminAnnouncementRow }>('/announcements', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return result.data
+}
+
+export async function updateAdminAnnouncement(id: string, payload: {
+  title: string
+  body?: string
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+}): Promise<AdminAnnouncementRow> {
+  const result = await adminRequest<{ data: AdminAnnouncementRow }>(`/announcements/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  return result.data
+}
+
+export async function deleteAdminAnnouncement(id: string): Promise<void> {
+  await adminRequest(`/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
 export async function fetchAdminUsers(params?: { search?: string; house?: string }): Promise<AdminUserRow[]> {
   const query = new URLSearchParams()
   if (params?.search) query.set('search', params.search)
@@ -145,6 +193,21 @@ export async function fetchAdminUsers(params?: { search?: string; house?: string
   const suffix = query.toString() ? `?${query}` : ''
   const result = await adminRequest<{ data: AdminUserRow[] }>(`/users${suffix}`)
   return result.data || []
+}
+
+export async function createAdminUser(payload: {
+  name: string
+  email: string
+  mobile_number?: string
+  register_number?: string
+  house?: string
+  picture_url?: string
+}): Promise<AdminUserRow> {
+  const result = await adminRequest<{ user: AdminUserRow }>('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return result.user
 }
 
 export async function fetchAdminUserDetails(userId: string): Promise<{ user: AdminUserRow; registrations: any[] }> {

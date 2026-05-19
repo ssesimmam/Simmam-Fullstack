@@ -175,6 +175,11 @@ function CheckInPage() {
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-sm truncate">{row.participant_name}</p>
                   <p className="text-gray-500 text-xs mt-0.5 truncate">{row.event_name}</p>
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    <span className="font-mono text-gray-300">{row.reg_no || '-'}</span>
+                    <span className="mx-2 text-gray-600">•</span>
+                    <span>{row.house || '-'}</span>
+                  </p>
                 </div>
 
                 <div className="shrink-0 ml-4">

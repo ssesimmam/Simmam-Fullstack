@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { AdminUser, AdminRole } from '@/types/admin'
-import { ROLE_PERMISSIONS } from '@/types/admin'
+import { ROLE_PERMISSIONS, ROUTE_PERMISSIONS } from '@/types/admin'
 
 // Mock users for development - in production, this would come from an API
 const MOCK_USERS: AdminUser[] = [
@@ -34,25 +34,67 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+export function getStoredAdminUser(): AdminUser | null {
+  if (typeof window === 'undefined') return null
+
+  const storedUser = localStorage.getItem('simmam_admin_user')
+  if (!storedUser) return null
+
+  try {
+    const parsed = JSON.parse(storedUser)
+    if (parsed?.role === 'coordinator') {
+      localStorage.removeItem('simmam_admin_user')
+      return null
+    }
+
+    return parsed as AdminUser
+  } catch {
+    localStorage.removeItem('simmam_admin_user')
+    return null
+  }
+}
+
+export function canAccessAdminPath(user: AdminUser | null | undefined, pathname: string): boolean {
+  if (!user) return false
+
+  const permissions = ROLE_PERMISSIONS[user.role] || []
+
+  if (pathname === '/admin' || pathname === '/admin/') {
+    return user.role === 'developer_admin' || user.role === 'core_team' || user.role === 'reg_team'
+  }
+
+  const normalizedPath = pathname.replace(/\/$/, '')
+  const allowed = Object.entries(ROUTE_PERMISSIONS || {})
+  return allowed.some(([routePath, requiredPermissions]) => {
+    if (routePath !== normalizedPath) return false
+    return requiredPermissions.every((permission) =>
+      permissions.some((entry) => entry.resource === permission.resource && permission.actions.every((action) => entry.actions.includes(action))),
+    )
+  })
+}
+
+export function getDefaultAdminPath(user: AdminUser | null | undefined): string {
+  if (!user) return '/admin'
+  if (user.role === 'reg_team') return '/admin/checkin'
+  return '/admin'
+}
+
+export function getAuthorizedAdminRedirect(user: AdminUser | null | undefined, requestedPath?: string | null): string {
+  if (requestedPath && canAccessAdminPath(user, requestedPath)) {
+    return requestedPath
+  }
+
+  return getDefaultAdminPath(user)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Check for stored auth on mount
-    const storedUser = localStorage.getItem('simmam_admin_user')
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser)
-        if (parsed?.role === 'coordinator') {
-          localStorage.removeItem('simmam_admin_user')
-        } else {
-          setUser(parsed)
-        }
-      } catch (error) {
-        localStorage.removeItem('simmam_admin_user')
-      }
-    }
+    const storedUser = getStoredAdminUser()
+    if (storedUser) setUser(storedUser)
     setIsLoading(false)
   }, [])
 

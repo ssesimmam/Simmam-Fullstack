@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, Search, Trash2, Users } from 'lucide-react'
+import { Eye, Plus, Search, Trash2, Users } from 'lucide-react'
 
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
-import { deleteAdminUser, updateAdminUser, fetchAdminUserDetails, fetchAdminUsers, type AdminUserRow } from '@/lib/adminApi'
+import { createAdminUser, deleteAdminUser, updateAdminUser, fetchAdminUserDetails, fetchAdminUsers, type AdminUserRow } from '@/lib/adminApi'
 import { useData } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +31,14 @@ function UserManagementPage() {
   const [houseFilter, setHouseFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<AdminUserRow[]>([])
+  const [isCreating, setIsCreating] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    register_number: '',
+    house: '',
+    mobile_number: '',
+  })
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [selectedUserDetails, setSelectedUserDetails] = useState<any>(null)
@@ -111,6 +119,34 @@ function UserManagementPage() {
     }
   }
 
+  const handleCreateUser = async () => {
+    if (!createForm.name.trim() || !createForm.email.trim() || !createForm.register_number.trim() || !createForm.house.trim()) {
+      toast.error('Name, email, register number, and house are required')
+      return
+    }
+
+    if (!/^[^\s@]+@saveetha\.com$/i.test(createForm.email.trim())) {
+      toast.error('Use a valid @saveetha.com email address')
+      return
+    }
+
+    try {
+      await createAdminUser({
+        name: createForm.name.trim(),
+        email: createForm.email.trim().toLowerCase(),
+        register_number: createForm.register_number.trim(),
+        house: createForm.house.trim(),
+        mobile_number: createForm.mobile_number.trim() || undefined,
+      })
+      toast.success('User saved successfully')
+      setIsCreating(false)
+      setCreateForm({ name: '', email: '', register_number: '', house: '', mobile_number: '' })
+      await loadUsers()
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to save user')
+    }
+  }
+
   const handleDeleteUser = async (userId: string) => {
     if (!hasPermission('users', 'delete')) {
       toast.error('You do not have permission to delete users')
@@ -165,9 +201,16 @@ function UserManagementPage() {
           </Select>
         </div>
 
-        <Button className="bg-white text-black hover:bg-gray-200" onClick={loadUsers}>
-          Search
-        </Button>
+        <div className="flex items-center gap-2">
+          {hasPermission('users', 'create') && (
+            <Button className="bg-[#D4AF37] text-black hover:bg-[#e0bd55]" onClick={() => setIsCreating(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add User
+            </Button>
+          )}
+          <Button className="bg-white text-black hover:bg-gray-200" onClick={loadUsers}>
+            Search
+          </Button>
+        </div>
       </div>
 
       <div className="bg-[#111] border border-[#333] rounded-lg overflow-hidden">
@@ -241,6 +284,78 @@ function UserManagementPage() {
           </table>
         </div>
       </div>
+
+      <Dialog open={isCreating} onOpenChange={setIsCreating}>
+        <DialogContent className="bg-[#111] border-[#333] text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add User</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="bg-black border border-[#333] rounded-lg p-3">
+              <p className="text-gray-500 text-xs mb-1">Name</p>
+              <Input
+                className="bg-black text-white"
+                value={createForm.name}
+                onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="bg-black border border-[#333] rounded-lg p-3">
+              <p className="text-gray-500 text-xs mb-1">Email</p>
+              <Input
+                className="bg-black text-white"
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                placeholder="student@saveetha.com"
+              />
+            </div>
+            <div className="bg-black border border-[#333] rounded-lg p-3">
+              <p className="text-gray-500 text-xs mb-1">Register Number</p>
+              <Input
+                className="bg-black text-white uppercase"
+                value={createForm.register_number}
+                onChange={(e) => setCreateForm({ ...createForm, register_number: e.target.value })}
+                placeholder="192421111"
+              />
+            </div>
+            <div className="bg-black border border-[#333] rounded-lg p-3">
+              <p className="text-gray-500 text-xs mb-1">House</p>
+              <Select value={createForm.house} onValueChange={(value) => setCreateForm({ ...createForm, house: value })}>
+                <SelectTrigger className="bg-black border-[#333] text-white">
+                  <SelectValue placeholder="Select house" />
+                </SelectTrigger>
+                <SelectContent>
+                  {houses.map((house) => (
+                    <SelectItem key={house.name} value={house.name}>
+                      {house.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="bg-black border border-[#333] rounded-lg p-3 md:col-span-2">
+              <p className="text-gray-500 text-xs mb-1">Mobile Number</p>
+              <Input
+                className="bg-black text-white"
+                value={createForm.mobile_number}
+                onChange={(e) => setCreateForm({ ...createForm, mobile_number: e.target.value })}
+                placeholder="Optional"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" className="border-[#333]" onClick={() => setIsCreating(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-white text-black hover:bg-gray-200" onClick={handleCreateUser}>
+              Save User
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedUserId} onOpenChange={(open) => !open && setSelectedUserId(null)}>
         <DialogContent className="bg-[#111] border-[#333] text-white max-w-2xl">

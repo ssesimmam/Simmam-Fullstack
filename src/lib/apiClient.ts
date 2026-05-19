@@ -32,6 +32,17 @@ export type ApiRegistration = {
   checked_in?: boolean
 }
 
+export type ApiAnnouncement = {
+  id: string
+  title: string
+  body?: string | null
+  pinned?: boolean
+  starts_at?: string | null
+  ends_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export type CreateRegistrationPayload = {
   email: string
   name: string
@@ -108,6 +119,11 @@ export async function fetchUserRegistrations(email: string): Promise<ApiRegistra
   const encoded = encodeURIComponent(email.trim().toLowerCase())
   const payload = await request<{ registrations: ApiRegistration[] }>(`/users/${encoded}/registrations`)
   return payload.registrations || []
+}
+
+export async function fetchAnnouncements(): Promise<ApiAnnouncement[]> {
+  const payload = await request<{ data: ApiAnnouncement[] }>('/announcements')
+  return payload.data || []
 }
 
 export async function fetchUserProfileByEmail(email: string): Promise<{

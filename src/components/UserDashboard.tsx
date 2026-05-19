@@ -333,13 +333,6 @@ export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
         )}
 
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Avatar */}
-          <img
-            src={user.picture}
-            alt={user.name}
-            className="h-14 w-14 shrink-0 rounded-full border border-white/10 bg-white/10"
-          />
-
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">

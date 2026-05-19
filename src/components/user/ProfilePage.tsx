@@ -10,6 +10,7 @@ import { fetchUserProfileByEmail } from '@/lib/apiClient'
 
 export function ProfilePage() {
   const [user, setUser] = useState(getUser)
+  const [syncingProfile, setSyncingProfile] = useState(false)
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -21,6 +22,50 @@ export function ProfilePage() {
     const params = new URLSearchParams(location.search)
     setShowSetupModal(params.get('signup') === '1')
   }, [location.search])
+
+  useEffect(() => {
+    if (!user?.email) {
+      setSyncingProfile(false)
+      return
+    }
+
+    let cancelled = false
+
+    const syncProfile = async () => {
+      setSyncingProfile(true)
+
+      try {
+        const result = await fetchUserProfileByEmail(user.email)
+        if (cancelled || !result.user) {
+          return
+        }
+
+        const syncedUser: UserProfile = {
+          email: result.user.email.toLowerCase(),
+          name: result.user.name || user.name,
+          picture: result.user.picture_url || user.picture,
+          registerNumber: result.user.register_number || user.registerNumber,
+          mobileNumber: result.user.mobile_number || user.mobileNumber,
+          house: result.user.house || user.house,
+        }
+
+        saveUser(syncedUser)
+        setUser(syncedUser)
+      } catch {
+        // Keep the session-backed profile if the API is unavailable.
+      } finally {
+        if (!cancelled) {
+          setSyncingProfile(false)
+        }
+      }
+    }
+
+    void syncProfile()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.email])
 
   const refreshUser = () => {
     setUser(getUser())
@@ -82,12 +127,18 @@ export function ProfilePage() {
           </div>
 
           {user ? (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <UserDashboard
-                user={user}
-                onSignOut={() => setUser(null)}
-              />
-            </div>
+            syncingProfile ? (
+              <div className="mx-auto mt-16 max-w-md rounded-2xl border border-white/10 bg-[#0d0d0d] p-8 text-center text-sm text-white/50">
+                Syncing profile from the database...
+              </div>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <UserDashboard
+                  user={user}
+                  onSignOut={() => setUser(null)}
+                />
+              </div>
+            )
           ) : (
             <div className="max-w-md mx-auto mt-16 text-center animate-in fade-in zoom-in-95 duration-500">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">

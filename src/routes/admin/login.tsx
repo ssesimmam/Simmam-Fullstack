@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Lock, Mail, UserCircle2 } from 'lucide-react'
 
-import { useAuth } from '@/lib/auth'
+import { useAuth, getAuthorizedAdminRedirect, getStoredAdminUser } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,10 +22,11 @@ const SAMPLE_ADMIN_ACCOUNTS: Record<AdminRole, string> = {
 }
 
 export const Route = createFileRoute('/admin/login')({
-  beforeLoad: ({ context }: { context: any }) => {
-    if (context.auth?.user) {
+  beforeLoad: ({ location }) => {
+    const storedUser = getStoredAdminUser()
+    if (storedUser) {
       throw redirect({
-        to: '/admin',
+        to: getAuthorizedAdminRedirect(storedUser, location.search?.redirectTo),
         replace: true,
       })
     }
@@ -36,6 +37,7 @@ export const Route = createFileRoute('/admin/login')({
 function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const search = Route.useSearch() as { redirectTo?: string }
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -59,7 +61,11 @@ function LoginPage() {
       if (!success) {
         setError('Invalid email, password, or profile')
       } else {
-        navigate({ to: '/admin', replace: true })
+        const storedUser = getStoredAdminUser()
+        navigate({
+          to: getAuthorizedAdminRedirect(storedUser, search.redirectTo),
+          replace: true,
+        })
       }
     } catch (err) {
       setError('Login failed. Please try again.')

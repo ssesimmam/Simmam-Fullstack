@@ -21,7 +21,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     { resource: 'registrations', actions: ['read'] },
   ],
   reg_team: [
-    { resource: 'checkin', actions: ['read', 'create', 'update'] },
+    { resource: 'checkin', actions: ['read', 'create', 'update', 'delete'] },
   ],
   developer_admin: [
     { resource: 'events', actions: ['read', 'create', 'update', 'delete'] },
@@ -29,7 +29,8 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     { resource: 'checkin', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'leaderboard', actions: ['read', 'update'] },
     { resource: 'settings', actions: ['read', 'update'] },
-    { resource: 'users', actions: ['read', 'delete'] },
+    { resource: 'users', actions: ['read', 'create', 'delete'] },
+    { resource: 'announcements', actions: ['read', 'create', 'delete'] },
     { resource: 'registrations', actions: ['read', 'export'] },
   ],
 }
@@ -42,4 +43,5 @@ export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/admin/settings': [{ resource: 'settings', actions: ['read'] }],
   '/admin/user-management': [{ resource: 'users', actions: ['read'] }],
   '/admin/registrations': [{ resource: 'registrations', actions: ['read'] }],
+  '/admin/announcements': [{ resource: 'announcements', actions: ['read'] }],
 }
