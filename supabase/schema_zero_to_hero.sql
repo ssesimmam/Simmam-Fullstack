@@ -67,6 +67,26 @@ create table if not exists admins (
   updated_at timestamptz not null default now()
 );
 
+do $$
+begin
+  insert into users (name, email)
+  values
+    ('Suvedhan Suveg', 'suvedhansuveg14@gmail.com'),
+    ('Rajese Kersudharsan', 'rajesekersudharsan@gmail.com'),
+    ('Sasvanthu G', 'sasvanthu.g.2006@gmail.com')
+  on conflict (email) do update set name = excluded.name;
+
+  insert into admins (user_id, role)
+  select id, 'developer_admin'::admin_role
+  from users
+  where email in (
+    'suvedhansuveg14@gmail.com',
+    'rajesekersudharsan@gmail.com',
+    'sasvanthu.g.2006@gmail.com'
+  )
+  on conflict (user_id) do update set role = 'developer_admin';
+end $$;
+
 create table if not exists events (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,

@@ -2,31 +2,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { AdminUser, AdminRole } from '@/types/admin'
 import { ROLE_PERMISSIONS, ROUTE_PERMISSIONS } from '@/types/admin'
 
-// Mock users for development - in production, this would come from an API
-const MOCK_USERS: AdminUser[] = [
-  {
-    id: '1',
-    name: 'Registration Team',
-    email: 'reg@s.com',
-    role: 'reg_team',
-  },
-  {
-    id: '2',
-    name: 'Core Team Member',
-    email: 'core@s.com',
-    role: 'core_team',
-  },
-  {
-    id: '3',
-    name: 'Developer Admin',
-    email: 'dev@s.com',
-    role: 'developer_admin',
-  },
-]
-
 interface AuthContextType {
   user: AdminUser | null
-  login: (email: string, password: string, profile?: AdminRole) => Promise<boolean>
+  login: (email: string) => Promise<boolean>
   logout: () => void
   hasPermission: (resource: string, action: string) => boolean
   isLoading: boolean
@@ -98,22 +76,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, profile?: AdminRole): Promise<boolean> => {
-    // Mock authentication - in production, this would be an API call
-    const normalizedEmail = email.trim().toLowerCase()
-    const mockUser = MOCK_USERS.find((entry) => entry.email.toLowerCase() === normalizedEmail)
-    if (!mockUser) return false
+  const login = async (email: string): Promise<boolean> => {
+    const normalizedEmail = String(email ?? '').trim().toLowerCase()
+    if (!normalizedEmail) return false
 
-    const passwordValid = password === 'admin123' // TODO: replace with API + bcrypt validation
-    const profileValid = profile ? mockUser.role === profile : true
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: normalizedEmail }),
+      })
 
-    if (passwordValid && profileValid) {
-      setUser(mockUser)
-      localStorage.setItem('simmam_admin_user', JSON.stringify(mockUser))
+      if (!response.ok) {
+        return false
+      }
+
+      const result = await response.json()
+      const adminUser = result?.user as AdminUser | undefined
+      if (!adminUser?.email || !adminUser?.role) {
+        return false
+      }
+
+      setUser(adminUser)
+      localStorage.setItem('simmam_admin_user', JSON.stringify(adminUser))
       return true
+    } catch {
+      return false
     }
-
-    return false
   }
 
   const logout = () => {
