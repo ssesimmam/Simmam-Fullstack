@@ -235,7 +235,7 @@ export function Events() {
                 </Link>
               ) : (
                 <div className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold bg-gray-600 text-gray-400 cursor-not-allowed">
-                  Registration Closed
+                  Register now
                 </div>
               )}
             </div>
