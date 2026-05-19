@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from '@tanstack/react-router'
-import { ArrowRight, Check, LogIn, Mail, Shield, X } from 'lucide-react'
+import { Check, LogIn, Shield, X } from 'lucide-react'
 
 import {
   getUser,
@@ -36,7 +35,6 @@ interface AuthModalProps {
 export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const existingUser = getUser()
   const [step, setStep] = useState<Step>(existingUser ? 'confirm' : 'login')
-  const [formEmail, setFormEmail] = useState(existingUser?.email ?? '')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
@@ -75,7 +73,6 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
         saveUser(newUser)
         if (mounted) {
-          setFormEmail(email)
           setStep('confirm')
         }
       } catch (error: any) {
@@ -126,42 +123,6 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
       setFormError(err?.message || 'Unable to start Google sign-in')
     } finally {
       setAuthLoading(false)
-    }
-  }
-
-  const handleLoginSubmit = async (eventSubmit: React.FormEvent) => {
-    eventSubmit.preventDefault()
-    setFormError('')
-
-    if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) {
-      setFormError('A valid email address is required.')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      const result = await fetchUserProfileByEmail(formEmail.trim())
-      if (!result.user) {
-        setFormError('No profile found for that email. Please sign up first.')
-        return
-      }
-
-      const newUser: UserProfile = {
-        email: result.user.email.toLowerCase(),
-        name: result.user.name,
-        picture: result.user.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(result.user.name)}`,
-        registerNumber: result.user.register_number || '',
-        mobileNumber: result.user.mobile_number,
-        house: result.user.house || '',
-      }
-
-      clearUser()
-      saveUser(newUser)
-      setStep('confirm')
-    } catch (error: any) {
-      setFormError(error?.message || 'Unable to sign in right now.')
-    } finally {
-      setSubmitting(false)
     }
   }
 
@@ -252,7 +213,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
               )}
 
               {step === 'login' && (
-                <form onSubmit={handleLoginSubmit} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="mb-1 flex items-center gap-2">
                     <LogIn className="h-4 w-4 text-[#D4AF37]" />
                     <h2 className="font-display text-xl font-bold text-white">Login</h2>
@@ -274,48 +235,10 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     {authLoading ? 'Signing in...' : 'Continue with Google'}
                   </button>
 
-                  <div className="mb-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.25em] text-white/35">
-                    <span className="h-px flex-1 bg-white/10" />
-                    <span>or use email</span>
-                    <span className="h-px flex-1 bg-white/10" />
-                  </div>
-
-                  <div className="mb-6">
-                    <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
-                      <input
-                        type="email"
-                        value={formEmail}
-                        onChange={(e) => setFormEmail(e.target.value)}
-                        placeholder="192421111.simats@saveetha.com"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
-                      />
-                    </div>
-                  </div>
-
                   {formError && (
                     <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>
                   )}
-
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 py-3.5 text-sm font-bold text-[#D4AF37] transition-all hover:bg-[#D4AF37]/20"
-                  >
-                    Continue <ArrowRight className="h-4 w-4" />
-                  </button>
-
-                  <div className="mt-4 text-center text-xs text-white/35">
-                    New here?{' '}
-                    <Link
-                      to="/profile"
-                      search={{ signup: '1' }}
-                      className="font-semibold text-[#D4AF37] transition hover:text-[#f3c95b]"
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                </form>
+                </div>
               )}
 
               {step === 'confirm' && currentUser && (

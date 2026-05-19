@@ -10,7 +10,7 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import { getUser, isRegisteredForEvent } from "@/lib/registrationStore";
+import { getUser, isRegisteredForEvent, syncUserRegistrations } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useData } from "@/lib/store";
 
@@ -95,7 +95,7 @@ function EventCard({ event, user, onRegister, registered, registrationOpen }: Ev
         {registered ? (
           <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-green-500/10 border border-green-500/25 text-green-400">
             <Check className="w-4 h-4" />
-            Registered
+            Already Registered
           </div>
         ) : !registrationOpen ? (
           <div className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-gray-600/20 border border-gray-600/40 text-gray-400 cursor-not-allowed">
@@ -130,6 +130,20 @@ export function EventsShowtime() {
     setUser(getUser());
     setRegistrationTick((t) => t + 1);
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const sync = async () => {
+      if (!user?.email || !mounted) return;
+      await syncUserRegistrations(user.email);
+      if (mounted) setRegistrationTick((t) => t + 1);
+    };
+
+    void sync();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.email]);
 
   const handleDateChange = (dateKey: string) => {
     if (dateKey === selectedDate) return;
