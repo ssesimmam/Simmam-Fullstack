@@ -1,9 +1,11 @@
 import { Bell, Search, LogOut } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/lib/auth'
 
 import AdminMobileNav from './AdminMobileNav'
 
 export default function AdminHeader() {
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
   return (
     <header className="sticky top-0 z-40 border-b border-[#333] bg-black">
@@ -34,7 +36,10 @@ export default function AdminHeader() {
                 <p className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
               </div>
               <button
-                onClick={logout}
+                onClick={() => {
+                  logout()
+                  navigate({ to: '/admin/login', replace: true })
+                }}
                 className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors"
               >
                 <LogOut className="h-5 w-5 text-white" />

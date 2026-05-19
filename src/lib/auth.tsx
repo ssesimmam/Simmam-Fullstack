@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { AdminUser, AdminRole } from '@/types/admin'
 import { ROLE_PERMISSIONS, ROUTE_PERMISSIONS } from '@/types/admin'
+import adminSupabase from '@/lib/adminSupabase'
 
 interface AuthContextType {
   user: AdminUser | null
-  login: (email: string) => Promise<boolean>
+  login: (email: string, role: AdminRole) => Promise<boolean>
   logout: () => void
   hasPermission: (resource: string, action: string) => boolean
   isLoading: boolean
@@ -76,9 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string): Promise<boolean> => {
+  const login = async (email: string, role: AdminRole): Promise<boolean> => {
     const normalizedEmail = String(email ?? '').trim().toLowerCase()
-    if (!normalizedEmail) return false
+    if (!normalizedEmail || !role) return false
 
     try {
       const response = await fetch('/api/admin/auth', {
@@ -86,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: normalizedEmail }),
+        body: JSON.stringify({ email: normalizedEmail, role }),
       })
 
       if (!response.ok) {
@@ -110,6 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem('simmam_admin_user')
+    localStorage.removeItem('simmam_admin_google_signin')
+    void adminSupabase.auth.signOut().catch(() => {
+      // ignore cleanup failures
+    })
   }
 
   const hasPermission = (resource: string, action: string): boolean => {

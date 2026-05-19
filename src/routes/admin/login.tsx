@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { Mail } from 'lucide-react'
 
 import { useAuth, getAuthorizedAdminRedirect, getStoredAdminUser } from '@/lib/auth'
+import type { AdminRole } from '@/types/admin'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import adminSupabase from '@/lib/adminSupabase'
 
 export const Route = createFileRoute('/admin/login')({
@@ -25,8 +25,7 @@ function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const search = Route.useSearch() as { redirectTo?: string }
-  const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<AdminRole>('developer_admin')
   const [error, setError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
 
@@ -49,11 +48,11 @@ function LoginPage() {
           return
         }
 
-        const success = await login(emailFromSession)
+        const success = await login(emailFromSession, selectedRole)
         if (!success) {
           window.localStorage.removeItem('simmam_admin_google_signin')
           await adminSupabase.auth.signOut()
-          setError('This Google account is not authorized for admin access.')
+          setError('This Google account is not authorized for the selected admin role.')
           return
         }
 
@@ -103,35 +102,6 @@ function LoginPage() {
     }
   }, [login, navigate, search.redirectTo])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    if (!email.trim()) {
-      setError('Please enter your admin email address.')
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const success = await login(email)
-      if (!success) {
-        setError('This email is not authorized for admin access.')
-      } else {
-        const storedUser = getStoredAdminUser()
-        navigate({
-          to: getAuthorizedAdminRedirect(storedUser, search.redirectTo),
-          replace: true,
-        })
-      }
-    } catch (err) {
-      setError('Login failed. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleGoogleSignIn = async () => {
     setError('')
     setAuthLoading(true)
@@ -170,11 +140,11 @@ function LoginPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div className="mt-8 space-y-6">
               <div className="space-y-3">
                 <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-gray-300">
                   <p className="font-semibold text-white">Admin access only</p>
-                  <p className="mt-1 text-xs text-gray-400">Use a permitted Google account or enter your approved admin email.</p>
+                  <p className="mt-1 text-xs text-gray-400">Select the admin role and continue with Google authentication.</p>
                 </div>
               </div>
 
@@ -199,36 +169,23 @@ function LoginPage() {
                 {authLoading ? 'Signing in...' : 'Continue with Google'}
               </button>
 
-              <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.25em] text-white/35">
-                <span className="h-px flex-1 bg-white/10" />
-                <span>or use email</span>
-                <span className="h-px flex-1 bg-white/10" />
-              </div>
-
               <div className="space-y-2">
-                <Label htmlFor="email">Admin Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <Label htmlFor="admin-role">Admin Role</Label>
+                <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as AdminRole)}>
+                  <SelectTrigger id="admin-role">
+                    <SelectValue placeholder="Choose admin role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Admin Role</SelectLabel>
+                      <SelectItem value="developer_admin">Developer Admin</SelectItem>
+                      <SelectItem value="core_team">Core Team</SelectItem>
+                      <SelectItem value="reg_team">Registration Admin</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-white text-black hover:bg-gray-200 rounded-md font-medium"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Authenticating...' : 'Sign In'}
-              </Button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
