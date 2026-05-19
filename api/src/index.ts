@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import helmet from 'helmet'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
@@ -22,6 +23,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 
 const app = express()
+app.set('trust proxy', 1)
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
 const allowedOrigins = new Set(
   [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:8080', 'http://127.0.0.1:5173', 'http://127.0.0.1:8080'].filter(
@@ -50,6 +52,8 @@ const corsOptions: cors.CorsOptions = {
 app.use(
   cors(corsOptions),
 )
+app.use(helmet())
+app.disable('x-powered-by')
 app.options('*', cors(corsOptions))
 app.use(express.json())
 

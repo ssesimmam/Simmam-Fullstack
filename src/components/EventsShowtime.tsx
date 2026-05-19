@@ -187,6 +187,27 @@ export function EventsShowtime() {
     }
   }, [festivalDates, selectedDate]);
 
+  useEffect(() => {
+    const pendingEventId = localStorage.getItem('simmam_pending_registration_event_id')
+    if (!pendingEventId || allDisplayEvents.length === 0) return
+
+    const pendingEvent = allDisplayEvents.find((event) => event.id === pendingEventId)
+    if (!pendingEvent) return
+
+    setSelectedDate(pendingEvent.date)
+    setModalEvent({
+      id: pendingEvent.id,
+      backendEventId: pendingEvent.id,
+      name: pendingEvent.name,
+      category: pendingEvent.mainCategory,
+      date: pendingEvent.date,
+      timeSlot: pendingEvent.timeSlot,
+      endTime: pendingEvent.endTime,
+      venue: pendingEvent.venue,
+    })
+    localStorage.removeItem('simmam_pending_registration_event_id')
+  }, [allDisplayEvents])
+
   const filteredEvents = allDisplayEvents.filter((event) => event.date === selectedDate);
 
   const grouped = filteredEvents.reduce<Record<string, DisplayEvent[]>>(

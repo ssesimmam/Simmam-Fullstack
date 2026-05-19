@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Check, LogIn, Mail, Shield, X } from 'lucide-react'
 
@@ -11,6 +11,7 @@ import {
   type UserProfile,
 } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
+import supabase from '@/lib/supabase'
 
 export type RegistrationEvent = {
   id: string
@@ -38,6 +39,95 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const [formEmail, setFormEmail] = useState(existingUser?.email ?? '')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [authLoading, setAuthLoading] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+
+    const syncSessionUser = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
+        const email = session?.user?.email?.toLowerCase()
+
+        if (!mounted || !email) return
+
+        if (!email.endsWith('@saveetha.com')) {
+          await supabase.auth.signOut()
+          if (mounted) setFormError('Only @saveetha.com accounts are allowed.')
+          return
+        }
+
+        const result = await fetchUserProfileByEmail(email)
+        if (!result.user) {
+          if (mounted) setFormError('No profile found for that email. Please sign up first.')
+          return
+        }
+
+        const newUser: UserProfile = {
+          email: result.user.email.toLowerCase(),
+          name: result.user.name,
+          picture: result.user.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(result.user.name)}`,
+          registerNumber: result.user.register_number || '',
+          mobileNumber: result.user.mobile_number,
+          house: result.user.house || '',
+        }
+
+        saveUser(newUser)
+        if (mounted) {
+          setFormEmail(email)
+          setStep('confirm')
+        }
+      } catch (error: any) {
+        if (mounted && !formError) {
+          setFormError(error?.message || '')
+        }
+      }
+    }
+
+    void syncSessionUser()
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
+      if (session?.user?.email) {
+        void syncSessionUser()
+      }
+    })
+
+    return () => {
+      mounted = false
+      try {
+        data.subscription.unsubscribe()
+      } catch {
+        // ignore unsubscribe errors
+      }
+    }
+  }, [])
+
+  const handleGoogleSignIn = async () => {
+    setAuthLoading(true)
+    setFormError('')
+
+    try {
+      localStorage.setItem('simmam_pending_registration_event_id', event.id)
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.href,
+          queryParams: { hd: 'saveetha.com' },
+        },
+      })
+
+      if (error) {
+        setFormError(error.message || 'Unable to start Google sign-in')
+      }
+    } catch (err: any) {
+      setFormError(err?.message || 'Unable to start Google sign-in')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
   const handleLoginSubmit = async (eventSubmit: React.FormEvent) => {
     eventSubmit.preventDefault()
@@ -167,7 +257,28 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     <LogIn className="h-4 w-4 text-[#D4AF37]" />
                     <h2 className="font-display text-xl font-bold text-white">Login</h2>
                   </div>
-                  <p className="mb-6 text-sm text-white/45">Enter your Saveetha email to continue registering for events.</p>
+                  <p className="mb-6 text-sm text-white/45">Sign in with your Saveetha Google account to continue registering for events.</p>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={authLoading}
+                    className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 disabled:opacity-60"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-4 w-4" aria-hidden>
+                      <path fill="#EA4335" d="M24 9.5c3.9 0 7.2 1.4 9.7 3.6l7.1-7.1C36.5 2.2 30.6 0 24 0 14.7 0 6.8 5.2 2.9 12.7l8.3 6.4C12.9 14.2 18.1 9.5 24 9.5z" />
+                      <path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.6H24v9h12.7c-.6 3.2-2.6 5.8-5.5 7.6l8.4 6.5C43.5 39.1 46.5 32.4 46.5 24.5z" />
+                      <path fill="#4A90E2" d="M10.3 29.1A14.9 14.9 0 0 1 9 24.5c0-1.6.3-3.1.8-4.6L2.9 13.6A24 24 0 0 0 0 24.5c0 3.8.9 7.3 2.9 10.6l7.4-6z" />
+                      <path fill="#FBBC05" d="M24 48c6.6 0 12.5-2.2 17.2-6l-8.4-6.5c-2.6 1.8-5.9 2.8-8.8 2.8-5.9 0-11.1-4.7-12.8-11.1L2.9 35.3C6.8 42.8 14.7 48 24 48z" />
+                    </svg>
+                    {authLoading ? 'Signing in...' : 'Continue with Google'}
+                  </button>
+
+                  <div className="mb-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.25em] text-white/35">
+                    <span className="h-px flex-1 bg-white/10" />
+                    <span>or use email</span>
+                    <span className="h-px flex-1 bg-white/10" />
+                  </div>
 
                   <div className="mb-6">
                     <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">Email Address</label>

@@ -63,12 +63,12 @@ export function createSimpleLimiter(bucket: string, windowMs: number, max: numbe
 
     // In-memory fallback (single-instance)
     if (!requestCounts[key]) {
-      requestCounts[key] = { count: 1, resetTime: now + windowMs }
+      requestCounts[key] = { count: 0, resetTime: now + windowMs }
     }
     if (now > requestCounts[key].resetTime) {
-      requestCounts[key] = { count: 1, resetTime: now + windowMs }
+      requestCounts[key] = { count: 0, resetTime: now + windowMs }
     }
-    requestCounts[key].count++
+    requestCounts[key].count += 1
     if (requestCounts[key].count > max) {
       const retryAfterSeconds = Math.ceil((requestCounts[key].resetTime - now) / 1000)
       res.setHeader('Retry-After', String(retryAfterSeconds))

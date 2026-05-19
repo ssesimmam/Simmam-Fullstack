@@ -64,7 +64,7 @@ You already have a project:
 
 **In the `api/` folder:**
 
-1. Copy `.env.example` → `.env`:
+1. Copy `api/.env.example` → `api/.env`:
    ```bash
    cd api
    cp .env.example .env
@@ -74,8 +74,10 @@ You already have a project:
    ```env
    SUPABASE_URL=https://hpctlcwdqffrcyilqaro.supabase.co
    SUPABASE_SERVICE_ROLE=<paste-service-role-key>
-   SUPABASE_ANON_KEY=<paste-anon-key>
+   FRONTEND_URL=http://localhost:5173
    PORT=4000
+   # Optional: add Redis if you want shared rate-limiting across multiple backend instances
+   # REDIS_URL=redis://user:pass@hostname:6379
    ```
 
 ### Step 2.2: Install Dependencies
@@ -127,7 +129,10 @@ Expected response:
    ```env
    VITE_SUPABASE_URL=https://hpctlcwdqffrcyilqaro.supabase.co
    VITE_SUPABASE_ANON_KEY=<paste-anon-key>
+   VITE_API_URL=http://localhost:4000
    ```
+
+> If you deploy a remote backend, set `VITE_API_URL=https://your-backend.example.com` instead of `http://localhost:4000`.
 
 ### Step 3.2: Add Vite Proxy
 

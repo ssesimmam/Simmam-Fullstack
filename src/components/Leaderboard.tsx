@@ -9,14 +9,9 @@ import {
   Cloud,
   Wind,
   Swords,
-  TrendingUp,
   Minus,
   ChevronUp,
   ChevronDown,
-  Users,
-  Hash,
-  Award,
-  Clock,
 } from "lucide-react";
 import { type House } from "@/lib/houses";
 import { useData } from "@/lib/store";
@@ -40,7 +35,7 @@ const C = {
 /* ─── helpers ──────────────────────────────────────────────── */
 
 function getHousePoints(house: House) {
-  return Number(house.points2026 ?? house.points2025 ?? 0);
+  return Number(house.points2025 ?? 0);
 }
 
 const ELEMENT_ICONS: Record<string, typeof Flame> = {
@@ -468,60 +463,6 @@ function RankingTable({ ranked }: { ranked: House[] }) {
   );
 }
 
-/* ─── Footer Stats Strip ───────────────────────────────────── */
-
-function FooterStats({ houses, totalPoints, topHouse }: { houses: House[]; totalPoints: number; topHouse?: string }) {
-  const stats = useMemo(
-    () => [
-      { icon: Users, label: "Total Houses", value: String(houses.length) },
-      { icon: Hash, label: "Total Points", value: totalPoints.toLocaleString() },
-      { icon: TrendingUp, label: "Lead Changes", value: "12" },
-      { icon: Award, label: "Top House", value: topHouse ?? "—" },
-      { icon: Clock, label: "Last Updated", value: "Just now" },
-    ],
-    [houses.length, totalPoints, topHouse]
-  );
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      {stats.map((s) => (
-        <div
-          key={s.label}
-          className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors duration-300"
-          style={{
-            background: C.bgCard,
-            border: `1px solid ${C.borderSoft}`,
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{
-              background: `${C.headingGold}12`,
-              border: `1px solid ${C.borderSoft}`,
-            }}
-          >
-            <s.icon className="w-3.5 h-3.5" style={{ color: C.headingGold }} />
-          </div>
-          <div className="min-w-0">
-            <div
-              className="text-[9px] tracking-[0.2em] uppercase"
-              style={{ color: C.dimText }}
-            >
-              {s.label}
-            </div>
-            <div
-              className="text-sm font-semibold truncate"
-              style={{ color: C.mainText }}
-            >
-              {s.value}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ─── Main Leaderboard ─────────────────────────────────────── */
 
 export function Leaderboard() {
@@ -625,9 +566,6 @@ export function Leaderboard() {
           </div>
           <RankingTable ranked={ranked} />
         </div>
-
-        <FooterStats houses={houses} totalPoints={totalPoints} topHouse={first?.name} />
-
       </div>
     </section>
   );
