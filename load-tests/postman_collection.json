@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Simmam API Smoke Tests",
+    "_postman_id": "b1a9f6c0-0000-4000-8000-000000000001",
+    "description": "Basic smoke tests for local API (health, events).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('ok is true', function () { pm.expect(json.ok).to.eql(true); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List Events",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "events"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    }
+  ]
+}
