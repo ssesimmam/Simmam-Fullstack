@@ -285,7 +285,7 @@ app.get('/api/leaderboard', publicLimiter, cacheMiddleware(60), async (_req, res
 })
 
 // Admin leaderboard
-app.get('/api/admin/leaderboard', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/leaderboard', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('leaderboard').select('*').order('total_points', { ascending: false })
     if (error) throw error
@@ -296,7 +296,7 @@ app.get('/api/admin/leaderboard', adminLimiter, cacheMiddleware(60), async (_req
   }
 })
 
-app.get('/api/admin/events', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true }).order('time_slot', { ascending: true })
     if (error) throw error
@@ -307,7 +307,7 @@ app.get('/api/admin/events', adminLimiter, cacheMiddleware(60), async (_req, res
   }
 })
 
-app.get('/api/admin/houses', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase.from('houses').select('*').order('name', { ascending: true })
     if (error) throw error
@@ -318,7 +318,7 @@ app.get('/api/admin/houses', adminLimiter, cacheMiddleware(60), async (_req, res
   }
 })
 
-app.post('/api/admin/auth', publicLimiter, async (req, res) => {
+app.post('/api/wch1925/auth', publicLimiter, async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase()
     const role = String(req.body?.role || '').trim()
@@ -371,7 +371,7 @@ let inMemoryAdminSettings = {
   coordinator_assignments: {} as any,
 }
 
-app.get('/api/admin/settings', async (_req, res) => {
+app.get('/api/wch1925/settings', async (_req, res) => {
   try {
     if (adminSettingsTableMissing) {
       return res.json({
@@ -419,7 +419,7 @@ app.get('/api/admin/settings', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/settings', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
   try {
     const { festivalStatus, registrationsOpen, coordinatorAssignments } = req.body
 
@@ -488,7 +488,7 @@ app.post('/api/admin/settings', adminLimiter, async (req, res) => {
   }
 })
 
-app.post('/api/admin/leaderboard/adjust', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
   try {
     const { house_id, points, reason } = req.body
 
@@ -526,7 +526,7 @@ app.post('/api/admin/leaderboard/adjust', adminLimiter, async (req, res) => {
 })
 
 // Admin dashboard summary
-app.get('/api/admin/dashboard-summary', async (_req, res) => {
+app.get('/api/wch1925/dashboard-summary', async (_req, res) => {
   try {
     const nowDate = new Date().toISOString().slice(0, 10)
 
@@ -576,7 +576,7 @@ app.get('/api/admin/dashboard-summary', async (_req, res) => {
 })
 
 // User management list with search/filter
-app.get('/api/admin/users', async (req, res) => {
+app.get('/api/wch1925/users', async (req, res) => {
   try {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
@@ -614,7 +614,7 @@ app.get('/api/admin/users', async (req, res) => {
   }
 })
 
-app.post('/api/admin/users', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
   try {
     const { name, email, mobile_number, register_number, house, picture_url } = req.body
 
@@ -656,7 +656,7 @@ app.post('/api/admin/users', adminLimiter, async (req, res) => {
   }
 })
 
-app.get('/api/admin/announcements', async (_req, res) => {
+app.get('/api/wch1925/announcements', async (_req, res) => {
   try {
     const { data, error } = await supabase
       .from('announcements')
@@ -672,7 +672,7 @@ app.get('/api/admin/announcements', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/announcements', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
   try {
     const { title, body, pinned, starts_at, ends_at } = req.body
 
@@ -700,7 +700,7 @@ app.post('/api/admin/announcements', adminLimiter, async (req, res) => {
   }
 })
 
-app.get('/api/admin/rules', async (_req, res) => {
+app.get('/api/wch1925/rules', async (_req, res) => {
   try {
     const { data, error } = await supabase
       .from('rules_and_regulations')
@@ -716,7 +716,7 @@ app.get('/api/admin/rules', async (_req, res) => {
   }
 })
 
-app.post('/api/admin/rules', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/rules', adminLimiter, async (req, res) => {
   try {
     const { title, body, pinned, starts_at, ends_at } = req.body
 
@@ -744,7 +744,7 @@ app.post('/api/admin/rules', adminLimiter, async (req, res) => {
   }
 })
 
-app.put('/api/admin/rules/:id', adminLimiter, async (req, res) => {
+app.put('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { title, body, pinned, starts_at, ends_at } = req.body
@@ -779,7 +779,7 @@ app.put('/api/admin/rules/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.delete('/api/admin/rules/:id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('rules_and_regulations').delete().eq('id', id)
@@ -791,7 +791,7 @@ app.delete('/api/admin/rules/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.put('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
+app.put('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { title, body, pinned, starts_at, ends_at } = req.body
@@ -825,7 +825,7 @@ app.put('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.delete('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('announcements').delete().eq('id', id)
@@ -837,7 +837,7 @@ app.delete('/api/admin/announcements/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.get('/api/admin/users/:id', async (req, res) => {
+app.get('/api/wch1925/users/:id', async (req, res) => {
   try {
     const { id } = req.params
 
@@ -877,7 +877,7 @@ app.get('/api/admin/users/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/admin/users/:id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { data: registrations, error: regErr } = await supabase.from('registrations').select('id').eq('user_id', id)
@@ -901,7 +901,7 @@ app.delete('/api/admin/users/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.put('/api/admin/users/:id', adminLimiter, async (req, res) => {
+app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { name, email, mobile_number, register_number, house, picture_url } = req.body
@@ -935,7 +935,7 @@ app.put('/api/admin/users/:id', adminLimiter, async (req, res) => {
 
 
 // Registration management list + search/filter
-app.get('/api/admin/registrations', async (req, res) => {
+app.get('/api/wch1925/registrations', async (req, res) => {
   try {
     const search = String(req.query.search || '').trim().toLowerCase()
     const eventName = String(req.query.event || '').trim().toLowerCase()
@@ -985,7 +985,7 @@ app.get('/api/admin/registrations', async (req, res) => {
   }
 })
 
-app.post('/api/admin/registrations', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
   try {
     const { email, name, register_number, house, event_id, event_name } = req.body
     if (!email || !name || (!event_id && !event_name)) {
@@ -1062,7 +1062,7 @@ app.post('/api/admin/registrations', adminLimiter, async (req, res) => {
   }
 })
 
-app.put('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
+app.put('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { status, event_id, event_name, email, name, register_number, house } = req.body
@@ -1161,7 +1161,7 @@ app.put('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.delete('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error: checkinErr } = await supabase.from('checkins').delete().eq('registration_id', id)
@@ -1177,13 +1177,13 @@ app.delete('/api/admin/registrations/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.get('/api/admin/registrations/export.csv', async (req, res) => {
+app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
   try {
     const search = String(req.query.search || '')
     const eventName = String(req.query.event || '')
     const date = String(req.query.date || '')
 
-    const url = new URL(`http://localhost/api/admin/registrations?search=${encodeURIComponent(search)}&event=${encodeURIComponent(eventName)}&date=${encodeURIComponent(date)}`)
+    const url = new URL(`http://localhost/api/wch1925/registrations?search=${encodeURIComponent(search)}&event=${encodeURIComponent(eventName)}&date=${encodeURIComponent(date)}`)
     const fakeReq: any = { query: Object.fromEntries(url.searchParams.entries()) }
 
     const { data, error } = await supabase
@@ -1271,7 +1271,7 @@ app.get('/api/admin/registrations/export.csv', async (req, res) => {
 })
 
 // Admin events CRUD
-app.post('/api/admin/events', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
   try {
     const {
       name,
@@ -1316,7 +1316,7 @@ app.post('/api/admin/events', adminLimiter, async (req, res) => {
   }
 })
 
-app.put('/api/admin/events/:id', adminLimiter, async (req, res) => {
+app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const {
@@ -1364,7 +1364,7 @@ app.put('/api/admin/events/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.delete('/api/admin/events/:id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { error } = await supabase.from('events').delete().eq('id', id)
@@ -1376,7 +1376,7 @@ app.delete('/api/admin/events/:id', adminLimiter, async (req, res) => {
   }
 })
 
-app.post('/api/admin/events/:id/close-registration', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/events/:id/close-registration', adminLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const { data, error } = await supabase
@@ -1394,7 +1394,7 @@ app.post('/api/admin/events/:id/close-registration', adminLimiter, async (req, r
 })
 
 // Attendance/check-in
-app.post('/api/admin/checkin', adminLimiter, async (req, res) => {
+app.post('/api/wch1925/checkin', adminLimiter, async (req, res) => {
   try {
     const { registration_id, device_info } = req.body
     if (!registration_id) {
@@ -1426,7 +1426,7 @@ app.post('/api/admin/checkin', adminLimiter, async (req, res) => {
   }
 })
 
-app.delete('/api/admin/checkin/:registration_id', adminLimiter, async (req, res) => {
+app.delete('/api/wch1925/checkin/:registration_id', adminLimiter, async (req, res) => {
   try {
     const { registration_id } = req.params
     const { error } = await supabase.from('checkins').delete().eq('registration_id', registration_id)
@@ -1438,7 +1438,7 @@ app.delete('/api/admin/checkin/:registration_id', adminLimiter, async (req, res)
   }
 })
 
-app.get('/api/admin/attendance-report', async (_req, res) => {
+app.get('/api/wch1925/attendance-report', async (_req, res) => {
   try {
     const { data: eventRegs, error: regErr } = await supabase
       .from('registrations')

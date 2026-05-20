@@ -7,7 +7,7 @@ import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
 import { fetchAdminDashboardSummary, type AdminDashboardSummary } from '@/lib/adminApi'
 
-export const Route = createFileRoute('/admin/_layout/')({
+export const Route = createFileRoute('/wch1925/_layout/')({
   component: AdminDashboard,
 })
 
@@ -45,7 +45,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     if (user?.role === 'reg_team') {
-      navigate({ to: '/admin/checkin', replace: true })
+      navigate({ to: '/wch1925/checkin', replace: true })
     }
   }, [navigate, user?.role])
 

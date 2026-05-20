@@ -1,7 +1,7 @@
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-  if (!raw) return '/api/admin'
-  return `${raw.replace(/\/$/, '')}/api/admin`
+  if (!raw) return '/api/wch1925'
+  return `${raw.replace(/\/$/, '')}/api/wch1925`
 })()
 
 async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {

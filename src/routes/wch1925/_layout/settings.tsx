@@ -4,7 +4,7 @@ import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import WebHealthMonitor from '@/components/admin/WebHealthMonitor'
 
-export const Route = createFileRoute('/admin/_layout/settings')({
+export const Route = createFileRoute('/wch1925/_layout/settings')({
   component: SettingsPage,
 })
 

@@ -2,13 +2,13 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuth, canAccessAdminPath, getStoredAdminUser, getDefaultAdminPath } from '@/lib/auth'
 import AdminLayout from '@/components/admin/layout/AdminLayout'
 
-export const Route = createFileRoute('/admin/_layout')({
+export const Route = createFileRoute('/wch1925/_layout')({
   beforeLoad: ({ location }) => {
     const storedUser = getStoredAdminUser()
 
     if (!storedUser) {
       throw redirect({
-        to: '/admin/login',
+        to: '/wch1925/login',
         search: { redirectTo: location.pathname },
         replace: true,
       })

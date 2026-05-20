@@ -19,7 +19,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/_layout/user-management')({
+export const Route = createFileRoute('/wch1925/_layout/user-management')({
   component: UserManagementPage,
 })
 

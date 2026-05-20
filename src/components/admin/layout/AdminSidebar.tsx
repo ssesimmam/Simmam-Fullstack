@@ -19,88 +19,88 @@ const MENU_ITEMS = {
   all: [
     {
       title: 'Dashboard',
-      href: '/admin',
+      href: '/wch1925',
       icon: LayoutDashboard,
     },
   ],
   core_team: [
     {
       title: 'Leaderboard',
-      href: '/admin/leaderboard',
+      href: '/wch1925/leaderboard',
       icon: Trophy,
     },
     {
       title: 'Participants',
-      href: '/admin/participants',
+      href: '/wch1925/participants',
       icon: Users,
     },
     {
       title: 'Registrations',
-      href: '/admin/registrations',
+      href: '/wch1925/registrations',
       icon: Shield,
     },
     {
       title: 'User Management',
-      href: '/admin/user-management',
+      href: '/wch1925/user-management',
       icon: UsersRound,
     },
   ],
   reg_team: [
     {
       title: 'Check-In',
-      href: '/admin/checkin',
+      href: '/wch1925/checkin',
       icon: CheckCircle,
     },
   ],
   developer_admin: [
     {
       title: 'Events',
-      href: '/admin/events',
+      href: '/wch1925/events',
       icon: CalendarDays,
     },
     {
       title: 'Notifications',
-      href: '/admin/announcements',
+      href: '/wch1925/announcements',
       icon: Bell,
     },
     {
       title: 'Rules & Regulations',
-      href: '/admin/rules',
+      href: '/wch1925/rules',
       icon: BookOpen,
     },
     {
       title: 'Data Entry',
-      href: '/admin/data-entry',
+      href: '/wch1925/data-entry',
       icon: Database,
     },
     {
       title: 'Leaderboard',
-      href: '/admin/leaderboard',
+      href: '/wch1925/leaderboard',
       icon: Trophy,
     },
     {
       title: 'Participants',
-      href: '/admin/participants',
+      href: '/wch1925/participants',
       icon: Users,
     },
     {
       title: 'Check-In',
-      href: '/admin/checkin',
+      href: '/wch1925/checkin',
       icon: CheckCircle,
     },
     {
       title: 'User Management',
-      href: '/admin/user-management',
+      href: '/wch1925/user-management',
       icon: UsersRound,
     },
     {
       title: 'Registrations',
-      href: '/admin/registrations',
+      href: '/wch1925/registrations',
       icon: Shield,
     },
     {
       title: 'Settings',
-      href: '/admin/settings',
+      href: '/wch1925/settings',
       icon: Settings,
     },
   ],

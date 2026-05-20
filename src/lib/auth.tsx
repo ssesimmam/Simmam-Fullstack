@@ -38,7 +38,7 @@ export function canAccessAdminPath(user: AdminUser | null | undefined, pathname:
 
   const permissions = ROLE_PERMISSIONS[user.role] || []
 
-  if (pathname === '/admin' || pathname === '/admin/') {
+  if (pathname === '/wch1925' || pathname === '/wch1925/') {
     return user.role === 'developer_admin' || user.role === 'core_team' || user.role === 'reg_team'
   }
 
@@ -53,9 +53,9 @@ export function canAccessAdminPath(user: AdminUser | null | undefined, pathname:
 }
 
 export function getDefaultAdminPath(user: AdminUser | null | undefined): string {
-  if (!user) return '/admin'
-  if (user.role === 'reg_team') return '/admin/checkin'
-  return '/admin'
+  if (!user) return '/wch1925'
+  if (user.role === 'reg_team') return '/wch1925/checkin'
+  return '/wch1925'
 }
 
 export function getAuthorizedAdminRedirect(user: AdminUser | null | undefined, requestedPath?: string | null): string {
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!normalizedEmail || !role) return false
 
     try {
-      const response = await fetch('/api/admin/auth', {
+      const response = await fetch('/api/wch1925/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

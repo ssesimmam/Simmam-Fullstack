@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarClock, Edit3, Plus, Pin, Search, Trash2 } from 'lucide-react'
-
-import AccessDenied from '@/components/admin/shared/AccessDenied'
+import { Bell, CalendarClock, Edit3, Plus, Pin, Search, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/admin/shared/PageHeader'
+import AccessDenied from '@/components/admin/shared/AccessDenied'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,19 +11,19 @@ import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
-  createAdminRule,
-  deleteAdminRule,
-  fetchAdminRules,
-  updateAdminRule,
-  type AdminRuleRow,
+  createAdminAnnouncement,
+  deleteAdminAnnouncement,
+  fetchAdminAnnouncements,
+  updateAdminAnnouncement,
+  type AdminAnnouncementRow,
 } from '@/lib/adminApi'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/_layout/rules')({
-  component: RulesPage,
+export const Route = createFileRoute('/wch1925/_layout/announcements')({
+  component: AnnouncementsPage,
 })
 
-type RuleForm = {
+type AnnouncementForm = {
   title: string
   body: string
   pinned: boolean
@@ -32,7 +31,7 @@ type RuleForm = {
   ends_at: string
 }
 
-const emptyForm: RuleForm = {
+const emptyForm: AnnouncementForm = {
   title: '',
   body: '',
   pinned: true,
@@ -51,7 +50,7 @@ const toDatetimeLocalValue = (value?: string | null) => {
 
 const toApiDatetime = (value: string) => (value ? new Date(value).toISOString() : null)
 
-const getRuleStatus = (item: AdminRuleRow) => {
+const getAnnouncementStatus = (item: AdminAnnouncementRow) => {
   const now = Date.now()
   const startsAt = item.starts_at ? Date.parse(item.starts_at) : null
   const endsAt = item.ends_at ? Date.parse(item.ends_at) : null
@@ -61,19 +60,19 @@ const getRuleStatus = (item: AdminRuleRow) => {
   return 'Live'
 }
 
-function RulesPage() {
+function AnnouncementsPage() {
   const { hasPermission } = useAuth()
-  const [items, setItems] = useState<AdminRuleRow[]>([])
+  const [items, setItems] = useState<AdminAnnouncementRow[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<AdminRuleRow | null>(null)
+  const [editingItem, setEditingItem] = useState<AdminAnnouncementRow | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [form, setForm] = useState<RuleForm>(emptyForm)
+  const [form, setForm] = useState<AnnouncementForm>(emptyForm)
 
-  const canRead = hasPermission('rules', 'read')
-  const canCreate = hasPermission('rules', 'create')
-  const canDelete = hasPermission('rules', 'delete')
+  const canRead = hasPermission('announcements', 'read')
+  const canCreate = hasPermission('announcements', 'create')
+  const canDelete = hasPermission('announcements', 'delete')
 
   useEffect(() => {
     if (!canRead) return
@@ -83,9 +82,9 @@ function RulesPage() {
   const loadItems = async () => {
     setLoading(true)
     try {
-      setItems(await fetchAdminRules())
+      setItems(await fetchAdminAnnouncements())
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to load rules')
+      toast.error(error?.message || 'Failed to load announcements')
     } finally {
       setLoading(false)
     }
@@ -97,7 +96,7 @@ function RulesPage() {
     setEditorOpen(true)
   }
 
-  const openEditEditor = (item: AdminRuleRow) => {
+  const openEditEditor = (item: AdminAnnouncementRow) => {
     setEditingItem(item)
     setForm({
       title: item.title || '',
@@ -137,17 +136,17 @@ function RulesPage() {
       }
 
       if (editingItem) {
-        await updateAdminRule(editingItem.id, payload)
-        toast.success('Rule updated')
+        await updateAdminAnnouncement(editingItem.id, payload)
+        toast.success('Notification updated')
       } else {
-        await createAdminRule(payload)
-        toast.success('Rule published')
+        await createAdminAnnouncement(payload)
+        toast.success('Notification published')
       }
 
       closeEditor()
       await loadItems()
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to save rule')
+      toast.error(error?.message || 'Failed to save notification')
     } finally {
       setIsSaving(false)
     }
@@ -155,27 +154,32 @@ function RulesPage() {
 
   const handleDelete = async (id: string) => {
     if (!canDelete) {
-      toast.error('You do not have permission to delete rules')
+      toast.error('You do not have permission to delete notifications')
       return
     }
 
-    if (!window.confirm('Delete this rule?')) {
+    if (!window.confirm('Delete this notification?')) {
       return
     }
 
     try {
-      await deleteAdminRule(id)
-      toast.success('Rule removed')
+      await deleteAdminAnnouncement(id)
+      toast.success('Notification removed')
       await loadItems()
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to delete rule')
+      toast.error(error?.message || 'Failed to delete notification')
     }
   }
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     if (!query) return items
-    return items.filter((item) => [item.title, item.body || '', item.id].join(' ').toLowerCase().includes(query))
+    return items.filter((item) => {
+      return [item.title, item.body || '', item.id]
+        .join(' ')
+        .toLowerCase()
+        .includes(query)
+    })
   }, [items, searchQuery])
 
   if (!canRead) {
@@ -185,8 +189,8 @@ function RulesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rules & Regulations"
-        subtitle="Create and manage the rules shown in the frontend rules panel."
+        title="Notifications"
+        subtitle="Create, schedule, and edit the messages that appear in the frontend bell icon."
       />
 
       <div className="rounded-lg border border-[#333] bg-[#111] p-4 sm:p-5 space-y-4">
@@ -196,7 +200,7 @@ function RulesPage() {
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search rules by title, body, or id"
+              placeholder="Search notifications by title, body, or id"
               className="bg-black border-[#333] pl-10 text-white"
             />
           </div>
@@ -204,7 +208,7 @@ function RulesPage() {
           <div className="flex items-center gap-2">
             {canCreate && (
               <Button className="bg-[#D4AF37] text-black hover:bg-[#e0bd55]" onClick={openCreateEditor}>
-                <Plus className="mr-2 h-4 w-4" /> New Rule
+                <Plus className="mr-2 h-4 w-4" /> New Notification
               </Button>
             )}
             <Button className="bg-white text-black hover:bg-gray-200" onClick={loadItems}>
@@ -215,14 +219,14 @@ function RulesPage() {
 
         <div className="space-y-3">
           {loading ? (
-            <p className="text-sm text-gray-400">Loading rules...</p>
+            <p className="text-sm text-gray-400">Loading notifications...</p>
           ) : filteredItems.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[#333] bg-black/40 p-6 text-sm text-gray-400">
-              No rules yet. Create one to show it on the frontend rules panel.
+              No notifications yet. Create one to send it to users.
             </div>
           ) : (
             filteredItems.map((item) => {
-              const status = getRuleStatus(item)
+              const status = getAnnouncementStatus(item)
 
               return (
                 <div key={item.id} className="rounded-xl border border-[#333] bg-black p-4">
@@ -230,7 +234,9 @@ function RulesPage() {
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-semibold text-white">{item.title}</p>
-                        <Badge className="border border-[#333] bg-[#151515] text-xs text-gray-300">{status}</Badge>
+                        <Badge className="border border-[#333] bg-[#151515] text-xs text-gray-300">
+                          {status}
+                        </Badge>
                         {item.pinned ? (
                           <Badge className="border border-[#333] bg-[#1d1a10] text-xs text-[#D4AF37]">
                             <Pin className="mr-1 h-3.5 w-3.5" /> Pinned
@@ -239,7 +245,7 @@ function RulesPage() {
                       </div>
 
                       <p className="max-w-4xl whitespace-pre-wrap text-sm leading-6 text-gray-400">
-                        {item.body || 'No rule text provided.'}
+                        {item.body || 'No message body provided.'}
                       </p>
 
                       <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
@@ -248,7 +254,7 @@ function RulesPage() {
                           {item.starts_at ? new Date(item.starts_at).toLocaleString() : 'Starts immediately'}
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <CalendarClock className="h-3.5 w-3.5" />
+                          <Bell className="h-3.5 w-3.5" />
                           {item.ends_at ? `Ends ${new Date(item.ends_at).toLocaleString()}` : 'No end time'}
                         </span>
                       </div>
@@ -287,7 +293,7 @@ function RulesPage() {
       <Dialog open={editorOpen} onOpenChange={(open) => (open ? setEditorOpen(true) : closeEditor())}>
         <DialogContent className="max-w-3xl border-[#333] bg-[#111] text-white">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Rule' : 'New Rule'}</DialogTitle>
+            <DialogTitle>{editingItem ? 'Edit Notification' : 'New Notification'}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -296,7 +302,7 @@ function RulesPage() {
                 <Input
                   value={form.title}
                   onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="Rule title"
+                  placeholder="Notification title"
                   className="bg-black border-[#333] text-white"
                 />
               </div>
@@ -305,7 +311,7 @@ function RulesPage() {
                 <Textarea
                   value={form.body}
                   onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))}
-                  placeholder="Rule details"
+                  placeholder="Notification message"
                   className="min-h-32 bg-black border-[#333] text-white"
                 />
               </div>
@@ -334,7 +340,7 @@ function RulesPage() {
             <div className="flex items-center justify-between rounded-lg border border-[#333] bg-black px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-white">Pin to top</p>
-                <p className="text-xs text-gray-500">Pinned rules stay above the rest in the frontend rules panel.</p>
+                <p className="text-xs text-gray-500">Pinned notifications stay above regular messages in the bell feed.</p>
               </div>
               <Switch checked={form.pinned} onCheckedChange={(checked) => setForm((current) => ({ ...current, pinned: checked }))} />
             </div>
@@ -345,7 +351,7 @@ function RulesPage() {
               </Button>
               <Button className="bg-[#D4AF37] text-black hover:bg-[#e0bd55]" onClick={handleSave} disabled={isSaving || !canCreate}>
                 <Plus className="mr-2 h-4 w-4" />
-                {editingItem ? 'Save Changes' : 'Publish Rule'}
+                {editingItem ? 'Save Changes' : 'Publish Notification'}
               </Button>
             </div>
           </div>

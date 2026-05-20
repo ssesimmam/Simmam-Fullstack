@@ -4,7 +4,7 @@ import { useData } from '@/lib/store'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 
-export const Route = createFileRoute('/admin/_layout/houses')({
+export const Route = createFileRoute('/wch1925/_layout/houses')({
   component: HousesPage,
 })
 
