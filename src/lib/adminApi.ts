@@ -1,14 +1,29 @@
+import adminSupabase from '@/lib/adminSupabase'
+
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
   if (!raw) return '/api/wch1925'
   return `${raw.replace(/\/$/, '')}/api/wch1925`
 })()
 
+async function getAdminAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data } = await adminSupabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return {}
+
+    return { Authorization: `Bearer ${token}` }
+  } catch {
+    return {}
+  }
+}
+
 async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${adminBase}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await getAdminAuthHeaders()),
       ...(init?.headers || {}),
     },
   })

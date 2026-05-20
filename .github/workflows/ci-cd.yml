@@ -1,0 +1,69 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install root dependencies
+        run: npm ci
+      - name: Build API
+        run: |
+          cd api
+          npm ci
+          npm run build
+      - name: Build Frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Run lint
+        run: npm run lint || true
+
+  staging-deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply DB migrations to staging
+        if: env.APPLY_MIGRATIONS == 'true'
+        env:
+          STAGING_DB_URL: ${{ secrets.STAGING_DB_URL }}
+        run: |
+          echo "Applying migrations to staging"
+          PGPASSWORD=$STAGING_DB_PASSWORD psql "$STAGING_DB_URL" -f supabase/migrations/20260521_safer_create_registration.sql
+      - name: Deploy API to staging (placeholder)
+        run: echo "Deploy your API here (e.g., Railway, Fly, Cloud Run)"
+      - name: Deploy Frontend to staging (placeholder)
+        run: echo "Deploy your frontend here (e.g., Vercel)"
+
+  production-deploy:
+    needs: staging-deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Manual approval
+        uses: peter-evans/wait-for-workflow@v1
+      - name: Backup DB (production)
+        run: |
+          echo "Run DB backup step here using pg_dump and store artifact"
+      - name: Apply production migrations
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+        run: |
+          PGPASSWORD=$PROD_DB_PASSWORD psql "$PROD_DB_URL" -f supabase/migrations/20260521_safer_create_registration.sql
+      - name: Deploy API to production (placeholder)
+        run: echo "Deploy API to production"
+      - name: Deploy Frontend to production (placeholder)
+        run: echo "Deploy frontend to production"

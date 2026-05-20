@@ -18,7 +18,10 @@ if (redisUrl) {
 }
 
 function getClientIp(req: any): string {
-  return (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown'
+  const cloudflareIp = req.headers['cf-connecting-ip'] as string | undefined
+  const realIp = req.headers['x-real-ip'] as string | undefined
+  const forwardedIp = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]
+  return cloudflareIp || realIp || forwardedIp || req.socket.remoteAddress || 'unknown'
 }
 
 function getRouteKey(req: any): string {

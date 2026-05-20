@@ -82,10 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!normalizedEmail || !role) return false
 
     try {
+      const { data: sessionData } = await adminSupabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      if (!token) return false
+
       const response = await fetch('/api/wch1925/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ email: normalizedEmail, role }),
       })

@@ -349,6 +349,8 @@ begin
     raise exception 'event_id_required';
   end if;
 
+  perform pg_advisory_xact_lock(hashtext(p_event_id::text)::bigint);
+
   insert into users (name, email, register_number, house)
   values (
     coalesce(nullif(trim(p_name), ''), split_part(lower(trim(p_email)), '@', 1)),
@@ -641,7 +643,8 @@ on conflict (name) do nothing;
 -- -----------------------------------------------------------------------------
 -- 10) Grant execute on RPCs
 -- -----------------------------------------------------------------------------
-grant execute on function create_registration(text, text, text, text, uuid) to anon, authenticated, service_role;
+revoke execute on function create_registration(text, text, text, text, uuid) from anon;
+grant execute on function create_registration(text, text, text, text, uuid) to authenticated, service_role;
 grant execute on function admin_checkin(uuid, text) to authenticated, service_role;
 grant execute on function award_house_points(uuid, int, text) to authenticated, service_role;
 

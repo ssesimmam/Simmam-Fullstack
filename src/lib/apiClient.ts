@@ -64,17 +64,32 @@ export type CreateRegistrationPayload = {
   event_name?: string
 }
 
+import supabase from '@/lib/supabase'
+
 const apiBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
   if (!raw) return '/api'
   return `${raw.replace(/\/$/, '')}/api`
 })()
 
+async function getUserAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return {}
+
+    return { Authorization: `Bearer ${token}` }
+  } catch {
+    return {}
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBase}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await getUserAuthHeaders()),
       ...(init?.headers || {}),
     },
   })

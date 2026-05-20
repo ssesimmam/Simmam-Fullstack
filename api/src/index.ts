@@ -5,6 +5,8 @@ import helmet from 'helmet'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
+import multer from 'multer'
+import { requireTurnstile } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
 
@@ -25,11 +27,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 const app = express()
 app.set('trust proxy', 1)
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
-const allowedOrigins = new Set(
-  [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:8080', 'http://127.0.0.1:5173', 'http://127.0.0.1:8080'].filter(
-    (value): value is string => Boolean(value),
-  ),
-)
+const allowedOrigins = new Set<string>()
+if (FRONTEND_URL) allowedOrigins.add(FRONTEND_URL)
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.add('http://localhost:5173')
+  allowedOrigins.add('http://localhost:8080')
+  allowedOrigins.add('http://127.0.0.1:5173')
+  allowedOrigins.add('http://127.0.0.1:8080')
+}
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -56,6 +61,114 @@ app.use(helmet())
 app.disable('x-powered-by')
 app.options('*', cors(corsOptions))
 app.use(express.json())
+
+// Multer for file uploads (in-memory; we upload straight to Supabase storage)
+const upload = multer({ storage: multer.memoryStorage() })
+
+type AuthenticatedUser = {
+  id: string
+  email: string
+  name?: string | null
+}
+
+type AdminContext = AuthenticatedUser & {
+  role: string
+  assignedEventId?: string | null
+}
+
+const getBearerToken = (req: express.Request) => {
+  const header = req.headers.authorization || ''
+  return header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+}
+
+const authenticateSession = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const token = getBearerToken(req)
+  if (!token) {
+    return res.status(401).json({ error: 'missing_auth_token' })
+  }
+
+  const { data, error } = await supabase.auth.getUser(token)
+  const user = data?.user
+  if (error || !user?.email || !user.id) {
+    return res.status(401).json({ error: 'invalid_auth_token' })
+  }
+
+  ;(req as any).authenticatedUser = {
+    id: user.id,
+    email: user.email.toLowerCase(),
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+  } satisfies AuthenticatedUser
+
+  next()
+}
+
+const attachAdminContext = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authUser = (req as any).authenticatedUser as AuthenticatedUser | undefined
+  if (!authUser?.email) {
+    return res.status(401).json({ error: 'unauthorized' })
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id,name,email,admins!inner(role,assigned_event_id)')
+    .ilike('email', authUser.email)
+    .limit(1)
+
+  if (error) {
+    return res.status(500).json({ error: error.message || 'unknown' })
+  }
+
+  const userRow = Array.isArray(data) ? data[0] : data
+  const adminRow = getSingleRelationsRow(userRow?.admins as any)
+  if (!userRow || !adminRow || typeof adminRow !== 'object' || !('role' in adminRow)) {
+    return res.status(403).json({ error: 'admin_required' })
+  }
+
+  ;(req as any).adminContext = {
+    id: userRow.id,
+    name: userRow.name || authUser.name || authUser.email,
+    email: userRow.email,
+    role: String((adminRow as any).role),
+    assignedEventId: (adminRow as any).assigned_event_id || null,
+  } satisfies AdminContext
+
+  next()
+}
+
+const requireSignedInUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const token = getBearerToken(req)
+  if (!token) {
+    return res.status(401).json({ error: 'missing_auth_token' })
+  }
+
+  const { data, error } = await supabase.auth.getUser(token)
+  const user = data?.user
+  if (error || !user?.email) {
+    return res.status(401).json({ error: 'invalid_auth_token' })
+  }
+
+  const authEmail = user.email.toLowerCase()
+  const routeEmail = String((req.params?.email as string | undefined) || (req.body?.email as string | undefined) || '').trim().toLowerCase()
+  if (routeEmail && routeEmail !== authEmail) {
+    return res.status(403).json({ error: 'email_mismatch' })
+  }
+
+  ;(req as any).authenticatedUser = {
+    id: user.id,
+    email: authEmail,
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+  } satisfies AuthenticatedUser
+
+  next()
+}
+
+app.use('/api/wch1925', authenticateSession, async (req, res, next) => {
+  if (req.path === '/auth') {
+    return next()
+  }
+
+  return attachAdminContext(req, res, next)
+})
 
 // Clear any in-memory rate limiter counts when server starts (useful during dev/test)
 try {
@@ -320,13 +433,18 @@ app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(60), async (_req, r
 
 app.post('/api/wch1925/auth', publicLimiter, async (req, res) => {
   try {
-    const email = String(req.body?.email || '').trim().toLowerCase()
+    const authUser = (req as any).authenticatedUser as AuthenticatedUser | undefined
+    const email = String(req.body?.email || authUser?.email || '').trim().toLowerCase()
     const role = String(req.body?.role || '').trim()
     if (!email) {
       return res.status(400).json({ error: 'missing_email' })
     }
     if (!role) {
       return res.status(400).json({ error: 'missing_role' })
+    }
+
+    if (authUser?.email && email !== authUser.email) {
+      return res.status(403).json({ error: 'email_mismatch' })
     }
 
     const { data, error } = await supabase
@@ -348,6 +466,10 @@ app.post('/api/wch1925/auth', publicLimiter, async (req, res) => {
     const admin = getSingleRelationsRow(user.admins as any)
     if (!admin || typeof admin !== 'object' || !('role' in admin)) {
       return res.status(401).json({ error: 'not_admin' })
+    }
+
+    if ((admin as any).role !== role) {
+      return res.status(403).json({ error: 'role_mismatch' })
     }
 
     res.json({
@@ -699,6 +821,35 @@ app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
     res.status(500).json({ error: err.message || 'unknown' })
   }
 })
+
+  // Media upload (admin only) - uploads to Supabase Storage and records metadata in `media` table
+  app.post('/api/wch1925/media/upload', adminLimiter, upload.single('file'), async (req, res) => {
+    try {
+      const file = req.file as Express.Multer.File | undefined
+      if (!file) return res.status(400).json({ error: 'no_file_uploaded' })
+
+      const key = `uploads/${Date.now()}-${file.originalname}`
+      const { data: storageData, error: storageErr } = await supabase.storage
+        .from('media')
+        .upload(key, file.buffer, { contentType: file.mimetype })
+
+      if (storageErr) throw storageErr
+
+      const uploadedUrl = storageData?.path || key
+      const adminId = (req as any).adminContext?.id || null
+      const { data: mediaRow, error: mediaErr } = await supabase
+        .from('media')
+        .insert({ key, url: uploadedUrl, uploaded_by: adminId })
+        .select('*')
+        .single()
+
+      if (mediaErr) throw mediaErr
+      res.status(201).json({ media: mediaRow })
+    } catch (err: any) {
+      console.error(err)
+      res.status(500).json({ error: err.message || 'unknown' })
+    }
+  })
 
 app.get('/api/wch1925/rules', async (_req, res) => {
   try {
@@ -1182,9 +1333,7 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
     const search = String(req.query.search || '')
     const eventName = String(req.query.event || '')
     const date = String(req.query.date || '')
-
-    const url = new URL(`http://localhost/api/wch1925/registrations?search=${encodeURIComponent(search)}&event=${encodeURIComponent(eventName)}&date=${encodeURIComponent(date)}`)
-    const fakeReq: any = { query: Object.fromEntries(url.searchParams.entries()) }
+    // use query params directly (removed internal localhost URL construction)
 
     const { data, error } = await supabase
       .from('registrations')
@@ -1478,7 +1627,7 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
 })
 
 // Upsert user profile
-app.post('/api/users/upsert', authLimiter, async (req, res) => {
+app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res) => {
   try {
     const { email, name, mobile_number, register_number, house, picture_url } = req.body
     const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
@@ -1512,7 +1661,7 @@ app.post('/api/users/upsert', authLimiter, async (req, res) => {
 })
 
 // Create registration: upsert user then insert registration
-app.post('/api/registrations', registrationLimiter, async (req, res) => {
+app.post('/api/registrations', registrationLimiter, requireSignedInUser, requireTurnstile, async (req, res) => {
   try {
     const { email, name, register_number, house, event_id, event_name } = req.body
     if (!email || !name || (!event_id && !event_name)) {
@@ -1535,11 +1684,10 @@ app.post('/api/registrations', registrationLimiter, async (req, res) => {
       resolvedEventId = eventRow.id
     }
 
-    const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration', {
-      p_email: String(email).toLowerCase(),
-      p_name: name,
-      p_register_number: register_number,
-      p_house: house,
+    // Use service-role RPC that accepts user id to avoid client-side RPC bypass
+    const userId = (req as any).authenticatedUser?.id
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration_safe', {
+      p_user_id: userId,
       p_event_id: resolvedEventId,
     })
 
@@ -1566,7 +1714,7 @@ app.post('/api/registrations', registrationLimiter, async (req, res) => {
 })
 
 // Get user's registrations
-app.get('/api/users/:email/registrations', publicLimiter, cacheMiddleware(60), async (req, res) => {
+app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, cacheMiddleware(60), async (req, res) => {
   try {
     const email = (req.params.email || '').toLowerCase()
     const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)
