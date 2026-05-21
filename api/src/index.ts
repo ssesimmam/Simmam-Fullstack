@@ -2,15 +2,21 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import helmet from 'helmet'
+import compression from 'compression'
+import morgan from 'morgan'
+import * as Sentry from '@sentry/node'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
+import { initSentry } from './instrument'
 import { requireTurnstile } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
 
 dotenv.config()
+
+initSentry()
 
 const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE
@@ -61,6 +67,13 @@ app.use(helmet())
 app.disable('x-powered-by')
 app.options('*', cors(corsOptions))
 app.use(express.json())
+// Compression to reduce response sizes (gzip/deflate)
+app.use(compression())
+
+// Request logging in non-production environments
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev'))
+}
 
 // Multer for file uploads (in-memory; we upload straight to Supabase storage)
 const upload = multer({ storage: multer.memoryStorage() })
@@ -1362,9 +1375,9 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       checked_in: checkedInSet.has(row.id),
     }))
 
-    const searchLower = String(fakeReq.query.search || '').toLowerCase()
-    const eventLower = String(fakeReq.query.event || '').toLowerCase()
-    const dateValue = String(fakeReq.query.date || '')
+    const searchLower = String(req.query.search || '').toLowerCase()
+    const eventLower = String(req.query.event || '').toLowerCase()
+    const dateValue = String(req.query.date || '')
 
     if (eventLower) rows = rows.filter((row) => row.event_name.toLowerCase().includes(eventLower))
     if (dateValue) rows = rows.filter((row) => row.event_date === dateValue)
@@ -1775,3 +1788,16 @@ const bootstrap = async () => {
 }
 
 bootstrap()
+
+Sentry.setupExpressErrorHandler(app)
+
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  Sentry.captureException(err)
+  console.error(err)
+
+  if (res.headersSent) {
+    return next(err)
+  }
+
+  res.status(500).json({ error: 'internal_server_error' })
+})
