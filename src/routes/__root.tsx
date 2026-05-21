@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import "../instrument";
+
 import { AuthProvider } from "@/lib/auth";
 import { DataProvider } from "@/lib/store";
 import favicon from "../assets/simmam-lion.png";
