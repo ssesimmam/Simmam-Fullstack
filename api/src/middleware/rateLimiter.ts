@@ -1,12 +1,16 @@
 import { Request, Response, NextFunction } from 'express'
 import IORedis from 'ioredis'
+import { Redis as UpstashRedis } from '@upstash/redis'
 
 // In-memory store for development (replace with Redis for production)
 const requestCounts: Record<string, { count: number; resetTime: number }> = {}
 
 // Redis client (optional). If REDIS_URL is set, use Redis for counters across instances.
 const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || ''
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || ''
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN || ''
 let redis: any = null
+let upstash: UpstashRedis | null = null
 if (redisUrl) {
   try {
     redis = new IORedis(redisUrl)
@@ -14,6 +18,16 @@ if (redisUrl) {
   } catch (e) {
     console.error('Failed to create Redis client', e)
     redis = null
+  }
+} else if (upstashUrl && upstashToken) {
+  try {
+    upstash = new UpstashRedis({
+      url: upstashUrl,
+      token: upstashToken,
+    })
+  } catch (e) {
+    console.error('Failed to create Upstash Redis client', e)
+    upstash = null
   }
 }
 
@@ -61,6 +75,28 @@ export function createSimpleLimiter(bucket: string, windowMs: number, max: numbe
       } catch (e) {
         console.error('Redis rate limiter error, falling back to memory', e)
         // fallthrough to in-memory
+      }
+    }
+
+    if (upstash) {
+      try {
+        const count = Number(await upstash.incr(key))
+        let ttlSeconds = Number(await upstash.ttl(key))
+        if (ttlSeconds < 0) {
+          ttlSeconds = Math.max(1, Math.ceil(windowMs / 1000))
+          await upstash.expire(key, ttlSeconds)
+        }
+
+        if (count > max) {
+          res.setHeader('Retry-After', String(ttlSeconds))
+          res.setHeader('RateLimit-Remaining', '0')
+          return res.status(429).json({ error: message })
+        }
+
+        res.setHeader('RateLimit-Remaining', String(Math.max(0, max - count)))
+        return next()
+      } catch (e) {
+        console.error('Upstash rate limiter error, falling back to memory', e)
       }
     }
 

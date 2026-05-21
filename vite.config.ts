@@ -11,6 +11,9 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 export default defineConfig({
   cloudflare: false,
   vite: {
+    build: {
+      sourcemap: true,
+    },
     server: {
       proxy: {
         '/api': {

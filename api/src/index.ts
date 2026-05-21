@@ -10,7 +10,6 @@ import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
-import { initSentry } from './instrument'
 import { requireTurnstile } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
@@ -36,7 +35,7 @@ import {
 
 dotenv.config()
 
-initSentry()
+require('./instrument')
 
 const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE

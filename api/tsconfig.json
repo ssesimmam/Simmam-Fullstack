@@ -5,6 +5,8 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
+    "sourceMap": true,
+    "inlineSources": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,

@@ -39,6 +39,7 @@ PGSSLMODE=require psql "$STAGING_DB_URL" -f supabase/migrations/20260521_safer_c
 
 8) Observability
 - Configure Sentry for frontend and API.
+- Follow detailed setup in `docs/SENTRY_SETUP.md`.
 - Export basic metrics: request count, errors, p95 latency.
 - Set alerting thresholds.
 
