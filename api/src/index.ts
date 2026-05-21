@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import morgan from 'morgan'
 import * as Sentry from '@sentry/node'
+import { randomUUID } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
@@ -13,6 +14,25 @@ import { initSentry } from './instrument'
 import { requireTurnstile } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
+import {
+  adminRegistrationCreateBodySchema,
+  adminSettingsBodySchema,
+  announcementBodySchema,
+  authBodySchema,
+  checkinBodySchema,
+  eventCreateBodySchema,
+  eventUpdateBodySchema,
+  exportQuerySchema,
+  leaderboardAdjustBodySchema,
+  paramsSchemas,
+  publicRegistrationBodySchema,
+  registrationsListQuerySchema,
+  registrationUpdateBodySchema,
+  ruleBodySchema,
+  userCreateBodySchema,
+  userUpsertBodySchema,
+  validateRequest,
+} from './validation'
 
 dotenv.config()
 
@@ -22,6 +42,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
+const IS_PROD = process.env.NODE_ENV === 'production'
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE in env')
@@ -35,7 +56,7 @@ app.set('trust proxy', 1)
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
 const allowedOrigins = new Set<string>()
 if (FRONTEND_URL) allowedOrigins.add(FRONTEND_URL)
-if (process.env.NODE_ENV === 'development') {
+if (!IS_PROD) {
   allowedOrigins.add('http://localhost:5173')
   allowedOrigins.add('http://localhost:8080')
   allowedOrigins.add('http://127.0.0.1:5173')
@@ -49,12 +70,15 @@ const corsOptions: cors.CorsOptions = {
       return
     }
 
-    if (allowedOrigins.has(origin) || localDevOriginPattern.test(origin)) {
+    if (allowedOrigins.has(origin) || (!IS_PROD && localDevOriginPattern.test(origin))) {
       callback(null, true)
       return
     }
 
-    callback(new Error(`CORS blocked origin: ${origin}`))
+    const corsError = new Error(`CORS blocked origin: ${origin}`) as Error & { statusCode?: number; code?: string }
+    corsError.statusCode = 403
+    corsError.code = 'cors_blocked'
+    callback(corsError)
   },
   credentials: false,
   optionsSuccessStatus: 204,
@@ -63,17 +87,27 @@ const corsOptions: cors.CorsOptions = {
 app.use(
   cors(corsOptions),
 )
-app.use(helmet())
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}))
 app.disable('x-powered-by')
 app.options('*', cors(corsOptions))
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
+app.use((req, res, next) => {
+  ;(req as any).requestId = req.headers['x-request-id'] || randomUUID()
+  res.setHeader('x-request-id', String((req as any).requestId))
+  next()
+})
 // Compression to reduce response sizes (gzip/deflate)
-app.use(compression())
+app.use(compression({ threshold: 1024 }))
 
-// Request logging in non-production environments
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'))
-}
+// Structured access logs in production and concise logs in development.
+app.use(
+  morgan(IS_PROD ? 'combined' : 'dev', {
+    skip: (req) => req.path === '/api/health',
+  }),
+)
 
 // Multer for file uploads (in-memory; we upload straight to Supabase storage)
 const upload = multer({ storage: multer.memoryStorage() })
@@ -93,6 +127,9 @@ const getBearerToken = (req: express.Request) => {
   const header = req.headers.authorization || ''
   return header.startsWith('Bearer ') ? header.slice(7).trim() : ''
 }
+
+const respondValidationError = (res: express.Response, details: unknown) =>
+  res.status(400).json({ error: 'validation_failed', details })
 
 const authenticateSession = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const token = getBearerToken(req)
@@ -446,9 +483,14 @@ app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(60), async (_req, r
 
 app.post('/api/wch1925/auth', publicLimiter, async (req, res) => {
   try {
+    const parsedBody = validateRequest(authBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
     const authUser = (req as any).authenticatedUser as AuthenticatedUser | undefined
-    const email = String(req.body?.email || authUser?.email || '').trim().toLowerCase()
-    const role = String(req.body?.role || '').trim()
+    const email = String(parsedBody.data.email || authUser?.email || '').trim().toLowerCase()
+    const role = parsedBody.data.role.trim()
     if (!email) {
       return res.status(400).json({ error: 'missing_email' })
     }
@@ -556,12 +598,12 @@ app.get('/api/wch1925/settings', async (_req, res) => {
 
 app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
   try {
-    const { festivalStatus, registrationsOpen, coordinatorAssignments } = req.body
-
-    const validStatuses = ['pre', 'live', 'post']
-    if (!festivalStatus || !validStatuses.includes(festivalStatus) || typeof registrationsOpen !== 'boolean') {
-      return res.status(400).json({ error: 'festivalStatus must be one of pre|live|post and registrationsOpen must be boolean' })
+    const parsedBody = validateRequest(adminSettingsBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { festivalStatus, registrationsOpen, coordinatorAssignments } = parsedBody.data
 
     const payload = {
       id: 'singleton',
@@ -625,11 +667,12 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
 
 app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
   try {
-    const { house_id, points, reason } = req.body
-
-    if (!house_id || typeof points !== 'number') {
-      return res.status(400).json({ error: 'house_id and points are required' })
+    const parsedBody = validateRequest(leaderboardAdjustBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { house_id, points, reason } = parsedBody.data
 
     const { data: house, error: houseErr } = await supabase.from('houses').select('id').eq('id', house_id).single()
     if (houseErr) throw houseErr
@@ -751,11 +794,12 @@ app.get('/api/wch1925/users', async (req, res) => {
 
 app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
   try {
-    const { name, email, mobile_number, register_number, house, picture_url } = req.body
-
-    if (!name || !email) {
-      return res.status(400).json({ error: 'name and email required' })
+    const parsedBody = validateRequest(userCreateBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
 
     const { data, error } = await supabase
       .from('users')
@@ -809,20 +853,21 @@ app.get('/api/wch1925/announcements', async (_req, res) => {
 
 app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
   try {
-    const { title, body, pinned, starts_at, ends_at } = req.body
-
-    if (!title || !String(title).trim()) {
-      return res.status(400).json({ error: 'title required' })
+    const parsedBody = validateRequest(announcementBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { title, body, pinned, starts_at, ends_at } = parsedBody.data
 
     const { data, error } = await supabase
       .from('announcements')
       .insert({
         title: String(title).trim(),
-        body: body ? String(body).trim() : null,
-        pinned: !!pinned,
-        starts_at: starts_at || null,
-        ends_at: ends_at || null,
+        body,
+        pinned,
+        starts_at,
+        ends_at,
       })
       .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
       .single()
@@ -840,6 +885,22 @@ app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
     try {
       const file = req.file as Express.Multer.File | undefined
       if (!file) return res.status(400).json({ error: 'no_file_uploaded' })
+
+      const allowedMimeTypes = new Set([
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'application/pdf',
+      ])
+
+      if (!allowedMimeTypes.has(file.mimetype)) {
+        return res.status(400).json({ error: 'invalid_file_type' })
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: 'file_too_large' })
+      }
 
       const key = `uploads/${Date.now()}-${file.originalname}`
       const { data: storageData, error: storageErr } = await supabase.storage
@@ -882,20 +943,21 @@ app.get('/api/wch1925/rules', async (_req, res) => {
 
 app.post('/api/wch1925/rules', adminLimiter, async (req, res) => {
   try {
-    const { title, body, pinned, starts_at, ends_at } = req.body
-
-    if (!title || !String(title).trim()) {
-      return res.status(400).json({ error: 'title required' })
+    const parsedBody = validateRequest(ruleBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { title, body, pinned, starts_at, ends_at } = parsedBody.data
 
     const { data, error } = await supabase
       .from('rules_and_regulations')
       .insert({
         title: String(title).trim(),
-        body: body ? String(body).trim() : null,
-        pinned: !!pinned,
-        starts_at: starts_at || null,
-        ends_at: ends_at || null,
+        body,
+        pinned,
+        starts_at,
+        ends_at,
       })
       .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
       .single()
@@ -910,21 +972,27 @@ app.post('/api/wch1925/rules', adminLimiter, async (req, res) => {
 
 app.put('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
-    const { title, body, pinned, starts_at, ends_at } = req.body
-
-    if (!title || !String(title).trim()) {
-      return res.status(400).json({ error: 'title required' })
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
     }
+
+    const parsedBody = validateRequest(ruleBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
+    const { id } = parsedParams.data
+    const { title, body, pinned, starts_at, ends_at } = parsedBody.data
 
     const { data, error } = await supabase
       .from('rules_and_regulations')
       .update({
         title: String(title).trim(),
-        body: body ? String(body).trim() : null,
-        pinned: !!pinned,
-        starts_at: starts_at || null,
-        ends_at: ends_at || null,
+        body,
+        pinned,
+        starts_at,
+        ends_at,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -945,7 +1013,12 @@ app.put('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
 
 app.delete('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { error } = await supabase.from('rules_and_regulations').delete().eq('id', id)
     if (error) throw error
     res.json({ ok: true })
@@ -957,21 +1030,27 @@ app.delete('/api/wch1925/rules/:id', adminLimiter, async (req, res) => {
 
 app.put('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
-    const { title, body, pinned, starts_at, ends_at } = req.body
-
-    if (!title || !String(title).trim()) {
-      return res.status(400).json({ error: 'title required' })
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
     }
+
+    const parsedBody = validateRequest(announcementBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
+    const { id } = parsedParams.data
+    const { title, body, pinned, starts_at, ends_at } = parsedBody.data
 
     const { data, error } = await supabase
       .from('announcements')
       .update({
         title: String(title).trim(),
-        body: body ? String(body).trim() : null,
-        pinned: !!pinned,
-        starts_at: starts_at || null,
-        ends_at: ends_at || null,
+        body,
+        pinned,
+        starts_at,
+        ends_at,
       })
       .eq('id', id)
       .select('id,title,body,pinned,starts_at,ends_at,created_by,created_at,updated_at')
@@ -991,7 +1070,12 @@ app.put('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
 
 app.delete('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { error } = await supabase.from('announcements').delete().eq('id', id)
     if (error) throw error
     res.json({ ok: true })
@@ -1003,7 +1087,12 @@ app.delete('/api/wch1925/announcements/:id', adminLimiter, async (req, res) => {
 
 app.get('/api/wch1925/users/:id', async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
 
     const { data: user, error: userErr } = await supabase
       .from('users')
@@ -1043,7 +1132,12 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
 
 app.delete('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { data: registrations, error: regErr } = await supabase.from('registrations').select('id').eq('user_id', id)
     if (regErr) throw regErr
 
@@ -1067,8 +1161,18 @@ app.delete('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
 
 app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
-    const { name, email, mobile_number, register_number, house, picture_url } = req.body
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const parsedBody = validateRequest(userCreateBodySchema.partial(), req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
+    const { id } = parsedParams.data
+    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
 
     const payload: any = {}
     if (name) payload.name = name
@@ -1101,9 +1205,14 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
 // Registration management list + search/filter
 app.get('/api/wch1925/registrations', async (req, res) => {
   try {
-    const search = String(req.query.search || '').trim().toLowerCase()
-    const eventName = String(req.query.event || '').trim().toLowerCase()
-    const date = String(req.query.date || '').trim()
+    const parsedQuery = validateRequest(registrationsListQuerySchema, req.query)
+    if (!parsedQuery.ok) {
+      return respondValidationError(res, parsedQuery.error)
+    }
+
+    const search = String(parsedQuery.data.search || '').trim().toLowerCase()
+    const eventName = String(parsedQuery.data.event || '').trim().toLowerCase()
+    const date = String(parsedQuery.data.date || '').trim()
 
     const { data, error } = await supabase
       .from('registrations')
@@ -1151,10 +1260,12 @@ app.get('/api/wch1925/registrations', async (req, res) => {
 
 app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
   try {
-    const { email, name, register_number, house, event_id, event_name } = req.body
-    if (!email || !name || (!event_id && !event_name)) {
-      return res.status(400).json({ error: 'email, name and one of event_id/event_name required' })
+    const parsedBody = validateRequest(adminRegistrationCreateBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { email, name, register_number, house, event_id, event_name } = parsedBody.data
 
     let resolvedEventId = event_id as string | undefined
     if (!resolvedEventId && event_name) {
@@ -1228,8 +1339,18 @@ app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
 
 app.put('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
-    const { status, event_id, event_name, email, name, register_number, house } = req.body
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const parsedBody = validateRequest(registrationUpdateBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
+    const { id } = parsedParams.data
+    const { status, event_id, event_name, email, name, register_number, house } = parsedBody.data
 
     const { data: registrationData, error: registrationErr } = await supabase
       .from('registrations')
@@ -1327,7 +1448,12 @@ app.put('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
 
 app.delete('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { error: checkinErr } = await supabase.from('checkins').delete().eq('registration_id', id)
     if (checkinErr) throw checkinErr
 
@@ -1343,9 +1469,14 @@ app.delete('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
 
 app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
   try {
-    const search = String(req.query.search || '')
-    const eventName = String(req.query.event || '')
-    const date = String(req.query.date || '')
+    const parsedQuery = validateRequest(exportQuerySchema, req.query)
+    if (!parsedQuery.ok) {
+      return respondValidationError(res, parsedQuery.error)
+    }
+
+    const search = String(parsedQuery.data.search || '')
+    const eventName = String(parsedQuery.data.event || '')
+    const date = String(parsedQuery.data.date || '')
     // use query params directly (removed internal localhost URL construction)
 
     const { data, error } = await supabase
@@ -1375,9 +1506,9 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       checked_in: checkedInSet.has(row.id),
     }))
 
-    const searchLower = String(req.query.search || '').toLowerCase()
-    const eventLower = String(req.query.event || '').toLowerCase()
-    const dateValue = String(req.query.date || '')
+    const searchLower = String(parsedQuery.data.search || '').toLowerCase()
+    const eventLower = String(parsedQuery.data.event || '').toLowerCase()
+    const dateValue = String(parsedQuery.data.date || '')
 
     if (eventLower) rows = rows.filter((row) => row.event_name.toLowerCase().includes(eventLower))
     if (dateValue) rows = rows.filter((row) => row.event_date === dateValue)
@@ -1435,6 +1566,11 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
 // Admin events CRUD
 app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
   try {
+    const parsedBody = validateRequest(eventCreateBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
     const {
       name,
       description,
@@ -1446,11 +1582,7 @@ app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
       venue,
       capacity,
       is_live_tomorrow,
-    } = req.body
-
-    if (!name || !category || !date || !time_slot || !venue) {
-      return res.status(400).json({ error: 'name, category, date, time_slot and venue are required' })
-    }
+    } = parsedBody.data
 
     const { data, error } = await supabase
       .from('events')
@@ -1480,7 +1612,21 @@ app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
 
 app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const parsedBody = validateRequest(eventUpdateBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
+    }
+
+    if (Object.keys(parsedBody.data).length === 0) {
+      return res.status(400).json({ error: 'at_least_one_field_required' })
+    }
+
+    const { id } = parsedParams.data
     const {
       name,
       description,
@@ -1496,7 +1642,7 @@ app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
       is_floated,
       is_live_tomorrow,
       status,
-    } = req.body
+    } = parsedBody.data
 
     const payload: any = {
       name,
@@ -1528,7 +1674,12 @@ app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
 
 app.delete('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { error } = await supabase.from('events').delete().eq('id', id)
     if (error) throw error
     res.json({ ok: true })
@@ -1540,7 +1691,12 @@ app.delete('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
 
 app.post('/api/wch1925/events/:id/close-registration', adminLimiter, async (req, res) => {
   try {
-    const { id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { id } = parsedParams.data
     const { data, error } = await supabase
       .from('events')
       .update({ registration_open: false })
@@ -1558,10 +1714,12 @@ app.post('/api/wch1925/events/:id/close-registration', adminLimiter, async (req,
 // Attendance/check-in
 app.post('/api/wch1925/checkin', adminLimiter, async (req, res) => {
   try {
-    const { registration_id, device_info } = req.body
-    if (!registration_id) {
-      return res.status(400).json({ error: 'registration_id required' })
+    const parsedBody = validateRequest(checkinBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { registration_id, device_info } = parsedBody.data
 
     const { data: existingCheckin, error: existingErr } = await supabase
       .from('checkins')
@@ -1590,7 +1748,12 @@ app.post('/api/wch1925/checkin', adminLimiter, async (req, res) => {
 
 app.delete('/api/wch1925/checkin/:registration_id', adminLimiter, async (req, res) => {
   try {
-    const { registration_id } = req.params
+    const parsedParams = validateRequest(paramsSchemas.registrationId, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const { registration_id } = parsedParams.data
     const { error } = await supabase.from('checkins').delete().eq('registration_id', registration_id)
     if (error) throw error
     res.json({ ok: true })
@@ -1642,12 +1805,13 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
 // Upsert user profile
 app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res) => {
   try {
-    const { email, name, mobile_number, register_number, house, picture_url } = req.body
-    const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
-
-    if (!email || !name) {
-      return res.status(400).json({ error: 'email and name required' })
+    const parsedBody = validateRequest(userUpsertBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { email, name, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
 
     const { data, error } = await supabase
       .from('users')
@@ -1676,10 +1840,12 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
 // Create registration: upsert user then insert registration
 app.post('/api/registrations', registrationLimiter, requireSignedInUser, requireTurnstile, async (req, res) => {
   try {
-    const { email, name, register_number, house, event_id, event_name } = req.body
-    if (!email || !name || (!event_id && !event_name)) {
-      return res.status(400).json({ error: 'email, name and one of event_id/event_name required' })
+    const parsedBody = validateRequest(publicRegistrationBodySchema, req.body)
+    if (!parsedBody.ok) {
+      return respondValidationError(res, parsedBody.error)
     }
+
+    const { email, name, register_number, house, event_id, event_name } = parsedBody.data
 
     let resolvedEventId = event_id as string | undefined
 
@@ -1729,7 +1895,12 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
 // Get user's registrations
 app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, cacheMiddleware(60), async (req, res) => {
   try {
-    const email = (req.params.email || '').toLowerCase()
+    const parsedParams = validateRequest(paramsSchemas.email, req.params)
+    if (!parsedParams.ok) {
+      return respondValidationError(res, parsedParams.error)
+    }
+
+    const email = parsedParams.data.email.toLowerCase()
     const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)
     if (userErr) throw userErr
     const user = Array.isArray(userData) ? userData[0] : userData
@@ -1789,15 +1960,33 @@ const bootstrap = async () => {
 
 bootstrap()
 
+app.use((_req, res) => {
+  res.status(404).json({ error: 'not_found' })
+})
+
 Sentry.setupExpressErrorHandler(app)
 
 app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  Sentry.captureException(err)
-  console.error(err)
+  const error = err as Error & { statusCode?: number; code?: string; type?: string }
+  const statusCode = error.statusCode || (error.type === 'entity.too.large' ? 413 : 500)
+  const code = error.code || (error.type === 'entity.too.large' ? 'payload_too_large' : 'internal_server_error')
+
+  if (statusCode >= 500) {
+    Sentry.captureException(err)
+  }
+
+  console.error({
+    requestId: (req as any).requestId,
+    method: req.method,
+    path: req.path,
+    statusCode,
+    code,
+    message: error?.message,
+  })
 
   if (res.headersSent) {
     return next(err)
   }
 
-  res.status(500).json({ error: 'internal_server_error' })
+  res.status(statusCode).json({ error: code, requestId: (req as any).requestId })
 })
