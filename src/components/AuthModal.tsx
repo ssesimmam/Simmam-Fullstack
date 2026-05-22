@@ -1,3 +1,4 @@
+import { Turnstile } from '@marsidev/react-turnstile'
 import { useState, useEffect } from 'react'
 import { Check, LogIn, Shield, X } from 'lucide-react'
 
@@ -38,6 +39,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>()
+  const [turnstileError, setTurnstileError] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -134,21 +137,29 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
     }
 
     setFormError('')
+    if (!turnstileToken) {
+      setFormError('Please complete the captcha before registering.')
+      return
+    }
     setSubmitting(true)
 
     await new Promise((resolve) => setTimeout(resolve, 600))
 
     try {
-      const result = await registerForEvent(user.email, {
-      eventId: event.id,
-      backendEventId: event.backendEventId,
-      eventName: event.name,
-      date: event.date ?? '',
-      timeSlot: event.timeSlot ?? '',
-      endTime: event.endTime ?? '',
-      venue: event.venue ?? '',
-      category: event.category,
-      })
+      const result = await registerForEvent(
+        user.email,
+        {
+          eventId: event.id,
+          backendEventId: event.backendEventId,
+          eventName: event.name,
+          date: event.date ?? '',
+          timeSlot: event.timeSlot ?? '',
+          endTime: event.endTime ?? '',
+          venue: event.venue ?? '',
+          category: event.category,
+        },
+        turnstileToken,
+      )
 
       setSubmitting(false)
 
@@ -257,6 +268,24 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                   {alreadyReg && (
                     <div className="mb-5 rounded-xl border border-green-500/25 bg-green-500/10 p-3 text-sm font-medium text-green-400">You are already registered for this event.</div>
                   )}
+
+                  <div className="mb-6">
+                    <Turnstile
+                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      onSuccess={(token) => {
+                        setTurnstileError('')
+                        setTurnstileToken(token)
+                      }}
+                      onExpire={() => setTurnstileToken(undefined)}
+                      onError={() => {
+                        setTurnstileToken(undefined)
+                        setTurnstileError('Captcha verification failed. Please refresh and try again.')
+                      }}
+                    />
+                    {turnstileError && (
+                      <p className="mt-3 text-xs text-red-400">{turnstileError}</p>
+                    )}
+                  </div>
 
                   {formError && (
                     <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>

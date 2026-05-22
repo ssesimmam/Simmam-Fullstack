@@ -1810,6 +1810,8 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
 // Create registration: upsert user then insert registration
 app.post('/api/registrations', registrationLimiter, requireSignedInUser, requireTurnstile, async (req, res) => {
   try {
+    console.log('REQUEST BODY:', req.body);
+    console.log('TURNSTILE TOKEN:', req.body?.turnstile_token);
     const parsedBody = validateRequest(publicRegistrationBodySchema, req.body)
     if (!parsedBody.ok) {
       return respondValidationError(res, parsedBody.error)

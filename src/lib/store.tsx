@@ -1,8 +1,4 @@
-netstat -ano | Select-String ":4000"
-# note the PID from the output, then:
-taskkill /PID <PID> /F
-# or use kill-port:
-npx kill-port 4000import { allEvents as initialEvents, type Event } from './eventsData';
+import { allEvents as initialEvents, type Event } from './eventsData';
 import { houses as initialHouses, type House } from './houses';
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { fetchEvents, fetchHouses, fetchLeaderboard } from './apiClient';
@@ -177,7 +173,7 @@ const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fe
       const rightOrder = orderByName.get(right.name.toLowerCase()) ?? 1000
       return leftOrder - rightOrder || left.name.localeCompare(right.name)
     })
-    .map((remoteEvent, index) => mapRemoteEventToAdminEvent(remoteEvent, fallbackByName.get(remoteEvent.name.toLowerCase()), index))
+    .map((remoteEvent, index) => mapRemoteEventToAdminEvent(remoteEvent, undefined, index))
 };
 
 // Participants are populated from the admin API; remove built-in mock generation.
@@ -453,3 +449,5 @@ export function DataProvider({ children }: { children: ReactNode }) {
 export function useData() {
   return useContext(DataContext);
 }
+
+

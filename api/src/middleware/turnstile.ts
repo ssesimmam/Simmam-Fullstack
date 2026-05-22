@@ -14,12 +14,15 @@ export async function verifyTurnstileToken(token: string, remoteIp?: string) {
     method: 'POST',
     body: params,
   });
-  const data = (await resp.json()) as { success?: boolean };
+  const data = (await resp.json()) as { success?: boolean } & Record<string, unknown>;
+  console.log('TURNSTILE VERIFY RESPONSE:', data);
   return data.success === true;
 }
 
 export async function requireTurnstile(req: Request, res: Response, next: NextFunction) {
   try {
+    console.log('REQUEST BODY:', req.body);
+    console.log('TURNSTILE TOKEN:', (req.body && req.body.turnstile_token) || req.headers['x-turnstile-token']);
     const token = (req.body && req.body.turnstile_token) || req.headers['x-turnstile-token'];
     const ip = req.headers['cf-connecting-ip'] as string || req.ip;
     if (!token) return res.status(400).json({ error: 'missing_turnstile' });

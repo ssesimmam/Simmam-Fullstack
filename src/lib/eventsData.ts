@@ -20,6 +20,11 @@ export type Event = {
   mainCategory: "Tech" | "Non-Tech" | "Sports" | "Cultural Fest";
   icon: LucideIcon;
   rules: string[];
+
+time?: string;
+date?: string;
+description?: string;
+order?: number;
 };
 
 export const allEvents: Event[] = [

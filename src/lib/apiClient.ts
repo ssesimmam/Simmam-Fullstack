@@ -62,6 +62,7 @@ export type CreateRegistrationPayload = {
   house: string
   event_id?: string
   event_name?: string
+  turnstile_token?: string
 }
 
 import supabase from '@/lib/supabase'

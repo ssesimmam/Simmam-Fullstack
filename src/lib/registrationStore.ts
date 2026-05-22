@@ -116,6 +116,7 @@ export function isRegisteredForEvent(email: string, eventId: string | undefined,
 export async function registerForEvent(
   email: string,
   event: Omit<Registration, 'registeredAt' | 'ticketCode'> & { backendEventId?: string },
+  turnstileToken?: string,
 ): Promise<{ success: boolean; alreadyRegistered: boolean }> {
   const registrations = getUserRegistrations(email)
 
@@ -141,6 +142,7 @@ export async function registerForEvent(
     house: user.house,
     event_id: event.backendEventId,
     event_name: event.eventName,
+    turnstile_token: turnstileToken,
   })
 
   const ticketCode = response.ticket_code || generateTicketCode(email, event.eventId)

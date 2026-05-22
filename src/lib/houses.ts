@@ -1,4 +1,5 @@
 export type House = {
+  id?: string;
   name: string;
   tagline: string;
   short: string;
