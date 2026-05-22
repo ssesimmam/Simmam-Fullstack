@@ -7,8 +7,11 @@ begin;
 -- -----------------------------------------------------------------------------
 -- 1) Extensions
 -- -----------------------------------------------------------------------------
-create extension if not exists pgcrypto;
-create extension if not exists citext;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+create extension if not exists citext with schema extensions;
+
+set search_path = public, extensions, pg_catalog;
 
 -- -----------------------------------------------------------------------------
 -- 2) Domain/Type Setup
@@ -194,6 +197,7 @@ create table if not exists media (
 -- 4) Indexes
 -- -----------------------------------------------------------------------------
 create index if not exists events_date_idx on events(date);
+create index if not exists events_date_time_slot_idx on events(date, time_slot);
 create index if not exists events_main_category_idx on events(main_category);
 create index if not exists events_registration_open_idx on events(registration_open);
 
@@ -213,6 +217,7 @@ create index if not exists points_history_house_idx on points_history(house_id);
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
+set search_path = pg_catalog, public, extensions
 as $$
 begin
   new.updated_at := now();
@@ -303,7 +308,7 @@ returns uuid
 language sql
 stable
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
   select u.id
   from users u
@@ -316,7 +321,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
   select exists(select 1 from admins a where a.user_id = p_user_id);
 $$;
@@ -332,7 +337,7 @@ create or replace function create_registration(
 returns table(registration_id uuid, ticket_code text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_user_id uuid;
@@ -410,7 +415,7 @@ create or replace function admin_checkin(
 returns table(checkin_id uuid, checked_in_at timestamptz)
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_admin_id uuid;
@@ -447,7 +452,7 @@ create or replace function award_house_points(
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_admin_id uuid;

@@ -1,7 +1,11 @@
-import { allEvents as initialEvents, type Event } from './eventsData';
+netstat -ano | Select-String ":4000"
+# note the PID from the output, then:
+taskkill /PID <PID> /F
+# or use kill-port:
+npx kill-port 4000import { allEvents as initialEvents, type Event } from './eventsData';
 import { houses as initialHouses, type House } from './houses';
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { fetchLeaderboard } from './apiClient';
+import { fetchEvents, fetchHouses, fetchLeaderboard } from './apiClient';
 import { fetchAdminEvents, fetchAdminHouses, fetchAdminRegistrations, fetchAdminSettings, type AdminSettings } from './adminApi';
 
 // Extend Event type for admin features
@@ -15,7 +19,6 @@ export interface EventResult {
 
 export interface AdminEvent extends Event {
   id: string;
-  date?: string;
   venue?: string;
   time?: string;
   is_floated: boolean;
@@ -146,7 +149,9 @@ export const mapRemoteEventToAdminEvent = (
   prizeInfo: remoteEvent.prize_info || fallback?.prizeInfo || 'Trophy + Certificate',
   result: fallback?.result,
   icon: fallback?.icon || initialEvents[0].icon,
-  rules: fallback?.rules || initialEvents[0].rules,
+  rules: Array.isArray((remoteEvent as any).rules) && (remoteEvent as any).rules.length > 0
+    ? (remoteEvent as any).rules
+    : fallback?.rules || initialEvents[0].rules,
   description: remoteEvent.description || fallback?.description || initialEvents[0].description,
   order: fallback?.order ?? order + 1,
 })
@@ -174,28 +179,6 @@ const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fe
     })
     .map((remoteEvent, index) => mapRemoteEventToAdminEvent(remoteEvent, fallbackByName.get(remoteEvent.name.toLowerCase()), index))
 };
-
-const createStaticAdminEvents = (): AdminEvent[] => {
-  return initialEvents.map((event, index) => ({
-    id: `static-${index}-${event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-    name: event.name,
-    category: event.category,
-    mainCategory: event.mainCategory,
-    icon: event.icon,
-    rules: event.rules,
-    date: '',
-    venue: 'TBD',
-    time: 'TBD',
-    is_floated: true,
-    is_live_tomorrow: false,
-    registration_open: true,
-    checkin_enabled: false,
-    status: 'upcoming',
-    participantCount: 0,
-    prizeInfo: 'Trophy + Certificate',
-    result: undefined,
-  }))
-}
 
 // Participants are populated from the admin API; remove built-in mock generation.
 
@@ -258,25 +241,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
-    const fallbackEvents = createStaticAdminEvents()
-    const eventsJob = fetchAdminEvents()
+    const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+
+    const eventsJob = (isAdminRoute ? fetchAdminEvents() : fetchEvents())
       .then((remoteEvents) => {
         if (remoteEvents.length > 0) {
-          const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents)
+          const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents as Awaited<ReturnType<typeof fetchAdminEvents>>)
           setEvents(mappedEvents)
           writeCachedValue('simmam_events', mappedEvents)
-        } else {
-          setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
-          writeCachedValue('simmam_events', fallbackEvents)
         }
       })
-      .catch((err) => {
-        console.error('Failed to refresh events from API:', err)
-        setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
-        writeCachedValue('simmam_events', fallbackEvents)
-      })
+      .catch((err) => console.error('Failed to refresh events from API:', err))
 
-    const housesJob = Promise.all([fetchAdminHouses(), fetchLeaderboard()])
+    const housesJob = Promise.all([isAdminRoute ? fetchAdminHouses() : fetchHouses(), fetchLeaderboard()])
       .then(([remoteHouses, remoteLeaderboard]) => {
         if (remoteHouses.length > 0) {
           const leaderboardPointsByName = new Map(
@@ -300,7 +277,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       })
       .catch((err) => console.error('Failed to refresh houses from API:', err))
 
-    const registrationsJob = fetchAdminRegistrations()
+    const registrationsJob = (isAdminRoute ? fetchAdminRegistrations() : Promise.resolve([]))
       .then((remoteRegistrations) => {
         if (Array.isArray(remoteRegistrations)) {
           const mappedParticipants = remoteRegistrations.map((row) => ({
@@ -320,7 +297,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       })
       .catch((err) => console.error('Failed to refresh registrations from API:', err))
 
-    const settingsJob = fetchAdminSettings()
+    const settingsJob = (isAdminRoute
+      ? fetchAdminSettings()
+      : Promise.resolve({
+          festivalStatus: 'pre',
+          registrationsOpen: true,
+          coordinatorAssignments: {},
+        } as AdminSettings)
+    )
       .then((remoteSettings) => {
         if (remoteSettings) {
           setSettings(remoteSettings)

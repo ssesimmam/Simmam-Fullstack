@@ -22,7 +22,7 @@ create or replace function create_registration_safe(
 returns table(registration_id uuid, ticket_code text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_capacity int;
