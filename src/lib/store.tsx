@@ -1,7 +1,7 @@
 import { allEvents as initialEvents, type Event } from "./eventsData";
 import { houses as initialHouses, type House } from "./houses";
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { fetchEvents, fetchHouses, fetchLeaderboard } from "./apiClient";
+import { fetchEvents, fetchHouses, fetchLeaderboard, isMaintenanceError, type ApiError } from "./apiClient";
 import {
   fetchAdminEvents,
   fetchAdminHouses,
@@ -9,6 +9,7 @@ import {
   fetchAdminSettings,
   type AdminSettings,
 } from "./adminApi";
+import ServerMaintenance from "@/components/ServerMaintenance";
 
 // Extend Event type for admin features
 export interface EventResult {
@@ -76,7 +77,9 @@ interface DataContextType {
   isCheckInAllowed: (eventName: string) => boolean;
   settings: AdminSettings;
   updateSettings: (newSettings: AdminSettings) => void;
-  refreshData: () => Promise<void>; // New refresh function
+  refreshData: () => Promise<void>;
+  maintenanceError: ApiError | null;
+  clearMaintenanceError: () => void;
 }
 
 const noopAsync = async () => undefined;
@@ -106,6 +109,8 @@ const defaultDataContext: DataContextType = {
   },
   updateSettings: () => undefined,
   refreshData: noopAsync,
+  maintenanceError: null,
+  clearMaintenanceError: () => undefined,
 };
 
 const DataContext = createContext<DataContextType>(defaultDataContext);
@@ -223,6 +228,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       },
   );
   const [pointsHistory, setPointsHistory] = useState<PointTransaction[]>([]);
+  const [maintenanceError, setMaintenanceError] = useState<ApiError | null>(null);
+
+  const clearMaintenanceError = useCallback(() => setMaintenanceError(null), []);
 
   useEffect(() => {
     const storedEvents = localStorage.getItem("simmam_events");
@@ -278,7 +286,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           writeCachedValue("simmam_events", mappedEvents);
         }
       })
-      .catch((err) => console.error("Failed to refresh events from API:", err));
+      .catch((err) => {
+        if (isMaintenanceError(err)) setMaintenanceError(err);
+        else console.error("Failed to refresh events from API:", err);
+      });
 
     const housesJob = Promise.all([
       isAdminRoute ? fetchAdminHouses() : fetchHouses(),
@@ -312,7 +323,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           writeCachedValue("simmam_houses", mappedHouses);
         }
       })
-      .catch((err) => console.error("Failed to refresh houses from API:", err));
+      .catch((err) => {
+        if (isMaintenanceError(err)) setMaintenanceError(err);
+        else console.error("Failed to refresh houses from API:", err);
+      });
 
     const registrationsJob = (isAdminRoute ? fetchAdminRegistrations() : Promise.resolve([]))
       .then((remoteRegistrations) => {
@@ -333,7 +347,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           writeCachedValue("simmam_participants", mappedParticipants);
         }
       })
-      .catch((err) => console.error("Failed to refresh registrations from API:", err));
+      .catch((err) => {
+        if (isMaintenanceError(err)) setMaintenanceError(err);
+        else console.error("Failed to refresh registrations from API:", err);
+      });
 
     const settingsJob = (
       isAdminRoute
@@ -350,7 +367,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           writeCachedValue("simmam_settings", remoteSettings);
         }
       })
-      .catch((err) => console.error("Failed to refresh settings from API:", err));
+      .catch((err) => {
+        if (isMaintenanceError(err)) setMaintenanceError(err);
+        else console.error("Failed to refresh settings from API:", err);
+      });
 
     await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob]);
   }, []);
@@ -473,6 +493,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return event ? event.checkin_enabled : false;
   };
 
+  const handleMaintenanceRetry = useCallback(() => {
+    setMaintenanceError(null);
+    void refreshData();
+  }, [refreshData]);
+
   return (
     <DataContext.Provider
       value={{
@@ -493,9 +518,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         settings,
         updateSettings,
         refreshData,
+        maintenanceError,
+        clearMaintenanceError,
       }}
     >
       {children}
+      {maintenanceError && (
+        <ServerMaintenance
+          statusCode={maintenanceError.status}
+          onRetry={handleMaintenanceRetry}
+        />
+      )}
     </DataContext.Provider>
   );
 }
