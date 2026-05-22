@@ -1,6 +1,6 @@
 import { allEvents as initialEvents, type Event } from './eventsData';
 import { houses as initialHouses, type House } from './houses';
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { fetchLeaderboard } from './apiClient';
 import { fetchAdminEvents, fetchAdminHouses, fetchAdminRegistrations, fetchAdminSettings, type AdminSettings } from './adminApi';
 
@@ -18,6 +18,8 @@ export interface AdminEvent extends Event {
   date?: string;
   venue?: string;
   time?: string;
+  description?: string;
+  order?: number;
   is_floated: boolean;
   is_live_tomorrow: boolean;
   registration_open: boolean;
@@ -100,12 +102,24 @@ const defaultDataContext: DataContextType = {
 
 const DataContext = createContext<DataContextType>(defaultDataContext);
 
+type AdminEventFallback = Partial<AdminEvent> & {
+  time?: string
+  description?: string
+  order?: number
+  mainCategory?: string
+  category?: string
+  icon?: unknown
+  rules?: unknown
+}
+
 const mapEventStatus = (status?: string): AdminEvent['status'] => {
   if (status === 'live' || status === 'ongoing') return 'ongoing';
   if (status === 'completed') return 'completed';
   if (status === 'cancelled') return 'cancelled';
   return 'upcoming';
 };
+
+const defaultEventFallback = initialEvents[0] as AdminEventFallback
 
 const readCachedValue = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null
@@ -126,7 +140,7 @@ const writeCachedValue = <T,>(key: string, value: T): void => {
 
 export const mapRemoteEventToAdminEvent = (
   remoteEvent: Awaited<ReturnType<typeof fetchAdminEvents>>[number],
-  fallback?: AdminEvent,
+  fallback?: AdminEventFallback,
   order = 0,
 ): AdminEvent => ({
   ...(fallback || initialEvents[0]),
@@ -135,8 +149,8 @@ export const mapRemoteEventToAdminEvent = (
   category: remoteEvent.category || fallback?.category || initialEvents[0].category,
   mainCategory: (remoteEvent.main_category as any) || fallback?.mainCategory || initialEvents[0].mainCategory,
   venue: remoteEvent.venue || fallback?.venue || (initialEvents[0] as any).venue,
-  time: remoteEvent.time_slot || fallback?.time || initialEvents[0].time,
-  date: remoteEvent.date || (fallback as any)?.date || (initialEvents[0] as any).date,
+  time: remoteEvent.time_slot || fallback?.time || defaultEventFallback.time || 'TBD',
+  date: remoteEvent.date || fallback?.date || defaultEventFallback.date,
   is_floated: remoteEvent.is_floated ?? fallback?.is_floated ?? true,
   is_live_tomorrow: remoteEvent.is_live_tomorrow ?? fallback?.is_live_tomorrow ?? false,
   registration_open: remoteEvent.registration_open ?? fallback?.registration_open ?? true,
@@ -145,9 +159,9 @@ export const mapRemoteEventToAdminEvent = (
   participantCount: remoteEvent.capacity ?? fallback?.participantCount ?? 0,
   prizeInfo: remoteEvent.prize_info || fallback?.prizeInfo || 'Trophy + Certificate',
   result: fallback?.result,
-  icon: fallback?.icon || initialEvents[0].icon,
-  rules: fallback?.rules || initialEvents[0].rules,
-  description: remoteEvent.description || fallback?.description || initialEvents[0].description,
+  icon: fallback?.icon || defaultEventFallback.icon || initialEvents[0].icon,
+  rules: fallback?.rules || defaultEventFallback.rules || initialEvents[0].rules,
+  description: remoteEvent.description ?? fallback?.description ?? defaultEventFallback.description ?? '',
   order: fallback?.order ?? order + 1,
 })
 
@@ -164,7 +178,7 @@ export async function resolvePersistedEventId(event: AdminEvent): Promise<string
 
 const mapRemoteEventsToAdminEvents = (remoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>>): AdminEvent[] => {
   const orderByName = new Map(initialEvents.map((event, index) => [event.name.toLowerCase(), index]))
-  const fallbackByName = new Map(initialEvents.map((event) => [event.name.toLowerCase(), event]))
+  const fallbackByName = new Map<string, AdminEventFallback>(initialEvents.map((event) => [event.name.toLowerCase(), event]))
 
   return [...remoteEvents]
     .sort((left, right) => {
@@ -217,6 +231,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
   const [pointsHistory, setPointsHistory] = useState<PointTransaction[]>([]);
 
+  // Guard against concurrent refresh calls (in-flight deduplication)
+  const refreshInProgressRef = useRef(false);
+  const pendingRefreshRef = useRef<Promise<void> | null>(null);
+
   useEffect(() => {
     const storedEvents = localStorage.getItem('simmam_events');
     const storedHouses = localStorage.getItem('simmam_houses');
@@ -258,85 +276,109 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
-    const fallbackEvents = createStaticAdminEvents()
-    const eventsJob = fetchAdminEvents()
-      .then((remoteEvents) => {
-        if (remoteEvents.length > 0) {
-          const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents)
-          setEvents(mappedEvents)
-          writeCachedValue('simmam_events', mappedEvents)
-        } else {
-          setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
-          writeCachedValue('simmam_events', fallbackEvents)
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to refresh events from API:', err)
-        setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
-        writeCachedValue('simmam_events', fallbackEvents)
-      })
+    // Prevent concurrent refreshes (deduplication)
+    if (refreshInProgressRef.current) {
+      // Wait for the pending refresh to complete
+      if (pendingRefreshRef.current) {
+        return pendingRefreshRef.current
+      }
+      return
+    }
 
-    const housesJob = Promise.all([fetchAdminHouses(), fetchLeaderboard()])
-      .then(([remoteHouses, remoteLeaderboard]) => {
-        if (remoteHouses.length > 0) {
-          const leaderboardPointsByName = new Map(
-            remoteLeaderboard.map((item) => [item.house_name.toLowerCase(), Number(item.total_points ?? item.points ?? 0)]),
-          )
+    refreshInProgressRef.current = true
 
-          const mappedHouses = initialHouses.map((house) => {
-            const remoteHouse = remoteHouses.find((candidate) => candidate.name.toLowerCase() === house.name.toLowerCase())
-            const points2026 = leaderboardPointsByName.get(house.name.toLowerCase()) ?? Number(remoteHouse?.points ?? house.points2026 ?? 0)
-
-            return {
-              ...house,
-              accent: remoteHouse?.accent || house.accent,
-              points2026,
+    try {
+      const refreshPromise = (async () => {
+        const fallbackEvents = createStaticAdminEvents()
+        const eventsJob = fetchAdminEvents()
+          .then((remoteEvents) => {
+            if (remoteEvents.length > 0) {
+              const mappedEvents = mapRemoteEventsToAdminEvents(remoteEvents)
+              setEvents(mappedEvents)
+              writeCachedValue('simmam_events', mappedEvents)
+            } else {
+              setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
+              writeCachedValue('simmam_events', fallbackEvents)
             }
           })
+          .catch((err) => {
+            console.error('Failed to refresh events from API:', err)
+            setEvents((currentEvents) => currentEvents.length > 0 ? currentEvents : fallbackEvents)
+            writeCachedValue('simmam_events', fallbackEvents)
+          })
 
-          setHouses(mappedHouses)
-          writeCachedValue('simmam_houses', mappedHouses)
-        }
-      })
-      .catch((err) => console.error('Failed to refresh houses from API:', err))
+        const housesJob = Promise.all([fetchAdminHouses(), fetchLeaderboard()])
+          .then(([remoteHouses, remoteLeaderboard]) => {
+            if (remoteHouses.length > 0) {
+              const leaderboardPointsByName = new Map(
+                remoteLeaderboard.map((item) => [item.house_name.toLowerCase(), Number(item.total_points ?? item.points ?? 0)]),
+              )
 
-    const registrationsJob = fetchAdminRegistrations()
-      .then((remoteRegistrations) => {
-        if (Array.isArray(remoteRegistrations)) {
-          const mappedParticipants = remoteRegistrations.map((row) => ({
-            id: row.registration_id,
-            name: row.participant_name,
-            regNo: row.reg_no || '',
-            email: row.email,
-            house: row.house || 'Unknown',
-            event: row.event_name,
-            status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
-            checkIn: !!row.checked_in,
-            certificate: false,
-          }))
-          setParticipants(mappedParticipants)
-          writeCachedValue('simmam_participants', mappedParticipants)
-        }
-      })
-      .catch((err) => console.error('Failed to refresh registrations from API:', err))
+              const mappedHouses = initialHouses.map((house) => {
+                const remoteHouse = remoteHouses.find((candidate) => candidate.name.toLowerCase() === house.name.toLowerCase())
+                const points2026 = leaderboardPointsByName.get(house.name.toLowerCase()) ?? Number(remoteHouse?.points ?? house.points2026 ?? 0)
 
-    const settingsJob = fetchAdminSettings()
-      .then((remoteSettings) => {
-        if (remoteSettings) {
-          setSettings(remoteSettings)
-          writeCachedValue('simmam_settings', remoteSettings)
-        }
-      })
-      .catch((err) => console.error('Failed to refresh settings from API:', err))
+                return {
+                  ...house,
+                  accent: remoteHouse?.accent || house.accent,
+                  points2026,
+                }
+              })
 
-    await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob])
+              setHouses(mappedHouses)
+              writeCachedValue('simmam_houses', mappedHouses)
+            }
+          })
+          .catch((err) => console.error('Failed to refresh houses from API:', err))
+
+        const registrationsJob = fetchAdminRegistrations()
+          .then((remoteRegistrations) => {
+            if (Array.isArray(remoteRegistrations)) {
+              const mappedParticipants = remoteRegistrations.map((row) => ({
+                id: row.registration_id,
+                name: row.participant_name,
+                regNo: row.reg_no || '',
+                email: row.email,
+                house: row.house || 'Unknown',
+                event: row.event_name,
+                status: (row.registration_status as 'confirmed' | 'pending' | 'waitlisted') || 'confirmed',
+                checkIn: !!row.checked_in,
+                certificate: false,
+              }))
+              setParticipants(mappedParticipants)
+              writeCachedValue('simmam_participants', mappedParticipants)
+            }
+          })
+          .catch((err) => console.error('Failed to refresh registrations from API:', err))
+
+        const settingsJob = fetchAdminSettings()
+          .then((remoteSettings) => {
+            if (remoteSettings) {
+              setSettings(remoteSettings)
+              writeCachedValue('simmam_settings', remoteSettings)
+            }
+          })
+          .catch((err) => console.error('Failed to refresh settings from API:', err))
+
+        await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob])
+      })()
+
+      pendingRefreshRef.current = refreshPromise
+      await refreshPromise
+    } finally {
+      refreshInProgressRef.current = false
+      pendingRefreshRef.current = null
+    }
   }, []);
 
   useEffect(() => {
     void refreshData();
+    // Polling interval: 30 seconds instead of 15s for production stability
+    // Admins poll every 30s = 120 requests/hour per admin (vs. 240 before)
+    // Cache TTL is 90s, so cache hits = 3 per polling cycle
     const refreshInterval = window.setInterval(() => {
       void refreshData();
-    }, 15000);
+    }, 30000);
 
     const handleVisibilityRefresh = () => {
       if (document.visibilityState === 'visible') {

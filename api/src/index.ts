@@ -11,11 +11,12 @@ import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
 import { requireTurnstile } from './middleware/turnstile'
-import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
-import { cacheMiddleware } from './middleware/cacheMiddleware'
+import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts, getRateLimiterHealth, closeRateLimiterClients } from './middleware/rateLimiter'
+import { cacheMiddleware, getCacheHealth, closeCacheClients } from './middleware/cacheMiddleware'
 import {
   adminRegistrationCreateBodySchema,
   adminSettingsBodySchema,
+  adminUsersQuerySchema,
   announcementBodySchema,
   authBodySchema,
   checkinBodySchema,
@@ -41,10 +42,35 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
+const REDIS_URL = process.env.REDIS_URL || process.env.REDIS_TLS_URL || ''
+const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || ''
+const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || ''
+const CACHE_PREFER_REDIS = process.env.CACHE_PREFER_REDIS === 'true'
 const IS_PROD = process.env.NODE_ENV === 'production'
+const REQUEST_TIMEOUT_MS = 15_000
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE in env')
+  process.exit(1)
+}
+
+if (IS_PROD && !FRONTEND_URL) {
+  console.error('Missing FRONTEND_URL in production env')
+  process.exit(1)
+}
+
+if (IS_PROD && CACHE_PREFER_REDIS && !REDIS_URL && !UPSTASH_REDIS_REST_URL) {
+  console.error('CACHE_PREFER_REDIS=true in production requires REDIS_URL or UPSTASH_REDIS_REST_URL')
+  process.exit(1)
+}
+
+if (IS_PROD && UPSTASH_REDIS_REST_URL && !UPSTASH_REDIS_REST_TOKEN) {
+  console.error('UPSTASH_REDIS_REST_URL is set but UPSTASH_REDIS_REST_TOKEN is missing')
+  process.exit(1)
+}
+
+if (IS_PROD && UPSTASH_REDIS_REST_TOKEN && !UPSTASH_REDIS_REST_URL) {
+  console.error('UPSTASH_REDIS_REST_TOKEN is set but UPSTASH_REDIS_REST_URL is missing')
   process.exit(1)
 }
 
@@ -98,6 +124,23 @@ app.use((req, res, next) => {
   res.setHeader('x-request-id', String((req as any).requestId))
   next()
 })
+app.use((req, res, next) => {
+  const timeout = setTimeout(() => {
+    if (res.writableFinished) return
+    const requestId = String((req as any).requestId || '')
+    console.error({ event: 'request_timeout', requestId, method: req.method, path: req.path })
+    if (!res.headersSent) {
+      res.status(503).json({ error: 'request_timeout', requestId })
+    }
+    req.socket?.destroy()
+  }, REQUEST_TIMEOUT_MS)
+
+  const cleanup = () => clearTimeout(timeout)
+  res.on('finish', cleanup)
+  res.on('close', cleanup)
+  res.on('error', cleanup)
+  next()
+})
 // Compression to reduce response sizes (gzip/deflate)
 app.use(compression({ threshold: 1024 }))
 
@@ -107,6 +150,28 @@ app.use(
     skip: (req) => req.path === '/api/health',
   }),
 )
+
+// Request timing + slow request logging
+const SLOW_REQUEST_MS = Number(process.env.SLOW_REQUEST_MS || 1000)
+let totalRequests = 0
+let slowRequests = 0
+app.use((req, res, next) => {
+  totalRequests++
+  const start = process.hrtime.bigint()
+  res.on('finish', () => {
+    try {
+      const durationMs = Number((process.hrtime.bigint() - start) / BigInt(1_000_000))
+      res.setHeader('X-Response-Time-ms', String(durationMs))
+      if (durationMs > SLOW_REQUEST_MS) {
+        slowRequests++
+        console.warn({ event: 'slow_request', method: req.method, path: req.path, durationMs, requestId: (req as any).requestId })
+      }
+    } catch (e) {
+      // ignore
+    }
+  })
+  next()
+})
 
 // Multer for file uploads (in-memory; we upload straight to Supabase storage)
 const upload = multer({ storage: multer.memoryStorage() })
@@ -130,94 +195,137 @@ const getBearerToken = (req: express.Request) => {
 const respondValidationError = (res: express.Response, details: unknown) =>
   res.status(400).json({ error: 'validation_failed', details })
 
+const MAX_ADMIN_USERS_LIMIT = 100
+const MAX_REGISTRATIONS_LIMIT = 200
+const DEFAULT_PAGE = 1
+const DEFAULT_LIMIT = 50
+
+const parsePage = (value: unknown) => {
+  const page = Number(value)
+  return Number.isFinite(page) && page >= 1 ? Math.floor(page) : DEFAULT_PAGE
+}
+
+const parseLimit = (value: unknown, maxLimit = MAX_REGISTRATIONS_LIMIT) => {
+  const limit = Number(value)
+  if (!Number.isFinite(limit) || limit < 1) return DEFAULT_LIMIT
+  return Math.min(Math.floor(limit), maxLimit)
+}
+
+const buildPaginationMeta = (total: number, page: number, limit: number) => ({
+  total,
+  page,
+  limit,
+  totalPages: Math.max(1, Math.ceil(total / limit)),
+})
+
+const escapeLike = (value: string) => value.replace(/[%_\\]/g, '\\$&')
+
+const asyncHandler = (fn: express.RequestHandler): express.RequestHandler => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
+}
+
 const authenticateSession = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const token = getBearerToken(req)
-  if (!token) {
-    return res.status(401).json({ error: 'missing_auth_token' })
+  try {
+    const token = getBearerToken(req)
+    if (!token) {
+      return res.status(401).json({ error: 'missing_auth_token' })
+    }
+
+    const { data, error } = await supabase.auth.getUser(token)
+    const user = data?.user
+    if (error || !user?.email || !user.id) {
+      return res.status(401).json({ error: 'invalid_auth_token' })
+    }
+
+    ;(req as any).authenticatedUser = {
+      id: user.id,
+      email: user.email.toLowerCase(),
+      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+    } satisfies AuthenticatedUser
+
+    next()
+  } catch (error) {
+    next(error)
   }
-
-  const { data, error } = await supabase.auth.getUser(token)
-  const user = data?.user
-  if (error || !user?.email || !user.id) {
-    return res.status(401).json({ error: 'invalid_auth_token' })
-  }
-
-  ;(req as any).authenticatedUser = {
-    id: user.id,
-    email: user.email.toLowerCase(),
-    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-  } satisfies AuthenticatedUser
-
-  next()
 }
 
 const attachAdminContext = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const authUser = (req as any).authenticatedUser as AuthenticatedUser | undefined
-  if (!authUser?.email) {
-    return res.status(401).json({ error: 'unauthorized' })
+  try {
+    const authUser = (req as any).authenticatedUser as AuthenticatedUser | undefined
+    if (!authUser?.email) {
+      return res.status(401).json({ error: 'unauthorized' })
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id,name,email,admins!inner(role,assigned_event_id)')
+      .ilike('email', authUser.email)
+      .limit(1)
+
+    if (error) {
+      return res.status(500).json({ error: error.message || 'unknown' })
+    }
+
+    const userRow = Array.isArray(data) ? data[0] : data
+    const adminRow = getSingleRelationsRow(userRow?.admins as any)
+    if (!userRow || !adminRow || typeof adminRow !== 'object' || !('role' in adminRow)) {
+      return res.status(403).json({ error: 'admin_required' })
+    }
+
+    ;(req as any).adminContext = {
+      id: userRow.id,
+      name: userRow.name || authUser.name || authUser.email,
+      email: userRow.email,
+      role: String((adminRow as any).role),
+      assignedEventId: (adminRow as any).assigned_event_id || null,
+    } satisfies AdminContext
+
+    next()
+  } catch (error) {
+    next(error)
   }
-
-  const { data, error } = await supabase
-    .from('users')
-    .select('id,name,email,admins!inner(role,assigned_event_id)')
-    .ilike('email', authUser.email)
-    .limit(1)
-
-  if (error) {
-    return res.status(500).json({ error: error.message || 'unknown' })
-  }
-
-  const userRow = Array.isArray(data) ? data[0] : data
-  const adminRow = getSingleRelationsRow(userRow?.admins as any)
-  if (!userRow || !adminRow || typeof adminRow !== 'object' || !('role' in adminRow)) {
-    return res.status(403).json({ error: 'admin_required' })
-  }
-
-  ;(req as any).adminContext = {
-    id: userRow.id,
-    name: userRow.name || authUser.name || authUser.email,
-    email: userRow.email,
-    role: String((adminRow as any).role),
-    assignedEventId: (adminRow as any).assigned_event_id || null,
-  } satisfies AdminContext
-
-  next()
 }
 
 const requireSignedInUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const token = getBearerToken(req)
-  if (!token) {
-    return res.status(401).json({ error: 'missing_auth_token' })
+  try {
+    const token = getBearerToken(req)
+    if (!token) {
+      return res.status(401).json({ error: 'missing_auth_token' })
+    }
+
+    const { data, error } = await supabase.auth.getUser(token)
+    const user = data?.user
+    if (error || !user?.email) {
+      return res.status(401).json({ error: 'invalid_auth_token' })
+    }
+
+    const authEmail = user.email.toLowerCase()
+    const routeEmail = String((req.params?.email as string | undefined) || (req.body?.email as string | undefined) || '').trim().toLowerCase()
+    if (routeEmail && routeEmail !== authEmail) {
+      return res.status(403).json({ error: 'email_mismatch' })
+    }
+
+    ;(req as any).authenticatedUser = {
+      id: user.id,
+      email: authEmail,
+      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+    } satisfies AuthenticatedUser
+
+    next()
+  } catch (error) {
+    next(error)
   }
-
-  const { data, error } = await supabase.auth.getUser(token)
-  const user = data?.user
-  if (error || !user?.email) {
-    return res.status(401).json({ error: 'invalid_auth_token' })
-  }
-
-  const authEmail = user.email.toLowerCase()
-  const routeEmail = String((req.params?.email as string | undefined) || (req.body?.email as string | undefined) || '').trim().toLowerCase()
-  if (routeEmail && routeEmail !== authEmail) {
-    return res.status(403).json({ error: 'email_mismatch' })
-  }
-
-  ;(req as any).authenticatedUser = {
-    id: user.id,
-    email: authEmail,
-    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-  } satisfies AuthenticatedUser
-
-  next()
 }
 
-app.use('/api/wch1925', authenticateSession, async (req, res, next) => {
+app.use('/api/wch1925', authenticateSession, asyncHandler(async (req, res, next) => {
   if (req.path === '/auth') {
     return next()
   }
 
   return attachAdminContext(req, res, next)
-})
+}))
 
 // Clear any in-memory rate limiter counts when server starts (useful during dev/test)
 try {
@@ -349,7 +457,55 @@ const seedMissingEvents = async () => {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, now: new Date().toISOString() })
+  const mem = process.memoryUsage()
+  res.json({
+    ok: true,
+    now: new Date().toISOString(),
+    uptime: process.uptime(),
+    pid: process.pid,
+    memory: {
+      rss: mem.rss,
+      heapTotal: mem.heapTotal,
+      heapUsed: mem.heapUsed,
+    },
+  })
+})
+
+// Readiness probe: lightweight checks for dependencies (suitable for Railway)
+app.get('/api/ready', async (_req, res) => {
+  const cache = getCacheHealth()
+  const rate = getRateLimiterHealth()
+
+  let supabaseOk = false
+  try {
+    const { error } = await supabase.from('events').select('id').limit(1)
+    if (!error) supabaseOk = true
+  } catch (err) {
+    supabaseOk = false
+  }
+
+  const ready = supabaseOk
+
+  res.json({
+    ready,
+    dependencies: {
+      supabase: { ok: supabaseOk },
+      cache,
+      rateLimiter: rate,
+    },
+    now: new Date().toISOString(),
+  })
+})
+
+// Lightweight in-process metrics
+app.get('/api/metrics', (_req, res) => {
+  res.json({
+    uptime: process.uptime(),
+    totalRequests,
+    slowRequests,
+    memory: process.memoryUsage(),
+    now: new Date().toISOString(),
+  })
 })
 
 // Get events
@@ -358,7 +514,9 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
     const category = req.query.category as string | undefined
     const date = req.query.date as string | undefined
 
-    let query = supabase.from('events').select('*')
+    let query = supabase
+      .from('events')
+      .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
 
     if (category) query = query.eq('main_category', category)
     if (date) query = query.eq('date', date)
@@ -375,7 +533,10 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
 // Get houses
 app.get('/api/houses', publicLimiter, cacheMiddleware(300), async (_req, res) => {
   try {
-    const { data, error } = await supabase.from('houses').select('*').order('name', { ascending: true })
+    const { data, error } = await supabase
+      .from('houses')
+      .select('id,name,accent,points')
+      .order('name', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -437,7 +598,9 @@ app.get('/api/rules', publicLimiter, cacheMiddleware(120), async (_req, res) => 
 // Leaderboard
 app.get('/api/leaderboard', publicLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
-    const { data, error } = await supabase.from('leaderboard').select('*')
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .select('house_id,house_name,accent,base_points,bonus_points,total_points')
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -447,9 +610,12 @@ app.get('/api/leaderboard', publicLimiter, cacheMiddleware(60), async (_req, res
 })
 
 // Admin leaderboard
-app.get('/api/wch1925/leaderboard', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/leaderboard', adminLimiter, cacheMiddleware(90), async (_req, res) => {
   try {
-    const { data, error } = await supabase.from('leaderboard').select('*').order('total_points', { ascending: false })
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .select('house_id,house_name,accent,base_points,bonus_points,total_points')
+      .order('total_points', { ascending: false })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -458,9 +624,13 @@ app.get('/api/wch1925/leaderboard', adminLimiter, cacheMiddleware(60), async (_r
   }
 })
 
-app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(90), async (_req, res) => {
   try {
-    const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true }).order('time_slot', { ascending: true })
+    const { data, error } = await supabase
+      .from('events')
+      .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .order('date', { ascending: true })
+      .order('time_slot', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -469,9 +639,12 @@ app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, r
   }
 })
 
-app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(90), async (_req, res) => {
   try {
-    const { data, error } = await supabase.from('houses').select('*').order('name', { ascending: true })
+    const { data, error } = await supabase
+      .from('houses')
+      .select('id,name,accent,points')
+      .order('name', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -682,14 +855,14 @@ app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
     const { data, error } = await supabase
       .from('points_history')
       .insert({ house_id, points, reason })
-      .select('*')
+      .select('id,house_id,points,reason,issued_by,created_at')
       .single()
 
     if (error) throw error
 
     const { data: leaderboardRow, error: leaderboardErr } = await supabase
       .from('leaderboard')
-      .select('*')
+      .select('house_id,house_name,accent,base_points,bonus_points,total_points')
       .eq('house_id', house_id)
       .single()
 
@@ -703,7 +876,7 @@ app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
 })
 
 // Admin dashboard summary
-app.get('/api/wch1925/dashboard-summary', async (_req, res) => {
+app.get('/api/wch1925/dashboard-summary', adminLimiter, cacheMiddleware(30), async (_req, res) => {
   try {
     const nowDate = new Date().toISOString().slice(0, 10)
 
@@ -755,26 +928,34 @@ app.get('/api/wch1925/dashboard-summary', async (_req, res) => {
 // User management list with search/filter
 app.get('/api/wch1925/users', async (req, res) => {
   try {
-    const search = String(req.query.search || '').trim().toLowerCase()
-    const house = String(req.query.house || '').trim()
+    const parsedQuery = validateRequest(adminUsersQuerySchema, req.query)
+    if (!parsedQuery.ok) {
+      return respondValidationError(res, parsedQuery.error)
+    }
 
-    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,house,created_at').order('created_at', { ascending: false })
+    const search = String(parsedQuery.data.search || '').trim()
+    const house = String(parsedQuery.data.house || '').trim()
+    const page = parsedQuery.data.page
+    const limit = parsedQuery.data.limit
+    const offset = (page - 1) * limit
+
+    let query = supabase
+      .from('users')
+      .select('id,name,email,mobile_number,register_number,house,created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+
     if (house) query = query.eq('house', house)
-
-    const { data, error } = await query.limit(500)
-    if (error) throw error
-
-    let rows = data || []
     if (search) {
-      rows = rows.filter(
-        (row: any) =>
-          String(row.name || '').toLowerCase().includes(search) ||
-          String(row.email || '').toLowerCase().includes(search) ||
-          String(row.register_number || '').toLowerCase().includes(search),
+      const escaped = escapeLike(search)
+      query = query.or(
+        `name.ilike.%${escaped}%,email.ilike.%${escaped}%,register_number.ilike.%${escaped}%`,
       )
     }
 
-    const users = rows.map((row: any) => ({
+    const { data, count, error } = await query.range(offset, offset + limit - 1)
+    if (error) throw error
+
+    const users = (data || []).map((row: any) => ({
       user_id: row.id,
       name: row.name,
       email: row.email,
@@ -784,7 +965,7 @@ app.get('/api/wch1925/users', async (req, res) => {
       created_at: row.created_at,
     }))
 
-    res.json({ data: users })
+    res.json({ data: users, meta: buildPaginationMeta(count ?? 0, page, limit) })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })
@@ -913,7 +1094,7 @@ app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
       const { data: mediaRow, error: mediaErr } = await supabase
         .from('media')
         .insert({ key, url: uploadedUrl, uploaded_by: adminId })
-        .select('*')
+        .select('id,key,url,uploaded_by,created_at,updated_at')
         .single()
 
       if (mediaErr) throw mediaErr
@@ -1189,7 +1370,7 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
       .from('users')
       .update(payload)
       .eq('id', id)
-      .select('*')
+      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
       .single()
 
     if (error) throw error
@@ -1209,22 +1390,43 @@ app.get('/api/wch1925/registrations', async (req, res) => {
       return respondValidationError(res, parsedQuery.error)
     }
 
-    const search = String(parsedQuery.data.search || '').trim().toLowerCase()
-    const eventName = String(parsedQuery.data.event || '').trim().toLowerCase()
+    const search = String(parsedQuery.data.search || '').trim()
+    const eventName = String(parsedQuery.data.event || '').trim()
     const date = String(parsedQuery.data.date || '').trim()
+    const page = parsedQuery.data.page
+    const limit = parsedQuery.data.limit
+    const offset = (page - 1) * limit
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('registrations')
-      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
+      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)', { count: 'exact' })
       .order('registered_at', { ascending: false })
-      .limit(1000)
 
-        if (error) throw error
-    const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinsErr) throw checkinsErr
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    if (date) query = query.eq('events.date', date)
+    if (eventName) query = query.ilike('events.name', `%${escapeLike(eventName)}%`)
+    if (search) {
+      const escaped = escapeLike(search)
+      query = query.or(
+        `users.name.ilike.%${escaped}%,users.email.ilike.%${escaped}%,events.name.ilike.%${escaped}%`,
+      )
+    }
 
-    let rows = (data || []).map((row: any) => ({
+    const { data, count, error } = await query.range(offset, offset + limit - 1)
+    if (error) throw error
+
+    const registrationIds = (data || []).map((row: any) => row.id)
+    let checkedInSet = new Set<string>()
+    if (registrationIds.length > 0) {
+      const { data: checkins, error: checkinsErr } = await supabase
+        .from('checkins')
+        .select('registration_id')
+        .in('registration_id', registrationIds)
+
+      if (checkinsErr) throw checkinsErr
+      checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    }
+
+    const rows = (data || []).map((row: any) => ({
       registration_id: row.id,
       user_id: row.users?.id || '',
       participant_name: row.users?.name || '',
@@ -1239,18 +1441,7 @@ app.get('/api/wch1925/registrations', async (req, res) => {
       checked_in: checkedInSet.has(row.id),
     }))
 
-    if (eventName) rows = rows.filter((row) => row.event_name.toLowerCase().includes(eventName))
-    if (date) rows = rows.filter((row) => row.event_date === date)
-    if (search) {
-      rows = rows.filter(
-        (row) =>
-          row.participant_name.toLowerCase().includes(search) ||
-          row.email.toLowerCase().includes(search) ||
-          row.event_name.toLowerCase().includes(search),
-      )
-    }
-
-    res.json({ data: rows })
+    res.json({ data: rows, meta: buildPaginationMeta(count ?? 0, page, limit) })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })
@@ -1473,24 +1664,42 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       return respondValidationError(res, parsedQuery.error)
     }
 
-    const search = String(parsedQuery.data.search || '')
-    const eventName = String(parsedQuery.data.event || '')
-    const date = String(parsedQuery.data.date || '')
-    // use query params directly (removed internal localhost URL construction)
+    const search = String(parsedQuery.data.search || '').trim()
+    const eventName = String(parsedQuery.data.event || '').trim()
+    const date = String(parsedQuery.data.date || '').trim()
+    const exportLimit = parsedQuery.data.limit
 
-    const { data, error } = await supabase
+    const baseQuery = supabase
       .from('registrations')
       .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
       .order('registered_at', { ascending: false })
-      .limit(1000)
+      .limit(exportLimit)
 
+    let query = baseQuery
+    if (date) query = query.eq('events.date', date)
+    if (eventName) query = query.ilike('events.name', `%${escapeLike(eventName)}%`)
+    if (search) {
+      const escaped = escapeLike(search)
+      query = query.or(
+        `users.name.ilike.%${escaped}%,users.email.ilike.%${escaped}%,events.name.ilike.%${escaped}%`,
+      )
+    }
+
+    const { data, error } = await query
     if (error) throw error
 
-    const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinsErr) throw checkinsErr
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    const registrationIds = (data || []).map((row: any) => row.id)
+    let checkedInSet = new Set<string>()
+    if (registrationIds.length > 0) {
+      const { data: checkins, error: checkinsErr } = await supabase
+        .from('checkins')
+        .select('registration_id')
+        .in('registration_id', registrationIds)
+      if (checkinsErr) throw checkinsErr
+      checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    }
 
-    let rows = (data || []).map((row: any) => ({
+    const rows = (data || []).map((row: any) => ({
       registration_id: row.id,
       user_id: row.users?.id || '',
       participant_name: row.users?.name || '',
@@ -1504,21 +1713,6 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       registration_status: row.status,
       checked_in: checkedInSet.has(row.id),
     }))
-
-    const searchLower = String(parsedQuery.data.search || '').toLowerCase()
-    const eventLower = String(parsedQuery.data.event || '').toLowerCase()
-    const dateValue = String(parsedQuery.data.date || '')
-
-    if (eventLower) rows = rows.filter((row) => row.event_name.toLowerCase().includes(eventLower))
-    if (dateValue) rows = rows.filter((row) => row.event_date === dateValue)
-    if (searchLower) {
-      rows = rows.filter(
-        (row) =>
-          row.participant_name.toLowerCase().includes(searchLower) ||
-          row.email.toLowerCase().includes(searchLower) ||
-          row.event_name.toLowerCase().includes(searchLower),
-      )
-    }
 
     const header = [
       'Registration ID',
@@ -1598,7 +1792,7 @@ app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
         capacity,
         is_live_tomorrow: is_live_tomorrow ?? false,
       } as any)
-      .select('*')
+      .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
       .single()
 
     if (error) throw error
@@ -1662,7 +1856,12 @@ app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
 
     if (name) payload.slug = slugify(name)
 
-    const { data, error } = await supabase.from('events').update(payload).eq('id', id).select('*').single()
+    const { data, error } = await supabase
+      .from('events')
+      .update(payload)
+      .eq('id', id)
+      .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .single()
     if (error) throw error
     res.json({ data })
   } catch (err: any) {
@@ -1734,7 +1933,7 @@ app.post('/api/wch1925/checkin', adminLimiter, async (req, res) => {
     const { data, error } = await supabase
       .from('checkins')
       .insert({ registration_id, device_info })
-      .select('*')
+      .select('id,registration_id,checked_in_by,checked_in_at,device_info')
       .single()
 
     if (error) throw error
@@ -1762,18 +1961,14 @@ app.delete('/api/wch1925/checkin/:registration_id', adminLimiter, async (req, re
   }
 })
 
-app.get('/api/wch1925/attendance-report', async (_req, res) => {
+app.get('/api/wch1925/attendance-report', adminLimiter, cacheMiddleware(30), async (_req, res) => {
   try {
     const { data: eventRegs, error: regErr } = await supabase
       .from('registrations')
-      .select('id,event_id,events(name,date)')
+      .select('event_id,events(name,date),checkins(id)')
 
     if (regErr) throw regErr
 
-    const { data: checkins, error: checkinErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinErr) throw checkinErr
-
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
     const eventMap = new Map<string, { event_name: string; event_date: string; total: number; checked_in: number }>()
 
     for (const row of eventRegs || []) {
@@ -1785,7 +1980,9 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
         checked_in: 0,
       }
       current.total += 1
-      if (checkedInSet.has((row as any).id)) current.checked_in += 1
+      if ((row as any).checkins?.length > 0) {
+        current.checked_in += 1
+      }
       eventMap.set(key, current)
     }
 
@@ -1825,7 +2022,7 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
         },
         { onConflict: 'email' },
       )
-      .select('*')
+      .select('id,email,name,mobile_number,register_number,house,picture_url')
       .limit(1)
 
     if (error) throw error
@@ -1945,6 +2142,42 @@ app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, c
   }
 })
 
+let server: ReturnType<typeof app.listen> | null = null
+
+const shutdown = (signal: string, err?: unknown) => {
+  const errorMessage = err instanceof Error ? err.message : String(err ?? '')
+  console.error({ event: 'shutdown', signal, error: errorMessage })
+
+  if (err) {
+    Sentry.captureException(err)
+  }
+
+  if (server) {
+    // attempt to close external clients gracefully
+    try {
+      closeCacheClients()
+    } catch (e) {
+      console.error('Error closing cache clients', e)
+    }
+    try {
+      closeRateLimiterClients()
+    } catch (e) {
+      console.error('Error closing rate limiter clients', e)
+    }
+    server.close(() => {
+      console.log('API server closed')
+      process.exit(err ? 1 : 0)
+    })
+
+    setTimeout(() => {
+      console.error('Force exiting after shutdown timeout')
+      process.exit(err ? 1 : 0)
+    }, 5000).unref()
+  } else {
+    process.exit(err ? 1 : 0)
+  }
+}
+
 const bootstrap = async () => {
   try {
     await seedMissingEvents()
@@ -1952,12 +2185,50 @@ const bootstrap = async () => {
     console.error('Failed to seed event catalog:', err?.message || err)
   }
 
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     console.log(`API server listening on http://localhost:${PORT}`)
   })
 }
 
+// Environment validation and production warnings
+try {
+  const cacheHealthOnStart = getCacheHealth()
+  if (IS_PROD) {
+    if (process.env.CACHE_PREFER_REDIS === 'true' && !cacheHealthOnStart.redis.available && !cacheHealthOnStart.upstash.available) {
+      console.warn('[Startup] CACHE_PREFER_REDIS=true but no remote Redis/Upstash configured or available. Memory fallback will be skipped; this may cause cache misses.')
+    }
+
+    if (!process.env.SENTRY_DSN) {
+      console.warn('[Startup] SENTRY_DSN not set — production errors will not be reported to Sentry')
+    }
+  }
+} catch (e) {
+  // ignore non-critical startup health check errors
+}
+
 bootstrap()
+
+// Periodic memory usage warnings (non-blocking)
+try {
+  const MEM_WARN_BYTES = Number(process.env.MEMORY_WARNING_BYTES || 700 * 1024 * 1024) // 700MB default
+  setInterval(() => {
+    try {
+      const mem = process.memoryUsage()
+      if (mem.rss > MEM_WARN_BYTES) {
+        console.warn('[Memory] High RSS usage', { rss: mem.rss, heapUsed: mem.heapUsed })
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, 60 * 1000)
+} catch (e) {
+  // ignore
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))
+process.on('uncaughtException', (error) => shutdown('uncaughtException', error))
+process.on('unhandledRejection', (reason) => shutdown('unhandledRejection', reason))
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not_found' })

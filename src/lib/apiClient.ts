@@ -85,24 +85,64 @@ async function getUserAuthHeaders(): Promise<Record<string, string>> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await getUserAuthHeaders()),
-      ...(init?.headers || {}),
-    },
-  })
+  const method = (init?.method || 'GET').toUpperCase()
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
-
-  if (!response.ok) {
-    const message = payload?.error || payload?.message || `Request failed (${response.status})`
-    throw new Error(message)
+  // Simple in-flight deduplication for GET requests to avoid duplicate concurrent
+  // requests for the same resource. This reduces request storms from multiple
+  // components calling the same API at once.
+  if (!(globalThis as any).__inflightApiRequests) (globalThis as any).__inflightApiRequests = new Map<string, Promise<any>>()
+  const inflight: Map<string, Promise<any>> = (globalThis as any).__inflightApiRequests
+  const key = `${method}:${path}`
+  if (method === 'GET' && inflight.has(key)) {
+    return inflight.get(key) as Promise<T>
   }
 
-  return payload as T
+  const attemptFetch = async (): Promise<T> => {
+    const response = await fetch(`${apiBase}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getUserAuthHeaders()),
+        ...(init?.headers || {}),
+      },
+    })
+
+    const text = await response.text()
+    const payload = text ? JSON.parse(text) : null
+
+    if (!response.ok) {
+      const message = payload?.error || payload?.message || `Request failed (${response.status})`
+      throw new Error(message)
+    }
+
+    return payload as T
+  }
+
+  const doRequest = async (): Promise<T> => {
+    // Retry on network errors (fetch throws) with small exponential backoff.
+    const maxRetries = 2
+    let attempt = 0
+    while (true) {
+      try {
+        return await attemptFetch()
+      } catch (err: any) {
+        const isNetworkError = err instanceof TypeError
+        if (!isNetworkError || attempt >= maxRetries) throw err
+        attempt += 1
+        const backoff = 200 * Math.pow(2, attempt) // 400ms, 800ms
+        await new Promise((r) => setTimeout(r, backoff))
+      }
+    }
+  }
+
+  const promise = doRequest()
+  if (method === 'GET') inflight.set(key, promise)
+  try {
+    const result = await promise
+    return result
+  } finally {
+    if (method === 'GET') inflight.delete(key)
+  }
 }
 
 export async function fetchEvents(): Promise<ApiEvent[]> {

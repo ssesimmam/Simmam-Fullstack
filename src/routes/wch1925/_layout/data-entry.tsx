@@ -365,6 +365,7 @@ function DataEntryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        title="Admin Data Editor"
         subtitle="Manual data editing — developer admin only"
       />
 

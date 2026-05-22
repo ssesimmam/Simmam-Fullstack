@@ -19,27 +19,61 @@ async function getAdminAuthHeaders(): Promise<Record<string, string>> {
 }
 
 async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${adminBase}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await getAdminAuthHeaders()),
-      ...(init?.headers || {}),
-    },
-  })
+  const method = (init?.method || 'GET').toUpperCase()
 
-  if (response.headers.get('content-type')?.includes('text/csv')) {
-    return (await response.text()) as unknown as T
+  if (!(globalThis as any).__inflightAdminRequests) (globalThis as any).__inflightAdminRequests = new Map<string, Promise<any>>()
+  const inflight: Map<string, Promise<any>> = (globalThis as any).__inflightAdminRequests
+  const key = `${method}:${path}`
+  if (method === 'GET' && inflight.has(key)) return inflight.get(key) as Promise<T>
+
+  const attemptFetch = async (): Promise<T> => {
+    const response = await fetch(`${adminBase}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAdminAuthHeaders()),
+        ...(init?.headers || {}),
+      },
+    })
+
+    if (response.headers.get('content-type')?.includes('text/csv')) {
+      return (await response.text()) as unknown as T
+    }
+
+    const text = await response.text()
+    const payload = text ? JSON.parse(text) : null
+
+    if (!response.ok) {
+      throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`)
+    }
+
+    return payload as T
   }
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
-
-  if (!response.ok) {
-    throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`)
+  const doRequest = async (): Promise<T> => {
+    const maxRetries = 2
+    let attempt = 0
+    while (true) {
+      try {
+        return await attemptFetch()
+      } catch (err: any) {
+        const isNetworkError = err instanceof TypeError
+        if (!isNetworkError || attempt >= maxRetries) throw err
+        attempt += 1
+        const backoff = 200 * Math.pow(2, attempt)
+        await new Promise((r) => setTimeout(r, backoff))
+      }
+    }
   }
 
-  return payload as T
+  const promise = doRequest()
+  if (method === 'GET') inflight.set(key, promise)
+  try {
+    const result = await promise
+    return result
+  } finally {
+    if (method === 'GET') inflight.delete(key)
+  }
 }
 
 export type AdminDashboardSummary = {

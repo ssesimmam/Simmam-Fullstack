@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useDebouncedValue from '@/lib/hooks/useDebouncedValue'
 import { Link } from "@tanstack/react-router";
 import { Tilt3D } from "./Tilt3D";
 import { Bell, BookOpen, X, Search } from "lucide-react";
@@ -50,13 +51,14 @@ export function Events() {
     }
   }, [])
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+
   const list = events.filter((e) => {
     const matchesCategory = filter === "All" || e.mainCategory === filter;
-    const matchesSearch =
-      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+    const q = debouncedSearch.toLowerCase()
+    const matchesSearch = e.name.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
+    return matchesCategory && matchesSearch
+  })
 
   return (
     <div id="events" className="relative py-24 md:py-32">

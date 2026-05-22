@@ -134,27 +134,49 @@ export async function registerForEvent(
     throw new Error('user_session_missing')
   }
 
-  const response = await createRegistration({
-    email: user.email,
-    name: user.name,
-    register_number: user.registerNumber,
-    house: user.house,
-    event_id: event.backendEventId,
-    event_name: event.eventName,
-  })
-
-  const ticketCode = response.ticket_code || generateTicketCode(email, event.eventId)
-  const newRegistration: Registration = {
-    ...event,
-    registeredAt: new Date().toISOString(),
-    ticketCode,
+  // Prevent duplicate concurrent registration attempts for the same email+event
+  // by deduplicating in-flight requests. This prevents rapid double-clicks
+  // or multiple components triggering the same registration simultaneously.
+  const key = `${email.toLowerCase()}:${event.backendEventId || event.eventId || event.eventName}`
+  if (!(globalThis as any).__pendingRegistrations) (globalThis as any).__pendingRegistrations = new Map<string, Promise<any>>()
+  const pending: Map<string, Promise<any>> = (globalThis as any).__pendingRegistrations
+  if (pending.has(key)) {
+    // Return the same promise to callers attempting the same registration
+    return pending.get(key)
   }
 
-  saveUserRegistrations(email, [...registrations, newRegistration])
+  const promise = (async () => {
+    const response = await createRegistration({
+      email: user.email,
+      name: user.name,
+      register_number: user.registerNumber,
+      house: user.house,
+      event_id: event.backendEventId,
+      event_name: event.eventName,
+    })
 
-  // Fetch authoritative rows from backend after local optimistic update.
-  await syncUserRegistrations(email)
-  return { success: true, alreadyRegistered: false }
+    const ticketCode = response.ticket_code || generateTicketCode(email, event.eventId)
+    const newRegistration: Registration = {
+      ...event,
+      registeredAt: new Date().toISOString(),
+      ticketCode,
+    }
+
+    saveUserRegistrations(email, [...registrations, newRegistration])
+
+    // Fetch authoritative rows from backend after local optimistic update.
+    await syncUserRegistrations(email)
+    return { success: true, alreadyRegistered: false }
+  })()
+
+  pending.set(key, promise)
+  try {
+    const result = await promise
+    return result
+  } finally {
+    pending.delete(key)
+  }
+
 }
 
 export function unregisterFromEvent(email: string, eventId: string): void {

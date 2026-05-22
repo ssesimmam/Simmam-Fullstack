@@ -4,6 +4,8 @@ import { Redis as UpstashRedis } from '@upstash/redis'
 
 // In-memory store for development (replace with Redis for production)
 const requestCounts: Record<string, { count: number; resetTime: number }> = {}
+const MAX_MEMORY_RATE_LIMIT_KEYS = 10000
+const IS_PROD = process.env.NODE_ENV === 'production'
 
 // Redis client (optional). If REDIS_URL is set, use Redis for counters across instances.
 const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || ''
@@ -11,12 +13,30 @@ const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || ''
 const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN || ''
 let redis: any = null
 let upstash: UpstashRedis | null = null
+let redisAvailable = false
+let upstashAvailable = false
+
 if (redisUrl) {
   try {
-    redis = new IORedis(redisUrl)
-    redis.on('error', (e: any) => console.error('Redis error', e))
+    redis = new IORedis(redisUrl, {
+      maxRetriesPerRequest: 2,
+      lazyConnect: true,
+    })
+    redis.connect()
+    redis.on('ready', () => {
+      redisAvailable = true
+      console.log('[RateLimit] Redis connection established')
+    })
+    redis.on('error', (e: any) => {
+      redisAvailable = false
+      console.error('[RateLimit] Redis error:', e.message)
+    })
+    redis.on('close', () => {
+      redisAvailable = false
+      console.log('[RateLimit] Redis connection closed')
+    })
   } catch (e) {
-    console.error('Failed to create Redis client', e)
+    console.error('[RateLimit] Failed to create Redis client', e)
     redis = null
   }
 } else if (upstashUrl && upstashToken) {
@@ -25,17 +45,35 @@ if (redisUrl) {
       url: upstashUrl,
       token: upstashToken,
     })
+    upstashAvailable = true
+    console.log('[RateLimit] Upstash Redis configured')
   } catch (e) {
-    console.error('Failed to create Upstash Redis client', e)
+    console.error('[RateLimit] Failed to create Upstash client', e)
     upstash = null
   }
 }
 
+function normalizeIp(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  return trimmed.replace(/^::ffff:/, '')
+}
+
 function getClientIp(req: any): string {
-  const cloudflareIp = req.headers['cf-connecting-ip'] as string | undefined
-  const realIp = req.headers['x-real-ip'] as string | undefined
-  const forwardedIp = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]
-  return cloudflareIp || realIp || forwardedIp || req.socket.remoteAddress || 'unknown'
+  const expressIp = normalizeIp(req.ip)
+  if (expressIp) return expressIp
+
+  const cloudflareIp = normalizeIp(req.headers['cf-connecting-ip'] as string | undefined)
+  if (cloudflareIp) return cloudflareIp
+
+  const realIp = normalizeIp(req.headers['x-real-ip'] as string | undefined)
+  if (realIp) return realIp
+
+  const forwardedIp = normalizeIp((req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0])
+  if (forwardedIp) return forwardedIp
+
+  return normalizeIp(req.socket?.remoteAddress) || 'unknown'
 }
 
 function getRouteKey(req: any): string {
@@ -49,7 +87,7 @@ export function createSimpleLimiter(bucket: string, windowMs: number, max: numbe
     const now = Date.now()
 
     // If Redis is available, use it for atomic increments with expiry so counts are shared across instances.
-    if (redis) {
+    if (redisAvailable && redis) {
       try {
         const r = redis.multi()
         r.incr(key)
@@ -73,12 +111,13 @@ export function createSimpleLimiter(bucket: string, windowMs: number, max: numbe
         res.setHeader('RateLimit-Remaining', String(Math.max(0, max - count)))
         return next()
       } catch (e) {
-        console.error('Redis rate limiter error, falling back to memory', e)
+        console.error('[RateLimit] Redis error, falling back to memory:', (e as any).message)
+        redisAvailable = false
         // fallthrough to in-memory
       }
     }
 
-    if (upstash) {
+    if (upstashAvailable && upstash) {
       try {
         const count = Number(await upstash.incr(key))
         let ttlSeconds = Number(await upstash.ttl(key))
@@ -96,11 +135,12 @@ export function createSimpleLimiter(bucket: string, windowMs: number, max: numbe
         res.setHeader('RateLimit-Remaining', String(Math.max(0, max - count)))
         return next()
       } catch (e) {
-        console.error('Upstash rate limiter error, falling back to memory', e)
+        console.error('[RateLimit] Upstash error, falling back to memory:', (e as any).message)
+        upstashAvailable = false
       }
     }
 
-    // In-memory fallback (single-instance)
+    // In-memory fallback (single-instance, bounded)
     if (!requestCounts[key]) {
       requestCounts[key] = { count: 0, resetTime: now + windowMs }
     }
@@ -156,3 +196,57 @@ export function resetRateLimitCounts() {
   for (const k of Object.keys(requestCounts)) delete requestCounts[k]
 }
 
+// Cleanup expired rate limit entries every 5 minutes to prevent memory explosion
+setInterval(() => {
+  const now = Date.now()
+  let cleaned = 0
+  let expired = 0
+  
+  for (const key in requestCounts) {
+    if (requestCounts[key].resetTime < now) {
+      delete requestCounts[key]
+      cleaned++
+    } else {
+      expired++
+    }
+  }
+  
+  const total = Object.keys(requestCounts).length
+  if (total > MAX_MEMORY_RATE_LIMIT_KEYS) {
+    console.warn(
+      `[RateLimit] Memory usage high: ${total} keys (max: ${MAX_MEMORY_RATE_LIMIT_KEYS}), cleaned ${cleaned} expired entries`,
+    )
+  }
+  
+  if (cleaned > 0 && total % 100 === 0) {
+    console.log(`[RateLimit] Cleanup: removed ${cleaned} expired entries, ${total} remaining`)
+  }
+}, 5 * 60 * 1000)
+
+export function getRateLimiterHealth() {
+  return {
+    redis: {
+      available: redisAvailable,
+      configured: !!redisUrl,
+    },
+    upstash: {
+      available: upstashAvailable,
+      configured: !!upstashUrl && !!upstashToken,
+    },
+    memory: {
+      keys: Object.keys(requestCounts).length,
+      maxKeys: MAX_MEMORY_RATE_LIMIT_KEYS,
+    },
+  }
+}
+
+export async function closeRateLimiterClients() {
+  try {
+    if (redis && typeof redis.quit === 'function') {
+      await redis.quit()
+      console.log('[RateLimit] Redis client closed')
+    }
+  } catch (err) {
+    console.error('[RateLimit] Error closing Redis client', (err as any).message)
+  }
+}

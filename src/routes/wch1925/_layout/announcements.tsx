@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
+import useDebouncedValue from '@/lib/hooks/useDebouncedValue'
 import { Bell, CalendarClock, Edit3, Plus, Pin, Search, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
@@ -171,8 +172,9 @@ function AnnouncementsPage() {
     }
   }
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const filteredItems = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
+    const query = debouncedSearch.trim().toLowerCase()
     if (!query) return items
     return items.filter((item) => {
       return [item.title, item.body || '', item.id]
@@ -180,7 +182,7 @@ function AnnouncementsPage() {
         .toLowerCase()
         .includes(query)
     })
-  }, [items, searchQuery])
+  }, [items, debouncedSearch])
 
   if (!canRead) {
     return <AccessDenied />

@@ -116,9 +116,20 @@ export const registrationsListQuerySchema = z.object({
   search: z.string().trim().max(100).optional().default(''),
   event: z.string().trim().max(120).optional().default(''),
   date: z.string().trim().max(32).optional().default(''),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
 })
 
-export const exportQuerySchema = registrationsListQuerySchema
+export const adminUsersQuerySchema = z.object({
+  search: z.string().trim().max(100).optional().default(''),
+  house: z.string().trim().max(50).optional().default(''),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+})
+
+export const exportQuerySchema = registrationsListQuerySchema.extend({
+  limit: z.coerce.number().int().min(1).max(2000).default(1000),
+})
 
 export const validateRequest = <T extends z.ZodTypeAny>(schema: T, input: unknown) => {
   const parsed = schema.safeParse(input)

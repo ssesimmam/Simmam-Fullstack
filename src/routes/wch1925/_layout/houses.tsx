@@ -35,7 +35,7 @@ function HousesPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {houses.map((house) => (
-          <div key={house.id} className="rounded-xl border border-[#333] bg-[#111] p-5">
+          <div key={house.short || house.name} className="rounded-xl border border-[#333] bg-[#111] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-400 uppercase tracking-[0.2em]">{house.name}</p>
