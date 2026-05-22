@@ -9,7 +9,6 @@ import { randomUUID } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
-import multer from 'multer'
 import { requireTurnstile } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts, getRateLimiterHealth, closeRateLimiterClients } from './middleware/rateLimiter'
 import { cacheMiddleware, getCacheHealth, closeCacheClients } from './middleware/cacheMiddleware'
@@ -517,6 +516,7 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
     let query = supabase
       .from('events')
       .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
 
     if (category) query = query.eq('main_category', category)
     if (date) query = query.eq('date', date)
@@ -537,6 +537,7 @@ app.get('/api/houses', publicLimiter, cacheMiddleware(300), async (_req, res) =>
       .from('houses')
       .select('id,name,accent,points')
       .order('name', { ascending: true })
+    const { data, error } = await supabase.from('houses').select('id,name,accent,points,created_at,updated_at').order('name', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -629,6 +630,7 @@ app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(90), async (_req, r
     const { data, error } = await supabase
       .from('events')
       .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
       .order('date', { ascending: true })
       .order('time_slot', { ascending: true })
     if (error) throw error
@@ -645,6 +647,7 @@ app.get('/api/wch1925/houses', adminLimiter, cacheMiddleware(90), async (_req, r
       .from('houses')
       .select('id,name,accent,points')
       .order('name', { ascending: true })
+    const { data, error } = await supabase.from('houses').select('id,name,accent,points,created_at,updated_at').order('name', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
@@ -887,8 +890,8 @@ app.get('/api/wch1925/dashboard-summary', adminLimiter, cacheMiddleware(30), asy
       supabase.from('checkins').select('id', { count: 'exact', head: true }),
       supabase.from('events').select('id,name,date,time_slot,venue').gte('date', nowDate).order('date', { ascending: true }).limit(8),
       supabase
-        .from('registrations')
-        .select('id,registered_at,status,users(name,email),events(name,date,time_slot)')
+        .from('user_dashboard_registrations')
+        .select('registration_id,registered_at,status,user_name,email,event_name,date,time_slot')
         .order('registered_at', { ascending: false })
         .limit(10),
     ])
@@ -909,14 +912,14 @@ app.get('/api/wch1925/dashboard-summary', adminLimiter, cacheMiddleware(30), asy
       },
       upcomingEvents: upcomingRes.data || [],
       recentRegistrations: (recentRes.data || []).map((row: any) => ({
-        id: row.id,
+        id: row.registration_id,
         registration_date: row.registered_at,
         registration_status: row.status,
-        participant_name: row.users?.name || '',
-        user_email: row.users?.email || '',
-        event_name: row.events?.name || '',
-        event_date: row.events?.date || '',
-        event_time: row.events?.time_slot || '',
+        participant_name: row.user_name || '',
+        user_email: row.email || '',
+        event_name: row.event_name || '',
+        event_date: row.date || '',
+        event_time: row.time_slot || '',
       })),
     })
   } catch (err: any) {
@@ -1060,50 +1063,9 @@ app.post('/api/wch1925/announcements', adminLimiter, async (req, res) => {
   }
 })
 
-  // Media upload (admin only) - uploads to Supabase Storage and records metadata in `media` table
-  app.post('/api/wch1925/media/upload', adminLimiter, upload.single('file'), async (req, res) => {
-    try {
-      const file = req.file as Express.Multer.File | undefined
-      if (!file) return res.status(400).json({ error: 'no_file_uploaded' })
-
-      const allowedMimeTypes = new Set([
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'image/gif',
-        'application/pdf',
-      ])
-
-      if (!allowedMimeTypes.has(file.mimetype)) {
-        return res.status(400).json({ error: 'invalid_file_type' })
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        return res.status(400).json({ error: 'file_too_large' })
-      }
-
-      const key = `uploads/${Date.now()}-${file.originalname}`
-      const { data: storageData, error: storageErr } = await supabase.storage
-        .from('media')
-        .upload(key, file.buffer, { contentType: file.mimetype })
-
-      if (storageErr) throw storageErr
-
-      const uploadedUrl = storageData?.path || key
-      const adminId = (req as any).adminContext?.id || null
-      const { data: mediaRow, error: mediaErr } = await supabase
-        .from('media')
-        .insert({ key, url: uploadedUrl, uploaded_by: adminId })
-        .select('id,key,url,uploaded_by,created_at,updated_at')
-        .single()
-
-      if (mediaErr) throw mediaErr
-      res.status(201).json({ media: mediaRow })
-    } catch (err: any) {
-      console.error(err)
-      res.status(500).json({ error: err.message || 'unknown' })
-    }
-  })
+  // Media upload endpoint removed per project requirements (no user media uploads).
+  // If you need server-side media management in future, reintroduce a secure
+  // admin-only endpoint with strict validation and storage rules.
 
 app.get('/api/wch1925/rules', async (_req, res) => {
   try {
@@ -1793,6 +1755,7 @@ app.post('/api/wch1925/events', adminLimiter, async (req, res) => {
         is_live_tomorrow: is_live_tomorrow ?? false,
       } as any)
       .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
       .single()
 
     if (error) throw error
@@ -1861,6 +1824,7 @@ app.put('/api/wch1925/events/:id', adminLimiter, async (req, res) => {
       .update(payload)
       .eq('id', id)
       .select('id,name,slug,description,category,main_category,date,time_slot,end_time,venue,capacity,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
       .single()
     if (error) throw error
     res.json({ data })
@@ -1964,8 +1928,8 @@ app.delete('/api/wch1925/checkin/:registration_id', adminLimiter, async (req, re
 app.get('/api/wch1925/attendance-report', adminLimiter, cacheMiddleware(30), async (_req, res) => {
   try {
     const { data: eventRegs, error: regErr } = await supabase
-      .from('registrations')
-      .select('event_id,events(name,date),checkins(id)')
+      .from('user_dashboard_registrations')
+      .select('registration_id,event_id,event_name,date')
 
     if (regErr) throw regErr
 
@@ -1974,15 +1938,13 @@ app.get('/api/wch1925/attendance-report', adminLimiter, cacheMiddleware(30), asy
     for (const row of eventRegs || []) {
       const key = row.event_id
       const current = eventMap.get(key) || {
-        event_name: (row as any).events?.name || '',
-        event_date: (row as any).events?.date || '',
+        event_name: row.event_name || '',
+        event_date: row.date || '',
         total: 0,
         checked_in: 0,
       }
       current.total += 1
-      if ((row as any).checkins?.length > 0) {
-        current.checked_in += 1
-      }
+      if (checkedInSet.has(row.registration_id)) current.checked_in += 1
       eventMap.set(key, current)
     }
 
@@ -2022,7 +1984,7 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
         },
         { onConflict: 'email' },
       )
-      .select('id,email,name,mobile_number,register_number,house,picture_url')
+      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
       .limit(1)
 
     if (error) throw error

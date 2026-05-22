@@ -66,10 +66,37 @@ jobs:
         run: |
           echo "Applying migrations to staging"
           PGPASSWORD=$STAGING_DB_PASSWORD psql "$STAGING_DB_URL" -f supabase/migrations/20260521_safer_create_registration.sql
+
+      - name: Run Postman smoke tests (Newman)
+        if: env.RUN_SMOKE == 'true'
+        env:
+          BASE_URL: ${{ env.STAGING_URL }}
+        run: |
+          npm ci --prefix .
+          npx newman run load-tests/postman_collection.json --env-var "baseUrl=${{ env.STAGING_URL }}" --bail
+
+      - name: Run k6 load test (staging)
+        if: env.RUN_LOAD == 'true'
+        env:
+          TARGET_URL: ${{ env.STAGING_URL }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y gnupg2 ca-certificates
+          wget -q -O - https://dl.k6.io/key.gpg | sudo apt-key add -
+          echo 'deb https://dl.k6.io/deb stable main' | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+          k6 run -e TARGET_URL=${{ env.STAGING_URL }} load-tests/k6-load-test.js
       - name: Deploy API to staging (placeholder)
         run: echo "Deploy your API here (e.g., Railway, Fly, Cloud Run)"
       - name: Deploy Frontend to staging (placeholder)
         run: echo "Deploy your frontend here (e.g., Vercel)"
+      - name: Deploy Frontend to Cloudflare Pages
+        if: env.DEPLOY_CLOUDFLARE == 'true'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_PAGES_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: ${{ secrets.CF_PROJECT_NAME }}
+          directory: ./dist
 
   production-deploy:
     needs: staging-deploy

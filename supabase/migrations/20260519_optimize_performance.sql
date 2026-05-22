@@ -6,6 +6,7 @@ begin;
 -- Events table indexes for filtering and sorting
 create index if not exists events_main_category_idx on events(main_category);
 create index if not exists events_date_idx on events(date desc);
+create index if not exists events_date_time_slot_idx on events(date desc, time_slot asc);
 create index if not exists events_registration_open_idx on events(registration_open);
 create index if not exists events_checkin_enabled_idx on events(checkin_enabled);
 
