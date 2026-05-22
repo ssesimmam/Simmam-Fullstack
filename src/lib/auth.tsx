@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { AdminUser, AdminRole } from '@/types/admin'
 import { ROLE_PERMISSIONS, ROUTE_PERMISSIONS } from '@/types/admin'
-import adminSupabase from '@/lib/adminSupabase'
+import supabase from '@/lib/supabase'
 
 interface AuthContextType {
   user: AdminUser | null
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!normalizedEmail || !role) return false
 
     try {
-      const { data: sessionData } = await adminSupabase.auth.getSession()
+      const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData.session?.access_token
       if (!token) return false
 
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     localStorage.removeItem('simmam_admin_user')
     localStorage.removeItem('simmam_admin_google_signin')
-    void adminSupabase.auth.signOut().catch(() => {
+    void supabase.auth.signOut().catch(() => {
       // ignore cleanup failures
     })
   }
@@ -148,7 +148,7 @@ export function useAuth() {
     return {
       user: null,
       login: async () => false,
-      logout: () => {},
+      logout: () => { },
       hasPermission: () => false,
       isLoading: true,
     } as unknown as AuthContextType

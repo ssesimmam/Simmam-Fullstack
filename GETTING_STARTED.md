@@ -128,8 +128,7 @@ Expected response:
 2. Edit `.env.local` and fill in credentials:
    ```env
    VITE_SUPABASE_URL=https://hpctlcwdqffrcyilqaro.supabase.co
-   VITE_SUPABASE_ANON_KEY=<paste-anon-key>
-   VITE_API_URL=http://localhost:4000
+   VITE_SUPABASE_ANON_KEY=<paste-anon-key>   VITE_TURNSTILE_SITE_KEY=<your-turnstile-site-key>   VITE_API_URL=http://localhost:4000
    ```
 
 > If you deploy a remote backend, set `VITE_API_URL=https://your-backend.example.com` instead of `http://localhost:4000`.

@@ -1,4 +1,4 @@
-import adminSupabase from '@/lib/adminSupabase'
+import supabase from '@/lib/supabase'
 
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
@@ -8,7 +8,7 @@ const adminBase = (() => {
 
 async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data } = await adminSupabase.auth.getSession()
+    const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     if (!token) return {}
 

@@ -6,7 +6,7 @@ import type { AdminRole } from '@/types/admin'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import adminSupabase from '@/lib/adminSupabase'
+import supabase from '@/lib/supabase'
 
 export const Route = createFileRoute('/wch1925/login')({
   beforeLoad: ({ location }) => {
@@ -51,7 +51,7 @@ function LoginPage() {
         const success = await login(emailFromSession, selectedRole)
         if (!success) {
           window.localStorage.removeItem('simmam_admin_google_signin')
-          await adminSupabase.auth.signOut()
+          await supabase.auth.signOut()
           setError('This Google account is not authorized for the selected admin role.')
           return
         }
@@ -74,7 +74,7 @@ function LoginPage() {
 
     const init = async () => {
       try {
-        const { data: sessionData } = await adminSupabase.auth.getSession()
+        const { data: sessionData } = await supabase.auth.getSession()
         if (sessionData?.session) {
           await handleSession(sessionData.session)
         }
@@ -82,7 +82,7 @@ function LoginPage() {
         // ignore
       }
 
-      const { data } = adminSupabase.auth.onAuthStateChange((_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
         if (session) {
           void handleSession(session)
         }
@@ -108,7 +108,7 @@ function LoginPage() {
     window.localStorage.setItem('simmam_admin_google_signin', '1')
 
     try {
-      const { error: authError } = await adminSupabase.auth.signInWithOAuth({
+      const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/wch1925/login`,

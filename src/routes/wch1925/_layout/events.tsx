@@ -360,9 +360,9 @@ function EventsPage() {
             <Button
               type="button"
               className="bg-white text-black hover:bg-gray-200"
-              onPointerDown={() => console.log('Create pointer down', { form })}
+              onPointerDown={() => { /* noop for pointer down */ }}
               onClick={() => {
-                console.log('Create clicked', { form })
+                // Create clicked (debug log removed)
                 toast('Creating...')
                 void handleCreate()
               }}
@@ -383,9 +383,9 @@ function EventsPage() {
             <Button
               type="button"
               className="bg-white text-black hover:bg-gray-200"
-              onPointerDown={() => console.log('Save pointer down', { editingEvent, form })}
+              onPointerDown={() => { /* noop for pointer down */ }}
               onClick={() => {
-                console.log('Save clicked', { editingEvent, form })
+                // Save clicked (debug log removed)
                 toast('Saving...')
                 void handleUpdate()
               }}

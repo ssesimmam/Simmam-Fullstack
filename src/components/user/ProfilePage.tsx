@@ -174,7 +174,7 @@ export function ProfilePage() {
         if (session) await handleSession(session)
 
         // Listen for auth changes
-        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
           if (!mounted) return
           if (session) {
             void handleSession(session)

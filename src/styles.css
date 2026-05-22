@@ -194,7 +194,7 @@
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
   }
 
-  [data-scroll-card] {
+  .scroll-card {
     transform-style: preserve-3d;
     perspective: 1200px;
     opacity: 0;
@@ -208,13 +208,13 @@
     will-change: transform, opacity, filter;
   }
 
-  [data-scroll-card].scroll-card-visible {
+  .scroll-card.scroll-card-visible {
     opacity: 1;
     transform: translateY(0) scale(1) rotateX(0deg);
     filter: blur(0);
   }
 
-  [data-scroll-card].scroll-card-visible:hover {
+  .scroll-card.scroll-card-visible:hover {
     transform: translateY(-6px) scale(1.01) rotateX(2deg) rotateY(-2deg);
   }
 

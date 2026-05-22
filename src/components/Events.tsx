@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Tilt3D } from "./Tilt3D";
 import { Bell, BookOpen, X, Search } from "lucide-react";
@@ -17,6 +17,16 @@ export function Events() {
   const [showRules, setShowRules] = useState(false);
   const [announcements, setAnnouncements] = useState<ApiAnnouncement[]>([]);
   const [rules, setRules] = useState<ApiRule[]>([]);
+  // Local hydration guard for CTA/search section to keep SSR and first client
+  // render identical. We intentionally render the stable search layout on the
+  // server and during the first client render; after hydration this flag
+  // becomes true and the Register CTA can appear based on event state.
+  const [ctaHydrated, setCtaHydrated] = useState(false);
+  useEffect(() => {
+    setCtaHydrated(true);
+  }, []);
+
+  // Debug logs removed to avoid spam during rendering.
 
   useEffect(() => {
     void fetchAnnouncements()
@@ -50,13 +60,15 @@ export function Events() {
     }
   }, [])
 
-  const list = events.filter((e) => {
-    const matchesCategory = filter === "All" || e.mainCategory === filter;
-    const matchesSearch =
-      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const list = useMemo(() => {
+    return [...events].filter((e) => {
+      const matchesCategory = filter === "All" || e.mainCategory === filter;
+      const matchesSearch =
+        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.category.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [events, filter, searchQuery]);
 
   return (
     <div id="events" className="relative py-24 md:py-32">
@@ -92,8 +104,8 @@ export function Events() {
           subtitle="From algorithmic showdowns to runway spectacles — SIMMAM 2026 has a stage for every spark."
         />
 
-        {/* Global Register Button */}
-        {list.some((e) => e.registration_open) && (
+        {/* CTA / Search section - render stable search layout until hydrated */}
+        {ctaHydrated && list.some((e) => e.registration_open) ? (
           <div className="flex justify-center mb-10">
             <Link
               to="/register"
@@ -102,21 +114,20 @@ export function Events() {
               Go to Registration Portal
             </Link>
           </div>
-        )}
-
-        {/* Search */}
-        <div className="relative max-w-md mx-auto mb-8">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="w-5 h-5 text-foreground/40" />
+        ) : (
+          <div className="relative max-w-md mx-auto mb-8">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-foreground/40" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search events, categories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition text-foreground placeholder:text-foreground/40"
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search events, categories..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition text-foreground placeholder:text-foreground/40"
-          />
-        </div>
+        )}
 
         {/* Category filters */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
@@ -145,7 +156,12 @@ export function Events() {
                 <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl bg-[var(--gold)]/30 opacity-50 group-hover:opacity-90 transition" />
                 <div className="relative flex items-start justify-between">
                   <div className="p-3 rounded-xl bg-gold/10 text-gold neon-border group-hover:scale-110 transition-transform">
-                    {e.icon ? <e.icon className="w-5 h-5" /> : <div className="w-5 h-5 bg-gold/20 rounded" />}
+                    {/* Runtime-safety: ensure icon is a callable React component */}
+                    {(() => {
+                      const IconComponent: any = (typeof e.icon === 'function' || (e.icon && (e.icon as any).$$typeof)) ? e.icon : undefined
+                      const SafeIcon = IconComponent || (() => <div className="w-5 h-5 bg-gold/20 rounded" />)
+                      return <SafeIcon className="w-5 h-5" />
+                    })()}
                   </div>
                   <span className="text-[10px] tracking-[0.25em] text-foreground/50">
                     {e.category.toUpperCase()}
@@ -193,7 +209,11 @@ export function Events() {
 
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 rounded-xl bg-gold/10 text-gold neon-border">
-                  {selectedEvent.icon ? <selectedEvent.icon className="w-6 h-6" /> : <div className="w-6 h-6 bg-gold/20 rounded" />}
+                  {(() => {
+                    const IconComponent: any = (typeof selectedEvent.icon === 'function' || (selectedEvent.icon && (selectedEvent.icon as any).$$typeof)) ? selectedEvent.icon : undefined
+                    const SafeIcon = IconComponent || (() => <div className="w-6 h-6 bg-gold/20 rounded" />)
+                    return <SafeIcon className="w-6 h-6" />
+                  })()}
                 </div>
                 <div>
                   <h3 className="font-display text-2xl font-bold text-foreground">

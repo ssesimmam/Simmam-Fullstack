@@ -122,13 +122,31 @@ export function EventsShowtime() {
   const { events: adminEvents } = useData();
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalEvent, setModalEvent] = useState<RegistrationEvent | null>(null);
-  const [user, setUser] = useState(getUser);
+  // Avoid reading sessionStorage during render to keep SSR deterministic.
+  const [user, setUser] = useState<ReturnType<typeof getUser> | null>(null);
+
+  // Hydrate user from sessionStorage on mount (client-only)
+  useEffect(() => {
+    try {
+      setUser(getUser());
+    } catch {
+      // ignore
+    }
+  }, []);
   const [registrationTick, setRegistrationTick] = useState(0);
   const [animating, setAnimating] = useState(false);
   const dateScrollRef = useRef<HTMLDivElement>(null);
 
-  const refreshUser = () => {
-    setUser(getUser());
+  const refreshUser = async () => {
+    const freshUser = getUser();
+    setUser(freshUser);
+    if (freshUser?.email) {
+      try {
+        await syncUserRegistrations(freshUser.email);
+      } catch {
+        // ignore
+      }
+    }
     setRegistrationTick((t) => t + 1);
   };
 
@@ -430,8 +448,8 @@ export function EventsShowtime() {
       {modalEvent && (
         <AuthModal
           event={modalEvent}
-          onClose={() => { setModalEvent(null); refreshUser(); }}
-          onRegistered={() => { setModalEvent(null); refreshUser(); }}
+          onClose={() => { setModalEvent(null); void refreshUser(); }}
+          onRegistered={() => { setModalEvent(null); void refreshUser(); }}
         />
       )}
 

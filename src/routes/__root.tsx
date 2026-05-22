@@ -129,7 +129,7 @@ function RootComponent() {
     );
 
     cards.forEach((card) => {
-      card.dataset.scrollCard = "true";
+      card.classList.add("scroll-card");
     });
 
     const observer = new IntersectionObserver(

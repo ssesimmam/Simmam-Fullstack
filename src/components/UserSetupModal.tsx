@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
@@ -11,15 +11,33 @@ interface UserSetupModalProps {
 
 export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
   const { houses } = useData()
-  const existing = getUser()
 
-  const [formName, setFormName] = useState(existing?.name ?? '')
-  const [formRegNo, setFormRegNo] = useState(existing?.registerNumber ?? '')
-  const [formMobile, setFormMobile] = useState(existing?.mobileNumber ?? '')
-  const [formEmail, setFormEmail] = useState(existing?.email ?? '')
-  const [formHouse, setFormHouse] = useState(existing?.house ?? '')
+  // Do not access sessionStorage during render. Hydrate on mount.
+  const [formName, setFormName] = useState('')
+  const [formRegNo, setFormRegNo] = useState('')
+  const [formMobile, setFormMobile] = useState('')
+  const [formEmail, setFormEmail] = useState('')
+  const [formHouse, setFormHouse] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Hydrate form values from stored profile on client mount
+  const [existingProfile, setExistingProfile] = useState<UserProfile | null>(null)
+  useEffect(() => {
+    try {
+      const existing = getUser()
+      if (existing) {
+        setExistingProfile(existing)
+        setFormName(existing.name ?? '')
+        setFormRegNo(existing.registerNumber ?? '')
+        setFormMobile(existing.mobileNumber ?? '')
+        setFormEmail(existing.email ?? '')
+        setFormHouse(existing.house ?? '')
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,12 +55,12 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
 
     try {
       const backendProfile = await fetchUserProfileByEmail(normalizedEmail)
-      if (!existing && backendProfile.user) {
+      if (!existingProfile && backendProfile.user) {
         setError('This email is already registered. Please log in instead.')
         setSubmitting(false)
         return
       }
-      if (existing && existing.email !== normalizedEmail && backendProfile.user) {
+      if (existingProfile && existingProfile.email !== normalizedEmail && backendProfile.user) {
         setError('This email is already registered. Please use a different email or log in.')
         setSubmitting(false)
         return
@@ -115,11 +133,11 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
               <div className="mb-2 flex items-center gap-2">
                 <Shield className="h-5 w-5 text-[#D4AF37]" />
                 <h2 className="font-display text-xl font-bold text-white">
-                  {existing ? 'Edit Profile' : 'Set Up Your Profile'}
+                  {existingProfile ? 'Edit Profile' : 'Set Up Your Profile'}
                 </h2>
               </div>
               <p className="mb-6 text-sm text-white/45">
-                {existing
+                {existingProfile
                   ? 'Update your details below.'
                   : 'Enter your details once to unlock your full SIMMAM 2026 dashboard.'}
               </p>
@@ -284,7 +302,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
                     </>
                   ) : (
                     <>
-                      {existing ? 'Update Profile' : 'Save & Continue'}
+                      {existingProfile ? 'Update Profile' : 'Save & Continue'}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
