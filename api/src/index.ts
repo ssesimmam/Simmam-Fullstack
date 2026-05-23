@@ -11,7 +11,7 @@ import { randomUUID } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
-import { requireTurnstile } from './middleware/turnstile'
+import { requireTurnstile, verifyTurnstileToken } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
 import {
@@ -198,6 +198,8 @@ const authenticateSession = async (req: express.Request, res: express.Response, 
   const { data, error } = await supabase.auth.getUser(token)
   const user = data?.user
   if (error || !user?.email || !user.id) {
+    console.error('authenticateSession auth error:', error)
+    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession auth error: ${JSON.stringify(error)}\n`)
     return res.status(401).json({ error: 'invalid_auth_token' })
   }
 
@@ -252,6 +254,8 @@ const requireSignedInUser = async (req: express.Request, res: express.Response, 
   const { data, error } = await supabase.auth.getUser(token)
   const user = data?.user
   if (error || !user?.email) {
+    console.error('requireSignedInUser auth error:', error)
+    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] requireSignedInUser auth error: ${JSON.stringify(error)}\n`)
     return res.status(401).json({ error: 'invalid_auth_token' })
   }
 
@@ -427,6 +431,55 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
     const { data, error } = await query.order('date', { ascending: true }).order('time_slot', { ascending: true })
     if (error) throw error
     res.json({ data: data || [] })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+// Public settings endpoint
+app.get('/api/settings', publicLimiter, cacheMiddleware(60), async (_req, res) => {
+  try {
+    if (adminSettingsTableMissing) {
+      return res.json({
+        settings: {
+          festivalStatus: inMemoryAdminSettings.festival_status,
+          registrationsOpen: inMemoryAdminSettings.registrations_open,
+          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+        },
+      })
+    }
+
+    const { data, error } = await supabase
+      .from('admin_settings')
+      .select('festival_status,registrations_open,coordinator_assignments')
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.json({ settings: DEFAULT_ADMIN_SETTINGS })
+      }
+      if (isMissingAdminSettingsTableError(error)) {
+        adminSettingsTableMissing = true
+        return res.json({
+          settings: {
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          },
+        })
+      }
+      throw error
+    }
+
+    res.json({
+      settings: {
+        festivalStatus: data?.festival_status ?? DEFAULT_ADMIN_SETTINGS.festival_status,
+        registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
+        coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
+      },
+    })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })
@@ -1875,11 +1928,31 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
   }
 })
 
+// Verify Turnstile token (used by frontend to validate token immediately)
+app.post('/api/turnstile/verify', publicLimiter, async (req, res) => {
+  try {
+    const token = req.body?.token || req.headers['x-turnstile-token']
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ ok: false, error: 'missing_token' })
+    }
+
+    const ip = (req.headers['cf-connecting-ip'] as string) || req.ip || undefined
+    const result = await verifyTurnstileToken(String(token), ip)
+    if (!result.success) {
+      console.error('TURNSTILE VERIFY (frontend) FAILED:', result)
+      return res.status(403).json({ ok: false, error: 'turnstile_failed', details: result })
+    }
+
+    return res.json({ ok: true, data: result.data })
+  } catch (err: any) {
+    console.error('Turnstile verify endpoint error:', err)
+    return res.status(500).json({ ok: false, error: 'turnstile_error' })
+  }
+})
+
 // Create registration: upsert user then insert registration
 app.post('/api/registrations', registrationLimiter, requireSignedInUser, requireTurnstile, async (req, res) => {
   try {
-    console.log('REQUEST BODY:', req.body);
-    console.log('TURNSTILE TOKEN:', req.body?.turnstile_token);
     const parsedBody = validateRequest(publicRegistrationBodySchema, req.body)
     if (!parsedBody.ok) {
       return respondValidationError(res, parsedBody.error)
@@ -1903,8 +1976,21 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
       resolvedEventId = eventRow.id
     }
 
-    // Use service-role RPC that accepts user id to avoid client-side RPC bypass
-    const userId = (req as any).authenticatedUser?.id
+    // Fetch the public.users.id because it may not match the auth.users.id from the JWT session
+    const authEmail = (req as any).authenticatedUser?.email || String(email).toLowerCase()
+    const { data: userRow, error: userFetchErr } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', authEmail)
+      .limit(1)
+      .single()
+
+    if (userFetchErr || !userRow) {
+      return res.status(404).json({ error: 'user_not_found' })
+    }
+
+    const userId = userRow.id
+
     const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration_safe', {
       p_user_id: userId,
       p_event_id: resolvedEventId,
@@ -1933,7 +2019,7 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
 })
 
 // Get user's registrations
-app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, cacheMiddleware(60), async (req, res) => {
+app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, async (req, res) => {
   try {
     const parsedParams = validateRequest(paramsSchemas.email, req.params)
     if (!parsedParams.ok) {

@@ -27,10 +27,9 @@ function CheckInPage() {
   const [attendanceReport, setAttendanceReport] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  if (!hasPermission('checkin', 'read')) {
-    return <AccessDenied />
-  }
+  const canRead = hasPermission('checkin', 'read')
 
+  // All hooks must run before any conditional returns (React Rules of Hooks)
   const eventSuggestions = useMemo(() => {
     return Array.from(new Set(rows.map((row) => row.event_name).filter(Boolean)))
   }, [rows])
@@ -44,12 +43,12 @@ function CheckInPage() {
     }
   }
 
-  const loadData = async () => {
+  const loadData = async (search?: string, event?: string) => {
     setLoading(true)
     try {
       const registrations = await fetchAdminRegistrations({
-        search: searchQuery || undefined,
-        event: selectedEvent || undefined,
+        search: search || undefined,
+        event: event || undefined,
       })
       setRows(registrations)
       await loadReport()
@@ -62,12 +61,12 @@ function CheckInPage() {
   }
 
   useEffect(() => {
+    if (!canRead) return
     void loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [canRead])
 
   const handleSearch = () => {
-    void loadData()
+    void loadData(searchQuery, selectedEvent)
   }
 
   const handleMarkAttendance = async (registrationId: string) => {
@@ -99,10 +98,14 @@ function CheckInPage() {
     try {
       await removeAdminCheckin(registrationId)
       toast.success('Attendance removed successfully')
-      await loadData()
+      await loadData(searchQuery, selectedEvent)
     } catch (error: any) {
       toast.error(error?.message || 'Unable to remove attendance')
     }
+  }
+
+  if (!canRead) {
+    return <AccessDenied />
   }
 
   return (
@@ -238,4 +241,3 @@ function CheckInPage() {
     </div>
   )
 }
-

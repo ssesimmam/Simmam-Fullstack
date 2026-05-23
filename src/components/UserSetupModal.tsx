@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
@@ -7,19 +7,38 @@ import { useData } from '@/lib/store'
 interface UserSetupModalProps {
   onSave: () => void
   onClose: () => void
+  preventDismiss?: boolean
 }
 
-export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
+export function UserSetupModal({ onSave, onClose, preventDismiss = false }: UserSetupModalProps) {
   const { houses } = useData()
-  const existing = getUser()
 
-  const [formName, setFormName] = useState(existing?.name ?? '')
-  const [formRegNo, setFormRegNo] = useState(existing?.registerNumber ?? '')
-  const [formMobile, setFormMobile] = useState(existing?.mobileNumber ?? '')
-  const [formEmail, setFormEmail] = useState(existing?.email ?? '')
-  const [formHouse, setFormHouse] = useState(existing?.house ?? '')
+  // Do not access sessionStorage during render. Hydrate on mount.
+  const [formName, setFormName] = useState('')
+  const [formRegNo, setFormRegNo] = useState('')
+  const [formMobile, setFormMobile] = useState('')
+  const [formEmail, setFormEmail] = useState('')
+  const [formHouse, setFormHouse] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Hydrate form values from stored profile on client mount
+  const [existingProfile, setExistingProfile] = useState<UserProfile | null>(null)
+  useEffect(() => {
+    try {
+      const existing = getUser()
+      if (existing) {
+        setExistingProfile(existing)
+        setFormName(existing.name ?? '')
+        setFormRegNo(existing.registerNumber ?? '')
+        setFormMobile(existing.mobileNumber ?? '')
+        setFormEmail(existing.email ?? '')
+        setFormHouse(existing.house ?? '')
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,12 +56,12 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
 
     try {
       const backendProfile = await fetchUserProfileByEmail(normalizedEmail)
-      if (!existing && backendProfile.user) {
+      if (!existingProfile && backendProfile.user) {
         setError('This email is already registered. Please log in instead.')
         setSubmitting(false)
         return
       }
-      if (existing && existing.email !== normalizedEmail && backendProfile.user) {
+      if (existingProfile && existingProfile.email !== normalizedEmail && backendProfile.user) {
         setError('This email is already registered. Please use a different email or log in.')
         setSubmitting(false)
         return
@@ -73,7 +92,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={preventDismiss ? undefined : onClose}
       />
 
       <div
@@ -101,25 +120,27 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
             <div className="h-1 w-full bg-gradient-to-r from-[oklch(0.55_0.22_27)] via-[#D4AF37] to-[oklch(0.55_0.22_27)]" />
 
             {/* Close button */}
-            <button
-              onClick={onClose}
-              id="user-setup-close-btn"
-              className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {!preventDismiss && (
+              <button
+                onClick={onClose}
+                id="user-setup-close-btn"
+                className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
 
             <div className="p-6 md:p-8">
               {/* Header */}
               <div className="mb-2 flex items-center gap-2">
                 <Shield className="h-5 w-5 text-[#D4AF37]" />
                 <h2 className="font-display text-xl font-bold text-white">
-                  {existing ? 'Edit Profile' : 'Set Up Your Profile'}
+                  {existingProfile ? 'Edit Profile' : 'Set Up Your Profile'}
                 </h2>
               </div>
               <p className="mb-6 text-sm text-white/45">
-                {existing
+                {existingProfile
                   ? 'Update your details below.'
                   : 'Enter your details once to unlock your full SIMMAM 2026 dashboard.'}
               </p>
@@ -284,7 +305,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
                     </>
                   ) : (
                     <>
-                      {existing ? 'Update Profile' : 'Save & Continue'}
+                      {existingProfile ? 'Update Profile' : 'Save & Continue'}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}

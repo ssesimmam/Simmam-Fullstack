@@ -2,7 +2,7 @@ Production deployment checklist
 
 1) Prepare staging environment
 - Create staging DB and restore a recent backup from production.
-- Configure staging env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE, VITE_* keys, REDIS_URL, SENTRY_DSN, CLOUDFLARE_TURNSTILE_SECRET.
+- Configure staging env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE, VITE_* keys, REDIS_URL, SENTRY_DSN, and one of TURNSTILE_SECRET_KEY, TURNSTILE_SECRET, or CLOUDFLARE_TURNSTILE_SECRET.
 
 2) Apply safer DB migration to staging
 - Run:
@@ -32,7 +32,7 @@ Cloudflare Pages
 Cloudflare WAF, Rate-limits and Turnstile at edge
 - Configure Cloudflare WAF rules to block common bot / SQLi / XSS payloads.
 - Add Rate Limiting for the registration and login endpoints (e.g., 10 reqs per minute per IP for registration).
-- Deploy the `cloudflare/turnstile-worker.js` Worker and route your registration POST path through it. Store Turnstile secret as a Worker secret named `TURNSTILE_SECRET` or configure via Pages environment variables.
+- Deploy the `cloudflare/turnstile-worker.js` Worker and route your registration POST path through it. Store Turnstile secret as a Worker secret named `TURNSTILE_SECRET` or configure via Pages environment variables. The backend also accepts `TURNSTILE_SECRET_KEY`, `TURNSTILE_SECRET`, or `CLOUDFLARE_TURNSTILE_SECRET`.
 
 Staging test automation
 - The CI `staging-deploy` job can run smoke tests and load tests before or after deployment. Set these env vars in the workflow or GitHub Actions UI:

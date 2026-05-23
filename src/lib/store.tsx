@@ -172,6 +172,9 @@ export const mapRemoteEventToAdminEvent = (
   order: fallback?.order ?? order + 1,
 });
 
+let cachedRemoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>> | null = null;
+let lastFetchTime = 0;
+
 export async function resolvePersistedEventId(event: AdminEvent): Promise<string> {
   if (!event.id.startsWith("event-")) {
     return event.id;

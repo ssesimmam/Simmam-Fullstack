@@ -34,11 +34,14 @@ function LeaderboardManagement() {
     }
   }
 
-  useEffect(() => {
-    void loadLeaderboard()
-  }, [])
+  const canRead = hasPermission('leaderboard', 'read')
 
-  if (!hasPermission('leaderboard', 'read')) {
+  useEffect(() => {
+    if (!canRead) return
+    void loadLeaderboard()
+  }, [canRead])
+
+  if (!canRead) {
     return <AccessDenied />
   }
 

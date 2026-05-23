@@ -105,11 +105,21 @@ const apiBase = (() => {
 
 async function getUserAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    if (!token) return {}
+    // First try getSession() (fast, local cache)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (token) return { Authorization: `Bearer ${token}` }
 
-    return { Authorization: `Bearer ${token}` }
+    // Fallback: getUser() makes a server round-trip to re-establish the session
+    // This handles the case where the local session hasn't been hydrated yet
+    // (e.g. immediately after an OAuth redirect)
+    const { data: userData } = await supabase.auth.getUser()
+    const refreshedSession = (await supabase.auth.getSession()).data.session
+    if (refreshedSession?.access_token) {
+      return { Authorization: `Bearer ${refreshedSession.access_token}` }
+    }
+
+    return {}
   } catch {
     return {}
   }
@@ -222,4 +232,8 @@ export async function upsertUserProfile(payload: {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export async function fetchPublicSettings(): Promise<{ settings: any }> {
+  return request<{ settings: any }>('/settings')
 }

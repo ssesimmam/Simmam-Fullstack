@@ -9,8 +9,11 @@ import {
   ChevronRight,
   Calendar,
   User,
+  ShieldAlert,
+  Trophy,
+  ArrowLeft,
 } from "lucide-react";
-import { getUser, isRegisteredForEvent, syncUserRegistrations } from "@/lib/registrationStore";
+import { getUser, getUserRegistrations, isRegisteredForEvent, syncUserRegistrations } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useData } from "@/lib/store";
 
@@ -119,16 +122,127 @@ function EventCard({ event, user, onRegister, registered, registrationOpen }: Ev
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function EventsShowtime() {
-  const { events: adminEvents } = useData();
+  const { events: adminEvents, settings } = useData();
+
+  // If global registration is closed, show a stunning "Closed" full-page experience
+  if (settings && !settings.registrationsOpen) {
+    return (
+      <div className="relative min-h-[70vh] flex items-center justify-center px-4 py-16">
+        {/* Deep ambient glows */}
+        <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full blur-[140px] opacity-15"
+            style={{ background: "radial-gradient(circle, #D4AF37 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute top-1/3 left-1/4 w-[350px] h-[300px] rounded-full blur-[120px] opacity-10"
+            style={{ background: "radial-gradient(circle, oklch(0.55 0.22 27) 0%, transparent 70%)" }}
+          />
+        </div>
+
+        <div className="w-full max-w-xl text-center relative z-10 animate-rise-in">
+          {/* Main glass card */}
+          <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-8 md:p-12 shadow-[0_0_50px_rgba(212,175,55,0.05)]">
+            <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/5 text-[var(--gold)] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+              <ShieldAlert className="h-10 w-10 text-[#D4AF37]" />
+              <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 opacity-20 blur-sm animate-pulse" />
+            </div>
+
+            <span className="text-[10px] font-bold tracking-[0.4em] text-[#D4AF37]/80 uppercase">SIMMAM 2026</span>
+            <h2 className="mt-3 mb-4 font-display text-3xl md:text-4xl font-black tracking-tight text-white uppercase leading-none">
+              Portal{" "}
+              <span
+                className="text-transparent bg-clip-text"
+                style={{ backgroundImage: "linear-gradient(135deg, #D4AF37, #f59e0b)" }}
+              >
+                Closed
+              </span>
+            </h2>
+
+            <p className="text-sm text-white/55 leading-relaxed mb-8">
+              Online registration for all events is currently closed. If you have any questions or require an adjustment to your registered events, please contact your respective <strong className="text-white/80">House Coordinator</strong> or the core registration team.
+            </p>
+
+            {/* Info boxes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
+              <Link to="/live-scores" className="p-4 rounded-xl border border-white/5 bg-white/5 hover:border-white/10 transition block">
+                <Trophy className="h-5 w-5 text-[#D4AF37] mb-2" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Live Standings</h3>
+                <p className="text-[11px] text-white/45">Stay up-to-date with live point logs and leaderboard standings.</p>
+              </Link>
+              <Link to="/my-schedule" className="p-4 rounded-xl border border-white/5 bg-white/5 hover:border-white/10 transition block">
+                <Calendar className="h-5 w-5 text-[#D4AF37] mb-2" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-1">My Schedule</h3>
+                <p className="text-[11px] text-white/45">Review all your confirmed registrations and schedule slots.</p>
+              </Link>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/events"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold hover:bg-[#D4AF37]/10 transition-all active:scale-95 animate-lift"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to All Events
+              </Link>
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--crimson)] to-[var(--gold)] text-background text-xs font-bold shadow-[var(--shadow-glow-red)] hover:opacity-90 transition-all active:scale-95 animate-lift"
+              >
+                Go to Homepage
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [modalEvent, setModalEvent] = useState<RegistrationEvent | null>(null);
-  const [user, setUser] = useState(getUser);
+  // Avoid reading sessionStorage during render to keep SSR deterministic.
+  const [user, setUser] = useState<ReturnType<typeof getUser> | null>(null);
+
+  // Hydrate user from sessionStorage on mount (client-only)
+  useEffect(() => {
+    try {
+      setUser(getUser());
+    } catch {
+      // ignore
+    }
+  }, []);
   const [registrationTick, setRegistrationTick] = useState(0);
   const [animating, setAnimating] = useState(false);
   const dateScrollRef = useRef<HTMLDivElement>(null);
 
-  const refreshUser = () => {
-    setUser(getUser());
+  // Recompute whenever registrationTick changes (i.e. after any sync or successful registration).
+  // Without this, isRegisteredForEvent reads localStorage but React never re-renders because
+  // localStorage mutations aren't reactive.
+  const registeredEventIds = useMemo(() => {
+    if (!user?.email) return new Set<string>();
+    const regs = getUserRegistrations(user.email);
+    return new Set(regs.map((r) => r.eventId));
+  }, [user?.email, registrationTick]);
+
+  const isEventRegistered = (eventId: string, eventName: string): boolean => {
+    // Primary: match by ID from the memoized set
+    if (registeredEventIds.has(eventId)) return true;
+    // Fallback: match by name (for events stored without a numeric backend ID)
+    if (!user?.email) return false;
+    return isRegisteredForEvent(user.email, eventId, eventName);
+  };
+
+  const refreshUser = async () => {
+    const freshUser = getUser();
+    setUser(freshUser);
+    if (freshUser?.email) {
+      try {
+        await syncUserRegistrations(freshUser.email);
+      } catch {
+        // ignore
+      }
+    }
     setRegistrationTick((t) => t + 1);
   };
 
@@ -399,7 +513,7 @@ export function EventsShowtime() {
                           key={ev.id}
                           event={ev}
                           user={user}
-                          registered={user ? isRegisteredForEvent(user.email, ev.id, ev.name) : false}
+                          registered={isEventRegistered(ev.id, ev.name)}
                           registrationOpen={ev.registrationOpen}
                           onRegister={(e) => setModalEvent(toRegEvent(e))}
                         />
@@ -430,8 +544,8 @@ export function EventsShowtime() {
       {modalEvent && (
         <AuthModal
           event={modalEvent}
-          onClose={() => { setModalEvent(null); refreshUser(); }}
-          onRegistered={() => { setModalEvent(null); refreshUser(); }}
+          onClose={() => { setModalEvent(null); void refreshUser(); }}
+          onRegistered={() => { setModalEvent(null); void refreshUser(); }}
         />
       )}
 

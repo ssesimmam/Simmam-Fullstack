@@ -21,6 +21,8 @@ export function ProfilePage() {
   const isProfileComplete = useCallback((profile: UserProfile | null | undefined) =>
     !!profile?.name?.trim() &&
     !!profile?.registerNumber?.trim() &&
+    !!profile?.mobileNumber?.trim() &&
+    !!profile?.email?.trim() &&
     !!profile?.house?.trim(),
   [])
 
@@ -174,7 +176,7 @@ export function ProfilePage() {
         if (session) await handleSession(session)
 
         // Listen for auth changes
-        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
           if (!mounted) return
           if (session) {
             void handleSession(session)
@@ -311,6 +313,7 @@ export function ProfilePage() {
 
       {showSetupModal && (
         <UserSetupModal
+          preventDismiss={!isProfileComplete(user)}
           onSave={() => {
             refreshUser()
             setShowSetupModal(false)

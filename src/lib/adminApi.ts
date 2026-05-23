@@ -9,7 +9,7 @@ const adminBase = (() => {
 
 async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data } = await adminSupabase.auth.getSession()
+    const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     if (!token) return {}
 

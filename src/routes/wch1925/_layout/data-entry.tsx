@@ -94,6 +94,23 @@ function DataEntryPage() {
     setExpandedEvents(newExpanded)
   }
 
+  const getOrCreateEvent = async (event: AdminEvent): Promise<string> => {
+    const liveEventId = await resolvePersistedEventId(event)
+    if (!liveEventId.startsWith('event-')) return liveEventId
+
+    const created = await createAdminEvent({
+      name: event.name,
+      description: event.description || 'No description provided.',
+      category: event.category || 'Technical',
+      main_category: event.mainCategory || 'Tech',
+      date: (event as any).date || new Date().toISOString().split('T')[0],
+      time_slot: event.time || '10:00 AM to 11:00 AM',
+      venue: event.venue || 'Main Campus',
+      capacity: event.participantCount || 0,
+    })
+    return created.id
+  }
+
   const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingEvent) return
@@ -118,7 +135,7 @@ function DataEntryPage() {
     }
 
     try {
-      const liveEventId = await resolvePersistedEventId(editingEvent)
+      const liveEventId = await getOrCreateEvent(editingEvent)
       const updated = await updateAdminEvent(liveEventId, payload)
       updateEvent(mapRemoteEventToAdminEvent(updated as any, editingEvent))
       setEditingEvent(null)
@@ -131,47 +148,80 @@ function DataEntryPage() {
   }
 
   const applyLiveToggle = async (event: AdminEvent, nextLiveState: boolean) => {
-    const liveEventId = await resolvePersistedEventId(event)
-
-    const updated = await updateAdminEvent(liveEventId, {
-      is_live_tomorrow: nextLiveState,
-      is_floated: nextLiveState ? true : event.is_floated,
-      registration_open: nextLiveState ? true : event.registration_open,
-    })
-
+    // Optimistic UI update
     updateEvent({
-      ...mapRemoteEventToAdminEvent(updated as any, event),
+      ...event,
       is_live_tomorrow: nextLiveState,
       is_floated: nextLiveState ? true : event.is_floated,
       registration_open: nextLiveState ? true : event.registration_open,
     })
-    void refreshData()
+
+    try {
+      const liveEventId = await getOrCreateEvent(event)
+
+      const updated = await updateAdminEvent(liveEventId, {
+        is_live_tomorrow: nextLiveState,
+        is_floated: nextLiveState ? true : event.is_floated,
+        registration_open: nextLiveState ? true : event.registration_open,
+      })
+
+      updateEvent({
+        ...mapRemoteEventToAdminEvent(updated as any, event),
+        is_live_tomorrow: nextLiveState,
+        is_floated: nextLiveState ? true : event.is_floated,
+        registration_open: nextLiveState ? true : event.registration_open,
+      })
+      void refreshData()
+    } catch (err) {
+      updateEvent(event)
+      toast.error('Failed to toggle live state')
+    }
   }
 
   const applyFloatToggle = async (event: AdminEvent, nextFloatState: boolean) => {
-    const liveEventId = await resolvePersistedEventId(event)
-    const updated = await updateAdminEvent(liveEventId, {
+    updateEvent({
+      ...event,
       is_floated: nextFloatState,
     })
 
-    updateEvent({
-      ...mapRemoteEventToAdminEvent(updated as any, event),
-      is_floated: nextFloatState,
-    })
-    void refreshData()
+    try {
+      const liveEventId = await getOrCreateEvent(event)
+      const updated = await updateAdminEvent(liveEventId, {
+        is_floated: nextFloatState,
+      })
+
+      updateEvent({
+        ...mapRemoteEventToAdminEvent(updated as any, event),
+        is_floated: nextFloatState,
+      })
+      void refreshData()
+    } catch (err) {
+      updateEvent(event)
+      toast.error('Failed to toggle float state')
+    }
   }
 
   const applyRegistrationToggle = async (event: AdminEvent, nextRegistrationState: boolean) => {
-    const liveEventId = await resolvePersistedEventId(event)
-    const updated = await updateAdminEvent(liveEventId, {
+    updateEvent({
+      ...event,
       registration_open: nextRegistrationState,
     })
 
-    updateEvent({
-      ...mapRemoteEventToAdminEvent(updated as any, event),
-      registration_open: nextRegistrationState,
-    })
-    void refreshData()
+    try {
+      const liveEventId = await getOrCreateEvent(event)
+      const updated = await updateAdminEvent(liveEventId, {
+        registration_open: nextRegistrationState,
+      })
+
+      updateEvent({
+        ...mapRemoteEventToAdminEvent(updated as any, event),
+        registration_open: nextRegistrationState,
+      })
+      void refreshData()
+    } catch (err) {
+      updateEvent(event)
+      toast.error('Failed to toggle registration state')
+    }
   }
 
   const handleAddEvent = async () => {
@@ -333,6 +383,11 @@ function DataEntryPage() {
     }
 
     try {
+      const eventObj = findAdminEventByName(newP.event)
+      if (eventObj) {
+        await getOrCreateEvent(eventObj)
+      }
+
       const created = await createAdminParticipant({
         email: newP.email,
         name: newP.name,
@@ -463,6 +518,7 @@ function DataEntryPage() {
                     className="bg-black border-[#333] text-white"
                     value={newEventDate}
                     onChange={(e) => setNewEventDate(e.target.value)}
+                    style={{ colorScheme: 'dark' }}
                   />
                 </div>
               </div>

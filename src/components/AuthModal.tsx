@@ -1,13 +1,13 @@
-import { Turnstile } from '@marsidev/react-turnstile'
+import { Turnstile } from './Turnstile'
 import { useState, useEffect } from 'react'
 import { Check, LogIn, Shield, X } from 'lucide-react'
 
 import {
   getUser,
-  clearUser,
   isRegisteredForEvent,
   registerForEvent,
   saveUser,
+  syncUserRegistrations,
   type UserProfile,
 } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
@@ -34,22 +34,30 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
-  const existingUser = getUser()
-  const [step, setStep] = useState<Step>(existingUser ? 'confirm' : 'login')
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [step, setStep] = useState<Step>('login')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
+  const [alreadyReg, setAlreadyReg] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>()
   const [turnstileError, setTurnstileError] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
 
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+  if (!turnstileSiteKey && import.meta.env.DEV) {
+    console.warn('[AuthModal] VITE_TURNSTILE_SITE_KEY is not set — Turnstile widget will fail silently.')
+  }
   useEffect(() => {
     let mounted = true
 
     const syncSessionUser = async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession()
-        const session = sessionData?.session
-        const email = session?.user?.email?.toLowerCase()
+        // Use getUser() instead of getSession() — getUser() makes a server round-trip
+        // and reliably returns the user even right after an OAuth redirect before the
+        // local session cache is hydrated.
+        const { data: userData } = await supabase.auth.getUser()
+        const email = userData?.user?.email?.toLowerCase()
 
         if (!mounted || !email) return
 
@@ -75,7 +83,11 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         }
 
         saveUser(newUser)
+        await syncUserRegistrations(email)
+        
         if (mounted) {
+          setCurrentUser(newUser)
+          setAlreadyReg(isRegisteredForEvent(email, event.backendEventId ?? event.id, event.name))
           setStep('confirm')
         }
       } catch (error: any) {
@@ -87,7 +99,18 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     void syncSessionUser()
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    try {
+      const stored = getUser()
+      if (stored) {
+        setCurrentUser(stored)
+        setAlreadyReg(isRegisteredForEvent(stored.email, event.backendEventId ?? event.id, event.name))
+        setStep('confirm')
+      }
+    } catch {
+      // ignore
+    }
+
+    const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (!mounted) return
       if (session?.user?.email) {
         void syncSessionUser()
@@ -102,7 +125,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         // ignore unsubscribe errors
       }
     }
-  }, [])
+  }, [event.backendEventId, event.id, event.name])
 
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
@@ -110,7 +133,6 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     try {
       localStorage.setItem('simmam_pending_registration_event_id', event.id)
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -119,9 +141,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         },
       })
 
-      if (error) {
-        setFormError(error.message || 'Unable to start Google sign-in')
-      }
+      if (error) setFormError(error.message || 'Unable to start Google sign-in')
     } catch (err: any) {
       setFormError(err?.message || 'Unable to start Google sign-in')
     } finally {
@@ -133,6 +153,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
     const user = getUser()
     if (!user) {
       setStep('login')
+      setTurnstileToken(undefined)
+      setTurnstileKey((k) => k + 1)
       return
     }
 
@@ -143,9 +165,20 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
     }
     setSubmitting(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 600))
-
     try {
+      // Always refresh the session before calling the API to ensure the token is not expired
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      if (refreshError || !refreshData.session) {
+        // Session cannot be refreshed – force re-login
+        await supabase.auth.signOut()
+        setSubmitting(false)
+        setFormError('Your session has expired. Please sign in again.')
+        setTurnstileToken(undefined)
+        setTurnstileKey((k) => k + 1)
+        setStep('login')
+        return
+      }
+
       const result = await registerForEvent(
         user.email,
         {
@@ -161,49 +194,41 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         turnstileToken,
       )
 
-      setSubmitting(false)
-
       if (result.alreadyRegistered) {
-        setFormError('You are already registered for this event.')
+        setAlreadyReg(true)
+        setSubmitting(false)
+        try { await syncUserRegistrations(user.email) } catch { /* ignore sync failure */ }
         return
       }
 
+      // Success — sync localStorage so re-opening the modal shows green box
+      try { await syncUserRegistrations(user.email) } catch { /* ignore */ }
+      setAlreadyReg(true)
       setStep('success')
-      setTimeout(() => {
-        onRegistered()
-      }, 1500)
+      setTimeout(() => onRegistered(), 2500)
     } catch (error: any) {
       setSubmitting(false)
+      // Backend 409 already_registered: show green box instead of red error
+      if (error?.message === 'already_registered') {
+        setAlreadyReg(true)
+        try { await syncUserRegistrations(user.email) } catch { /* ignore */ }
+        return
+      }
       setFormError(error?.message || 'Unable to complete registration right now.')
     }
   }
 
-  const currentUser = getUser()
-  const alreadyReg = currentUser && isRegisteredForEvent(currentUser.email, event.backendEventId ?? event.id, event.name)
-
   return (
     <>
       <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm" onClick={onClose} />
-
-      <div
-        className="fixed inset-0 z-[201] flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Event registration"
-      >
+      <div className="fixed inset-0 z-[201] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Event registration">
         <div className="relative w-full max-w-md animate-rise-in" onClick={(e) => e.stopPropagation()}>
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: '#D4AF37' }} />
           <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: 'oklch(0.55 0.22 27)' }} />
 
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-2xl">
             <div className="h-1 w-full bg-gradient-to-r from-[oklch(0.55_0.22_27)] via-[#D4AF37] to-[oklch(0.55_0.22_27)]" />
-
-            <button
-              onClick={onClose}
-              id="auth-modal-close"
-              className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white"
-              aria-label="Close"
-            >
+            <button onClick={onClose} className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white" aria-label="Close">
               <X className="h-4 w-4" />
             </button>
 
@@ -245,10 +270,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     </svg>
                     {authLoading ? 'Signing in...' : 'Continue with Google'}
                   </button>
-
-                  {formError && (
-                    <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>
-                  )}
+                  {formError && <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>}
                 </div>
               )}
 
@@ -269,49 +291,40 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     <div className="mb-5 rounded-xl border border-green-500/25 bg-green-500/10 p-3 text-sm font-medium text-green-400">You are already registered for this event.</div>
                   )}
 
-                  <div className="mb-6">
-                    <Turnstile
-                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => {
-                        setTurnstileError('')
-                        setTurnstileToken(token)
-                      }}
-                      onExpire={() => setTurnstileToken(undefined)}
-                      onError={() => {
-                        setTurnstileToken(undefined)
-                        setTurnstileError('Captcha verification failed. Please refresh and try again.')
-                      }}
-                    />
-                    {turnstileError && (
-                      <p className="mt-3 text-xs text-red-400">{turnstileError}</p>
-                    )}
-                  </div>
-
-                  {formError && (
-                    <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>
+                  {!alreadyReg && (
+                    <div className="mb-6">
+                      {!turnstileSiteKey ? (
+                        <p className="text-xs text-red-400">Captcha is misconfigured. Please contact support.</p>
+                      ) : (
+                        <Turnstile
+                          key={turnstileKey}
+                          siteKey={turnstileSiteKey}
+                          onSuccess={(token) => {
+                            setTurnstileError('')
+                            setTurnstileToken(token)
+                          }}
+                          onExpire={() => setTurnstileToken(undefined)}
+                          onError={() => {
+                            setTurnstileToken(undefined)
+                            setTurnstileError('Captcha verification failed. Click Refresh to try again.')
+                          }}
+                        />
+                      )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <button type="button" onClick={() => { setTurnstileKey((k) => k + 1); setTurnstileToken(undefined) }} className="text-xs text-white/80 underline">Refresh Captcha</button>
+                        {turnstileToken && <span className="text-xs text-green-400">✓ Verified</span>}
+                      </div>
+                      {turnstileError && <p className="mt-3 text-xs text-red-400">{turnstileError}</p>}
+                    </div>
                   )}
 
+                  {formError && <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>}
+
                   {alreadyReg ? (
-                    <button
-                      onClick={onClose}
-                      className="w-full rounded-xl border border-white/10 py-3.5 text-sm font-bold text-white/60 transition-all hover:bg-white/5 hover:text-white"
-                    >
-                      Close Window
-                    </button>
+                    <button onClick={onClose} className="w-full rounded-xl border border-white/10 py-3.5 text-sm font-bold text-white/60 transition-all hover:bg-white/5 hover:text-white">Close Window</button>
                   ) : (
-                    <button
-                      onClick={handleConfirmSubmit}
-                      disabled={submitting}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[oklch(0.55_0.22_27)] to-[#D4AF37] py-3.5 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_#D4AF3760] disabled:opacity-60"
-                    >
-                      {submitting ? (
-                        <>
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                          Registering...
-                        </>
-                      ) : (
-                        'Confirm Registration'
-                      )}
+                    <button onClick={handleConfirmSubmit} disabled={submitting || !turnstileToken} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[oklch(0.55_0.22_27)] to-[#D4AF37] py-3.5 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_#D4AF3760] disabled:opacity-60">
+                      {submitting ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> Registering...</> : 'Confirm Registration'}
                     </button>
                   )}
                 </div>
@@ -323,9 +336,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     <Check className="h-8 w-8 text-green-400" />
                   </div>
                   <h2 className="mb-2 font-display text-2xl font-bold text-white">Confirmed!</h2>
-                  <p className="mb-1 text-sm text-white/55">
-                    You are registered for <span className="font-semibold text-[#D4AF37]">{event.name}</span>
-                  </p>
+                  <p className="mb-1 text-sm text-white/55">You are registered for <span className="font-semibold text-[#D4AF37]">{event.name}</span></p>
                   <p className="text-xs text-white/35">Check My Schedule to view your registration status.</p>
                 </div>
               )}
