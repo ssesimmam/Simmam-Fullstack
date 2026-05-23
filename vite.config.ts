@@ -9,7 +9,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 export default defineConfig({
-  cloudflare: true,
+  cloudflare: {},
   vite: {
     build: {
       sourcemap: true,

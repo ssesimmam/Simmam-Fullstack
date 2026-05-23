@@ -13,7 +13,7 @@ export const Route = createFileRoute('/wch1925/login')({
     const storedUser = getStoredAdminUser()
     if (storedUser) {
       throw redirect({
-        to: getAuthorizedAdminRedirect(storedUser, location.search?.redirectTo),
+        to: getAuthorizedAdminRedirect(storedUser, (location.search as any)?.redirectTo),
         replace: true,
       })
     }

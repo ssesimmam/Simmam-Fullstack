@@ -62,9 +62,40 @@ export type CreateRegistrationPayload = {
   house: string
   event_id?: string
   event_name?: string
+  turnstile_token?: string
 }
 
 import supabase from '@/lib/supabase'
+
+// ─── Custom API Error ─────────────────────────────────────────────────────────
+// Carries the HTTP status code so the UI can react to server-level failures
+// (maintenance, rate limiting, etc.) without parsing error messages.
+
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+/** Status codes that should trigger the "Server Under Maintenance" screen. */
+const MAINTENANCE_STATUS_CODES = new Set([
+  400, 401, 402, 403, 404, 405, // client errors that indicate broken server state
+  429,                           // rate limited
+  500, 501, 502, 503,           // server errors
+])
+
+/**
+ * Returns `true` when the given error represents a server condition that
+ * should be surfaced as a maintenance / unavailable page rather than a
+ * field-level error message.
+ */
+export function isMaintenanceError(error: unknown): error is ApiError {
+  return error instanceof ApiError && MAINTENANCE_STATUS_CODES.has(error.status)
+}
 
 const apiBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
@@ -99,7 +130,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const message = payload?.error || payload?.message || `Request failed (${response.status})`
-    throw new Error(message)
+    throw new ApiError(message, response.status)
   }
 
   return payload as T
