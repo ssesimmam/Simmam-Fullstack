@@ -1,5 +1,7 @@
+import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import helmet from 'helmet'
 import compression from 'compression'
@@ -51,8 +53,49 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 
 const app = express()
 app.set('trust proxy', 1)
+let server: ReturnType<typeof app.listen> | null = null
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
 const allowedOrigins = new Set<string>()
+
+const shutdown = async (signal: string) => {
+  console.warn(`Received ${signal}. Gracefully shutting down API server...`)
+  try {
+    await Sentry.flush(2000)
+  } catch (err) {
+    console.error('Sentry flush failed during shutdown', err)
+  }
+
+  if (server) {
+    server.close((closeErr) => {
+      if (closeErr) console.error('Error closing server', closeErr)
+      process.exit(0)
+    })
+    setTimeout(() => process.exit(0), 5000)
+  } else {
+    process.exit(0)
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))
+process.on('SIGQUIT', () => shutdown('SIGQUIT'))
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled promise rejection:', reason, promise)
+  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)))
+})
+
+process.on('uncaughtException', async (error) => {
+  console.error('Uncaught exception:', error)
+  Sentry.captureException(error)
+  await Sentry.flush(2000).catch(() => undefined)
+  if (server) {
+    server.close(() => process.exit(1))
+    setTimeout(() => process.exit(1), 5000)
+  } else {
+    process.exit(1)
+  }
+})
 if (FRONTEND_URL) allowedOrigins.add(FRONTEND_URL)
 if (!IS_PROD) {
   allowedOrigins.add('http://localhost:5173')
@@ -99,6 +142,24 @@ app.use((req, res, next) => {
 })
 // Compression to reduce response sizes (gzip/deflate)
 app.use(compression({ threshold: 1024 }))
+
+const requestTimeoutMs = Number(process.env.REQUEST_TIMEOUT_MS ?? 30000)
+
+app.use((req, res, next) => {
+  res.setTimeout(requestTimeoutMs, () => {
+    if (!res.headersSent) {
+      console.error(`Request timed out after ${requestTimeoutMs}ms`, {
+        requestId: (req as any).requestId,
+        method: req.method,
+        path: req.originalUrl,
+      })
+      res.status(503).json({ error: 'service_unavailable', requestId: (req as any).requestId })
+    }
+  })
+  next()
+})
+
+// Rate limiting disabled for this environment to allow full load testing.
 
 // Structured access logs in production and concise logs in development.
 app.use(
@@ -1231,14 +1292,17 @@ app.get('/api/wch1925/registrations', async (req, res) => {
     const search = String(parsedQuery.data.search || '').trim().toLowerCase()
     const eventName = String(parsedQuery.data.event || '').trim().toLowerCase()
     const date = String(parsedQuery.data.date || '').trim()
+    const page = parsedQuery.data.page || 1
+    const limit = parsedQuery.data.limit || 1000
+    const offset = (page - 1) * limit
 
     const { data, error } = await supabase
       .from('registrations')
       .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
       .order('registered_at', { ascending: false })
-      .limit(1000)
+      .range(offset, offset + limit - 1)
 
-        if (error) throw error
+    if (error) throw error
     const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
     if (checkinsErr) throw checkinsErr
     const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
@@ -1497,11 +1561,15 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
     const date = String(parsedQuery.data.date || '')
     // use query params directly (removed internal localhost URL construction)
 
+    const page = parsedQuery.data.page || 1
+    const limit = parsedQuery.data.limit || 1000
+    const offset = (page - 1) * limit
+
     const { data, error } = await supabase
       .from('registrations')
       .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
       .order('registered_at', { ascending: false })
-      .limit(1000)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
@@ -2011,7 +2079,7 @@ const bootstrap = async () => {
     console.error('Failed to seed event catalog:', err?.message || err)
   }
 
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     console.log(`API server listening on http://localhost:${PORT}`)
   })
 }

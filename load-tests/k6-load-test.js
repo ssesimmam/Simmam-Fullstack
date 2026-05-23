@@ -5,7 +5,7 @@ export let options = {
   stages: [
     { duration: '30s', target: 100 },
     { duration: '1m', target: 1000 },
-    { duration: '2m', target: 2000 },
+    { duration: '2m', target: 4000 },
     // The full ramp to 10k should be used only in controlled environments
     // { duration: '5m', target: 10000 }
   ],
@@ -15,7 +15,7 @@ export let options = {
   }
 }
 
-const BASE = __ENV.TARGET_URL || 'http://127.0.0.1:4173'
+const BASE = __ENV.TARGET_URL || 'http://127.0.0.1:4000'
 
 export default function () {
   const res = http.get(`${BASE}/api/leaderboard`)

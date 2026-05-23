@@ -1,4 +1,5 @@
-import supabase from '@/lib/supabase'
+import adminSupabase from '@/lib/adminSupabase'
+import { ApiError } from '@/lib/apiClient'
 
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
@@ -36,7 +37,7 @@ async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
-    throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`)
+    throw new ApiError(payload?.error || payload?.message || `Request failed (${response.status})`, response.status)
   }
 
   return payload as T
