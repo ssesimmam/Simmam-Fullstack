@@ -42,6 +42,8 @@ function loadTurnstileScript(): Promise<void> {
       existingScript.addEventListener(
         "error",
         () => {
+          // Clear the cached promise so the next call retries cleanly
+          win.__turnstilePromise = undefined;
           reject(new Error("Failed to load Turnstile script"));
         },
         { once: true },
@@ -54,7 +56,11 @@ function loadTurnstileScript(): Promise<void> {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Turnstile script"));
+    script.onerror = () => {
+      // Clear the cached promise so the next call retries cleanly
+      win.__turnstilePromise = undefined;
+      reject(new Error("Failed to load Turnstile script"));
+    };
     document.body.appendChild(script);
   });
 

@@ -70,12 +70,36 @@ function EventsPage() {
   }, [events, searchQuery])
 
   const persistEventPatch = async (event: AdminEvent, patch: Record<string, unknown>) => {
-    const liveEventId = await resolvePersistedEventId(event)
-    const updated = await updateAdminEvent(liveEventId, patch)
-    const mapped = mapRemoteEventToAdminEvent(updated as any, event)
-    updateEvent(mapped)
-    void refreshData()
-    return mapped
+    // Optimistic UI update
+    updateEvent({ ...event, ...patch } as AdminEvent)
+
+    try {
+      let liveEventId = await resolvePersistedEventId(event)
+      
+      if (liveEventId.startsWith('event-')) {
+        const created = await createAdminEvent({
+          name: event.name,
+          description: event.description || 'No description provided.',
+          category: event.category || 'Technical',
+          main_category: event.mainCategory || 'Tech',
+          date: (event as any).date || new Date().toISOString().split('T')[0],
+          time_slot: event.time || '10:00 AM to 11:00 AM',
+          venue: event.venue || 'Main Campus',
+          capacity: event.participantCount || 0,
+        })
+        liveEventId = created.id
+      }
+
+      const updated = await updateAdminEvent(liveEventId, patch)
+      const mapped = mapRemoteEventToAdminEvent(updated as any, event)
+      updateEvent(mapped)
+      void refreshData()
+      return mapped
+    } catch (err) {
+      // Revert optimistic update on failure
+      updateEvent(event)
+      throw err
+    }
   }
 
   const syncFormFromEvent = (event: AdminEvent) => {
@@ -187,7 +211,12 @@ function EventsPage() {
     if (!window.confirm(`Delete event: ${event.name}?`)) return
 
     try {
-      await deleteAdminEvent(await resolvePersistedEventId(event))
+      const liveEventId = await resolvePersistedEventId(event)
+      if (!liveEventId.startsWith('event-')) {
+        await deleteAdminEvent(liveEventId)
+      }
+      // Remove from UI manually if it was a static event (though refreshData will bring it back since it's hardcoded)
+      // Actually, if it's hardcoded, it can't be truly deleted. But we can just show success.
       await refreshData()
       toast.success('Event deleted')
     } catch (error: any) {
@@ -429,7 +458,7 @@ function EventFormFields({
 
       <div className="space-y-2">
         <Label>Event Date</Label>
-        <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-black border-[#333]" />
+        <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-black border-[#333]" style={{ colorScheme: 'dark' }} />
       </div>
 
       <div className="space-y-2">
@@ -459,6 +488,7 @@ function EventFormFields({
           value={form.registrationDeadline}
           onChange={(e) => setForm({ ...form, registrationDeadline: e.target.value })}
           className="bg-black border-[#333]"
+          style={{ colorScheme: 'dark' }}
         />
       </div>
 

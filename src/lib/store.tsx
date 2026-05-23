@@ -1,8 +1,8 @@
 import { allEvents as initialEvents, type Event } from './eventsData';
 import { houses as initialHouses, type House } from './houses';
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { fetchEvents, fetchHouses, fetchLeaderboard } from './apiClient';
-import { fetchAdminEvents, fetchAdminHouses, fetchAdminRegistrations, fetchAdminSettings, type AdminSettings } from './adminApi';
+import { fetchEvents, fetchHouses, fetchLeaderboard, fetchPublicSettings } from './apiClient';
+import { fetchAdminEvents, fetchAdminHouses, fetchAdminRegistrations, fetchAdminSettings, saveAdminSettings, type AdminSettings } from './adminApi';
 
 // Extend Event type for admin features
 export interface EventResult {
@@ -152,13 +152,21 @@ export const mapRemoteEventToAdminEvent = (
   order: fallback?.order ?? order + 1,
 })
 
+let cachedRemoteEvents: Awaited<ReturnType<typeof fetchAdminEvents>> | null = null;
+let lastFetchTime = 0;
+
 export async function resolvePersistedEventId(event: AdminEvent): Promise<string> {
   if (!event.id.startsWith('event-')) {
     return event.id
   }
 
-  const remoteEvents = await fetchAdminEvents()
-  const remoteMatch = remoteEvents.find((candidate) => candidate.name.toLowerCase() === event.name.toLowerCase())
+  const now = Date.now();
+  if (!cachedRemoteEvents || now - lastFetchTime > 5000) {
+    cachedRemoteEvents = await fetchAdminEvents()
+    lastFetchTime = now;
+  }
+
+  const remoteMatch = cachedRemoteEvents.find((candidate) => candidate.name.toLowerCase() === event.name.toLowerCase())
 
   return remoteMatch?.id || event.id
 }
@@ -237,7 +245,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
-    const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+    const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/wch1925')
 
     const eventsJob = (isAdminRoute ? fetchAdminEvents() : fetchEvents())
       .then((remoteEvents) => {
@@ -295,11 +303,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const settingsJob = (isAdminRoute
       ? fetchAdminSettings()
-      : Promise.resolve({
-          festivalStatus: 'pre',
-          registrationsOpen: true,
-          coordinatorAssignments: {},
-        } as AdminSettings)
+      : fetchPublicSettings().then((res) => res.settings)
     )
       .then((remoteSettings) => {
         if (remoteSettings) {
@@ -402,10 +406,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateSettings = (newSettings: any) => {
+  const updateSettings = useCallback(async (newSettings: AdminSettings) => {
     setSettings(newSettings);
     writeCachedValue('simmam_settings', newSettings);
-  };
+    try {
+      const saved = await saveAdminSettings(newSettings);
+      setSettings(saved);
+      writeCachedValue('simmam_settings', saved);
+    } catch (err) {
+      console.error('Failed to save settings to backend:', err);
+      throw err;
+    }
+  }, []);
 
   const findAdminEventByName = (name: string): AdminEvent | undefined => {
     return events.find(e => e.name === name);

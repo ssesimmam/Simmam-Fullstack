@@ -21,6 +21,8 @@ export function ProfilePage() {
   const isProfileComplete = useCallback((profile: UserProfile | null | undefined) =>
     !!profile?.name?.trim() &&
     !!profile?.registerNumber?.trim() &&
+    !!profile?.mobileNumber?.trim() &&
+    !!profile?.email?.trim() &&
     !!profile?.house?.trim(),
   [])
 
@@ -311,6 +313,7 @@ export function ProfilePage() {
 
       {showSetupModal && (
         <UserSetupModal
+          preventDismiss={!isProfileComplete(user)}
           onSave={() => {
             refreshUser()
             setShowSetupModal(false)

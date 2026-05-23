@@ -13,17 +13,17 @@ export const Route = createFileRoute('/wch1925/_layout/participants')({
 
 function ParticipantsPage() {
   const { hasPermission } = useAuth()
-  const { participants, houses, events } = useData()
+  const { houses, events } = useData()
   const [registrations, setRegistrations] = useState<AdminRegistrationRow[]>([])
   const [loading, setLoading] = useState(false)
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [expandedHouses, setExpandedHouses] = useState<Set<string>>(new Set())
 
-  if (!hasPermission('participants', 'read')) {
-    return <AccessDenied />
-  }
+  const canRead = hasPermission('participants', 'read')
 
+  // All hooks must run before any conditional return
   useEffect(() => {
+    if (!canRead) return
     setLoading(true)
     void fetchAdminRegistrations()
       .then((data) => {
@@ -35,7 +35,11 @@ function ParticipantsPage() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [canRead])
+
+  if (!canRead) {
+    return <AccessDenied />
+  }
 
   const apiParticipants = registrations.map((row) => ({
     id: row.registration_id,
@@ -108,23 +112,27 @@ function ParticipantsPage() {
 
       <div className="bg-[#111] border border-[#333] rounded-lg p-6">
         <h3 className="text-lg font-semibold text-white mb-4">House-wise Counts</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {houses.map(house => {
-            const count = effectiveParticipants.filter(p => p.house === house.name).length
-            return (
-              <div key={house.name} className="bg-black border border-[#333] rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: house.accent }}
-                  />
-                  <div className="text-gray-500 font-medium">{house.name}</div>
+        {loading ? (
+          <p className="text-gray-500 text-sm">Loading participants...</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {houses.map(house => {
+              const count = effectiveParticipants.filter(p => p.house === house.name).length
+              return (
+                <div key={house.name} className="bg-black border border-[#333] rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: house.accent }}
+                    />
+                    <div className="text-gray-500 font-medium">{house.name}</div>
+                  </div>
+                  <div className="text-white text-2xl font-bold">{count}</div>
                 </div>
-                <div className="text-white text-2xl font-bold">{count}</div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -134,7 +142,6 @@ function ParticipantsPage() {
           const checkedIn = eventParticipants.filter(p => p.checkIn).length
           const isEventExpanded = expandedEvents.has(event.name)
 
-          // Group participants by house within this event
           const houseGroups = houses
             .map(house => ({
               houseName: house.name,

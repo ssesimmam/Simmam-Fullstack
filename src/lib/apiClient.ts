@@ -203,3 +203,7 @@ export async function upsertUserProfile(payload: {
     body: JSON.stringify(payload),
   })
 }
+
+export async function fetchPublicSettings(): Promise<{ settings: any }> {
+  return request<{ settings: any }>('/settings')
+}

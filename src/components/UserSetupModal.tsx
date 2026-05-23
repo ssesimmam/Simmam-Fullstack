@@ -7,9 +7,10 @@ import { useData } from '@/lib/store'
 interface UserSetupModalProps {
   onSave: () => void
   onClose: () => void
+  preventDismiss?: boolean
 }
 
-export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
+export function UserSetupModal({ onSave, onClose, preventDismiss = false }: UserSetupModalProps) {
   const { houses } = useData()
 
   // Do not access sessionStorage during render. Hydrate on mount.
@@ -91,7 +92,7 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={preventDismiss ? undefined : onClose}
       />
 
       <div
@@ -119,14 +120,16 @@ export function UserSetupModal({ onSave, onClose }: UserSetupModalProps) {
             <div className="h-1 w-full bg-gradient-to-r from-[oklch(0.55_0.22_27)] via-[#D4AF37] to-[oklch(0.55_0.22_27)]" />
 
             {/* Close button */}
-            <button
-              onClick={onClose}
-              id="user-setup-close-btn"
-              className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {!preventDismiss && (
+              <button
+                onClick={onClose}
+                id="user-setup-close-btn"
+                className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/40 transition-all hover:bg-white/10 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
 
             <div className="p-6 md:p-8">
               {/* Header */}

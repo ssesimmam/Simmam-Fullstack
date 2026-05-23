@@ -44,6 +44,10 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const [turnstileError, setTurnstileError] = useState('')
   const [turnstileKey, setTurnstileKey] = useState(0)
 
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+  if (!turnstileSiteKey && import.meta.env.DEV) {
+    console.warn('[AuthModal] VITE_TURNSTILE_SITE_KEY is not set — Turnstile widget will fail silently.')
+  }
   useEffect(() => {
     let mounted = true
 
@@ -149,6 +153,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
     const user = getUser()
     if (!user) {
       setStep('login')
+      setTurnstileToken(undefined)
+      setTurnstileKey((k) => k + 1)
       return
     }
 
@@ -167,6 +173,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         await supabase.auth.signOut()
         setSubmitting(false)
         setFormError('Your session has expired. Please sign in again.')
+        setTurnstileToken(undefined)
+        setTurnstileKey((k) => k + 1)
         setStep('login')
         return
       }
@@ -285,19 +293,23 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
                   {!alreadyReg && (
                     <div className="mb-6">
-                      <Turnstile
-                        key={turnstileKey}
-                        siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                        onSuccess={(token) => {
-                          setTurnstileError('')
-                          setTurnstileToken(token)
-                        }}
-                        onExpire={() => setTurnstileToken(undefined)}
-                        onError={() => {
-                          setTurnstileToken(undefined)
-                          setTurnstileError('Captcha verification failed.')
-                        }}
-                      />
+                      {!turnstileSiteKey ? (
+                        <p className="text-xs text-red-400">Captcha is misconfigured. Please contact support.</p>
+                      ) : (
+                        <Turnstile
+                          key={turnstileKey}
+                          siteKey={turnstileSiteKey}
+                          onSuccess={(token) => {
+                            setTurnstileError('')
+                            setTurnstileToken(token)
+                          }}
+                          onExpire={() => setTurnstileToken(undefined)}
+                          onError={() => {
+                            setTurnstileToken(undefined)
+                            setTurnstileError('Captcha verification failed. Click Refresh to try again.')
+                          }}
+                        />
+                      )}
                       <div className="mt-2 flex items-center gap-2">
                         <button type="button" onClick={() => { setTurnstileKey((k) => k + 1); setTurnstileToken(undefined) }} className="text-xs text-white/80 underline">Refresh Captcha</button>
                         {turnstileToken && <span className="text-xs text-green-400">✓ Verified</span>}

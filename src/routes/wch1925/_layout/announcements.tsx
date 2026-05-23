@@ -323,6 +323,7 @@ function AnnouncementsPage() {
                   value={form.starts_at}
                   onChange={(event) => setForm((current) => ({ ...current, starts_at: event.target.value }))}
                   className="bg-black border-[#333] text-white"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
 
@@ -333,6 +334,7 @@ function AnnouncementsPage() {
                   value={form.ends_at}
                   onChange={(event) => setForm((current) => ({ ...current, ends_at: event.target.value }))}
                   className="bg-black border-[#333] text-white"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
             </div>

@@ -86,7 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = sessionData.session?.access_token
       if (!token) return false
 
-      const response = await fetch('/api/wch1925/auth', {
+      const apiBase = (() => {
+        const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
+        if (!raw) return ''
+        return raw.replace(/\/$/, '')
+      })()
+      const response = await fetch(`${apiBase}/api/wch1925/auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

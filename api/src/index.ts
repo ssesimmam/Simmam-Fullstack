@@ -376,6 +376,55 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
   }
 })
 
+// Public settings endpoint
+app.get('/api/settings', publicLimiter, cacheMiddleware(60), async (_req, res) => {
+  try {
+    if (adminSettingsTableMissing) {
+      return res.json({
+        settings: {
+          festivalStatus: inMemoryAdminSettings.festival_status,
+          registrationsOpen: inMemoryAdminSettings.registrations_open,
+          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+        },
+      })
+    }
+
+    const { data, error } = await supabase
+      .from('admin_settings')
+      .select('festival_status,registrations_open,coordinator_assignments')
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.json({ settings: DEFAULT_ADMIN_SETTINGS })
+      }
+      if (isMissingAdminSettingsTableError(error)) {
+        adminSettingsTableMissing = true
+        return res.json({
+          settings: {
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          },
+        })
+      }
+      throw error
+    }
+
+    res.json({
+      settings: {
+        festivalStatus: data?.festival_status ?? DEFAULT_ADMIN_SETTINGS.festival_status,
+        registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
+        coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
+      },
+    })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 // Get houses
 app.get('/api/houses', publicLimiter, cacheMiddleware(300), async (_req, res) => {
   try {
@@ -1902,7 +1951,7 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
 })
 
 // Get user's registrations
-app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, cacheMiddleware(60), async (req, res) => {
+app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, async (req, res) => {
   try {
     const parsedParams = validateRequest(paramsSchemas.email, req.params)
     if (!parsedParams.ok) {
