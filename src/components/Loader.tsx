@@ -10,8 +10,9 @@ export function Loader() {
 
   return (
     <div
+      aria-hidden={done}
       className={`fixed inset-0 z-[100] grid place-items-center bg-background transition-opacity duration-700 ${
-        done ? "opacity-0 pointer-events-none" : "opacity-100"
+        done ? "opacity-0 pointer-events-none splash-exit" : "opacity-100 splash-enter splash-auto-hide"
       }`}
     >
       <div className="absolute inset-0 grid-bg opacity-50" />

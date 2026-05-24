@@ -265,6 +265,21 @@
 }
 @keyframes count-up { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 @keyframes draw-bar { from { width: 0; } }
+
+@keyframes splash-auto-hide {
+  0% { opacity: 1; visibility: visible; }
+  84% { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+.splash-auto-hide {
+  animation: splash-auto-hide 1.8s ease forwards;
+}
+
+.splash-enter,
+.splash-exit {
+  will-change: opacity, transform;
+}
 @keyframes ember-rise {
   0%   { opacity: 0; transform: translateY(0) translateX(0) scale(0.6); }
   10%  { opacity: 0.8; }
