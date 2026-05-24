@@ -1,12 +1,13 @@
 import { allEvents as initialEvents, type Event } from "./eventsData";
 import { houses as initialHouses, type House } from "./houses";
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { fetchEvents, fetchHouses, fetchLeaderboard, isMaintenanceError, type ApiError } from "./apiClient";
 import {
   fetchAdminEvents,
   fetchAdminHouses,
   fetchAdminRegistrations,
   fetchAdminSettings,
+  saveAdminSettings,
   type AdminSettings,
 } from "./adminApi";
 import ServerMaintenance from "@/components/ServerMaintenance";
@@ -76,7 +77,7 @@ interface DataContextType {
   isRegistrationAllowed: (eventName: string) => boolean;
   isCheckInAllowed: (eventName: string) => boolean;
   settings: AdminSettings;
-  updateSettings: (newSettings: AdminSettings) => void;
+  updateSettings: (newSettings: AdminSettings) => Promise<void>;
   refreshData: () => Promise<void>;
   maintenanceError: ApiError | null;
   clearMaintenanceError: () => void;
@@ -107,7 +108,7 @@ const defaultDataContext: DataContextType = {
     registrationsOpen: true,
     coordinatorAssignments: {},
   },
-  updateSettings: () => undefined,
+  updateSettings: noopAsync,
   refreshData: noopAsync,
   maintenanceError: null,
   clearMaintenanceError: () => undefined,
@@ -208,6 +209,7 @@ const mapRemoteEventsToAdminEvents = (
 // Participants are populated from the admin API; remove built-in mock generation.
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const isRefreshingRef = useRef(false);
   const [events, setEvents] = useState<AdminEvent[]>(
     () => readCachedValue<AdminEvent[]>("simmam_events") || [],
   );
@@ -276,8 +278,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshData = useCallback(async () => {
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
+
     const isAdminRoute =
-      typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+      typeof window !== "undefined" && window.location.pathname.startsWith("/wch1925");
 
     const eventsJob = (isAdminRoute ? fetchAdminEvents() : fetchEvents())
       .then((remoteEvents) => {
@@ -375,7 +380,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         else console.error("Failed to refresh settings from API:", err);
       });
 
-    await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob]);
+    try {
+      await Promise.allSettled([eventsJob, housesJob, registrationsJob, settingsJob]);
+    } finally {
+      isRefreshingRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -477,9 +486,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateSettings = (newSettings: AdminSettings) => {
-    setSettings(newSettings);
-    writeCachedValue("simmam_settings", newSettings);
+  const updateSettings = async (newSettings: AdminSettings) => {
+    const persistedSettings = await saveAdminSettings(newSettings);
+    setSettings(persistedSettings);
+    writeCachedValue("simmam_settings", persistedSettings);
   };
 
   const findAdminEventByName = (name: string): AdminEvent | undefined => {

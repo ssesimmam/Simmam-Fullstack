@@ -1,4 +1,4 @@
-import adminSupabase from '@/lib/adminSupabase'
+import supabase from '@/lib/supabase'
 import { ApiError } from '@/lib/apiClient'
 
 const adminBase = (() => {
@@ -9,11 +9,17 @@ const adminBase = (() => {
 
 async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    if (!token) return {}
+    // Try the fast local session first
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (token) return { Authorization: `Bearer ${token}` }
 
-    return { Authorization: `Bearer ${token}` }
+    // Fallback: force a round-trip to re-establish session (handles immediate post-OAuth hydration)
+    await supabase.auth.getUser().catch(() => null)
+    const refreshed = (await supabase.auth.getSession()).data.session
+    if (refreshed?.access_token) return { Authorization: `Bearer ${refreshed.access_token}` }
+
+    return {}
   } catch {
     return {}
   }

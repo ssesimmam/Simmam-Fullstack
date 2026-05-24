@@ -195,12 +195,47 @@ const authenticateSession = async (req: express.Request, res: express.Response, 
     return res.status(401).json({ error: 'missing_auth_token' })
   }
 
-  const { data, error } = await supabase.auth.getUser(token)
-  const user = data?.user
-  if (error || !user?.email || !user.id) {
-    console.error('authenticateSession auth error:', error)
-    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession auth error: ${JSON.stringify(error)}\n`)
-    return res.status(401).json({ error: 'invalid_auth_token' })
+  // Attempt to retrieve user from Supabase, retrying once on transient fetch failures
+  let user
+  try {
+    let attempts = 0
+    let lastErr: any = null
+    while (attempts < 2) {
+      try {
+        const resp = await supabase.auth.getUser(token)
+        const err = (resp as any).error
+        if (!err) {
+          user = (resp as any).data?.user
+          break
+        }
+        lastErr = err
+        // If it's a retryable fetch error, try again after short delay
+        if (String(err?.name).includes('AuthRetryableFetchError')) {
+          await new Promise((r) => setTimeout(r, 250))
+          attempts += 1
+          continue
+        }
+        break
+      } catch (e: any) {
+        lastErr = e
+        if (String(e?.name).includes('AuthRetryableFetchError')) {
+          await new Promise((r) => setTimeout(r, 250))
+          attempts += 1
+          continue
+        }
+        break
+      }
+    }
+
+    if (!user) {
+      console.error('authenticateSession auth error:', lastErr)
+      fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession auth error: ${JSON.stringify(lastErr)}\n`)
+      return res.status(401).json({ error: 'invalid_auth_token' })
+    }
+  } catch (err: any) {
+    console.error('authenticateSession unexpected error:', err)
+    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession unexpected error: ${JSON.stringify(err)}\n`)
+    return res.status(500).json({ error: 'auth_check_failed' })
   }
 
   ;(req as any).authenticatedUser = {
@@ -438,7 +473,7 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
 })
 
 // Public settings endpoint
-app.get('/api/settings', publicLimiter, cacheMiddleware(60), async (_req, res) => {
+app.get('/api/settings', publicLimiter, async (_req, res) => {
   try {
     if (adminSettingsTableMissing) {
       return res.json({

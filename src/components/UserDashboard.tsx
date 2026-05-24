@@ -294,17 +294,21 @@ export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
     loadData()
   }, [loadData])
 
-  // Derive check-in data from admin participants
-  const checkedInEntries = getCheckedInEvents(user.email, participants as any)
+  // Derive check-in data from authoritative registration rows first,
+  // then fall back to admin participants (for realtime admin view).
+  const checkedInFromRegistrations = registrations.filter((r) => !!r.checkedIn)
 
-  // Map checkedIn entries back to registration-like objects
-  const checkedInRegs = registrations.filter((reg) =>
-    checkedInEntries.some(
-      (ci) =>
-        (ci as any).event?.toLowerCase() === reg.eventName.toLowerCase() ||
-        (ci as any).eventName?.toLowerCase() === reg.eventName.toLowerCase(),
+  const checkedInFromParticipants = registrations.filter((reg) =>
+    getCheckedInEvents(user.email, participants as any).some((ci) =>
+      (ci as any).event?.toLowerCase() === reg.eventName.toLowerCase() ||
+      (ci as any).eventName?.toLowerCase() === reg.eventName.toLowerCase(),
     ),
   )
+
+  // Merge unique checked-in registrations (by eventId)
+  const checkedInMap = new Map<string, Registration>()
+  ;[...checkedInFromRegistrations, ...checkedInFromParticipants].forEach((r) => checkedInMap.set(r.eventId, r))
+  const checkedInRegs = Array.from(checkedInMap.values())
 
   const odEligibleRegs = checkedInRegs // OD eligible == checked-in
 

@@ -4,6 +4,11 @@ import os from "os";
 import IORedis from "ioredis";
 import { Redis as UpstashRedis } from "@upstash/redis";
 
+const ENABLE_DYNAMIC_LOAD_SHEDDING =
+  process.env.ENABLE_DYNAMIC_LOAD_SHEDDING === "true";
+const ENABLE_MEMORY_LOAD_SHEDDING =
+  process.env.ENABLE_MEMORY_LOAD_SHEDDING === "true";
+
 // ========================================
 // MEMORY FALLBACK (DEV ONLY)
 // ========================================
@@ -71,7 +76,7 @@ function isServerOverloaded(): { overloaded: boolean; reason: string } {
       reason: `Event-loop lag ${eventLoopP99.toFixed(0)}ms exceeds ${EL_LAG_THRESHOLD_MS}ms`,
     };
   }
-  if (isMemoryOverloaded()) {
+  if (ENABLE_MEMORY_LOAD_SHEDDING && isMemoryOverloaded()) {
     return {
       overloaded: true,
       reason: `Memory usage exceeds ${(MEM_THRESHOLD * 100).toFixed(0)}%`,
@@ -188,14 +193,16 @@ export function createSimpleLimiter(
       // ========================================
       // DYNAMIC LOAD SHEDDING (85% threshold)
       // ========================================
-      const load = isServerOverloaded();
-      if (load.overloaded) {
-        res.setHeader("Retry-After", "2");
-        return res.status(503).json({
-          success: false,
-          message: "Server under high load. Please retry shortly.",
-          reason: load.reason,
-        });
+      if (ENABLE_DYNAMIC_LOAD_SHEDDING) {
+        const load = isServerOverloaded();
+        if (load.overloaded) {
+          res.setHeader("Retry-After", "2");
+          return res.status(503).json({
+            success: false,
+            message: "Server under high load. Please retry shortly.",
+            reason: load.reason,
+          });
+        }
       }
 
       // ========================================

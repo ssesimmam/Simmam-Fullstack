@@ -85,7 +85,7 @@ export class ApiError extends Error {
 const MAINTENANCE_STATUS_CODES = new Set([
   400, 401, 402, 403, 404, 405, // client errors that indicate broken server state
   429,                           // rate limited
-  500, 501, 502, 503,           // server errors
+  500, 501, 502,                 // server errors
 ])
 
 /**
