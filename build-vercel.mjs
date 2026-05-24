@@ -64,7 +64,7 @@ const needed = [
   "h3-v2", "@tanstack/router-core", "@tanstack/react-router", "@tanstack/history",
   "seroval", "react", "react-dom", "lucide-react", "react-icons",
   "@radix-ui/react-dialog", "class-variance-authority", "clsx", "tailwind-merge",
-  "@tanstack/react-store", "seroval-plugins", "isbot",
+  "@tanstack/react-store", "seroval-plugins", "isbot", "@supabase/supabase-js",
 ];
 for (const dep of needed) {
   if (mainPkg.dependencies?.[dep]) {
