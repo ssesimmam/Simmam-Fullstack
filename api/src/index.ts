@@ -369,7 +369,7 @@ const getEventCatalogPath = () => {
 
   const existingPath = candidates.find((candidate) => fs.existsSync(candidate))
   if (!existingPath) {
-    throw new Error('Unable to locate src/lib/eventsData.ts for event catalog seeding')
+    return null
   }
 
   return existingPath
@@ -377,6 +377,10 @@ const getEventCatalogPath = () => {
 
 const extractEventCatalog = (): EventCatalogItem[] => {
   const catalogPath = getEventCatalogPath()
+  if (!catalogPath) {
+    return []
+  }
+
   const source = fs.readFileSync(catalogPath, 'utf8')
   const arrayStart = source.indexOf('export const allEvents: Event[] = [')
   const arrayEnd = source.lastIndexOf('];')
@@ -405,6 +409,11 @@ const extractEventCatalog = (): EventCatalogItem[] => {
 
 const seedMissingEvents = async () => {
   const catalog = extractEventCatalog()
+  if (catalog.length === 0) {
+    console.warn('Event catalog source not available; skipping event seeding')
+    return
+  }
+
   const { data: existingRows, error: existingErr } = await supabase.from('events').select('slug')
   if (existingErr) throw existingErr
 
