@@ -1,15 +1,15 @@
 import { createRouter, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import * as Sentry from '@sentry/react'
 import { routeTree } from "./routeTree.gen";
 import { isMaintenanceError } from "@/lib/apiClient";
 import ServerMaintenance from "@/components/ServerMaintenance";
+import { captureSentryException } from "@/lib/sentry";
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   useEffect(() => {
-    Sentry.captureException(error)
+    void captureSentryException(error)
   }, [error])
 
   // If the error is a maintenance-level API error, show the maintenance page
