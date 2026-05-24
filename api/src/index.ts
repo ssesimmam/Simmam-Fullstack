@@ -362,6 +362,8 @@ type EventCatalogItem = {
 
 const getEventCatalogPath = () => {
   const candidates = [
+    path.resolve(process.cwd(), 'src/data/eventCatalog.json'),
+    path.resolve(__dirname, './data/eventCatalog.json'),
     path.resolve(process.cwd(), '../src/lib/eventsData.ts'),
     path.resolve(__dirname, '../../src/lib/eventsData.ts'),
     path.resolve(process.cwd(), 'src/lib/eventsData.ts'),
@@ -379,6 +381,10 @@ const extractEventCatalog = (): EventCatalogItem[] => {
   const catalogPath = getEventCatalogPath()
   if (!catalogPath) {
     return []
+  }
+
+  if (catalogPath.endsWith('.json')) {
+    return JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as EventCatalogItem[]
   }
 
   const source = fs.readFileSync(catalogPath, 'utf8')
