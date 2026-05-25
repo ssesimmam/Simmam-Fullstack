@@ -33,6 +33,13 @@ export function getStoredAdminUser(): AdminUser | null {
   }
 }
 
+export function getStoredAdminAccessToken(): string | null {
+  if (typeof window === 'undefined') return null
+
+  const token = localStorage.getItem('simmam_admin_access_token')
+  return token && token.trim() ? token : null
+}
+
 export function canAccessAdminPath(user: AdminUser | null | undefined, pathname: string): boolean {
   if (!user) return false
 
@@ -112,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(adminUser)
       localStorage.setItem('simmam_admin_user', JSON.stringify(adminUser))
+      localStorage.setItem('simmam_admin_access_token', token)
       return true
     } catch {
       return false
@@ -121,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem('simmam_admin_user')
+    localStorage.removeItem('simmam_admin_access_token')
     localStorage.removeItem('simmam_admin_google_signin')
     void supabase.auth.signOut().catch(() => {
       // ignore cleanup failures

@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase'
 import { ApiError } from '@/lib/apiClient'
+import { getStoredAdminAccessToken } from '@/lib/auth'
 
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
@@ -14,10 +15,16 @@ async function getAdminAuthHeaders(): Promise<Record<string, string>> {
     const token = sessionData.session?.access_token
     if (token) return { Authorization: `Bearer ${token}` }
 
+    const storedToken = getStoredAdminAccessToken()
+    if (storedToken) return { Authorization: `Bearer ${storedToken}` }
+
     // Fallback: force a round-trip to re-establish session (handles immediate post-OAuth hydration)
     await supabase.auth.getUser().catch(() => null)
     const refreshed = (await supabase.auth.getSession()).data.session
     if (refreshed?.access_token) return { Authorization: `Bearer ${refreshed.access_token}` }
+
+    const refreshedStoredToken = getStoredAdminAccessToken()
+    if (refreshedStoredToken) return { Authorization: `Bearer ${refreshedStoredToken}` }
 
     return {}
   } catch {
