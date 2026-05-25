@@ -52,6 +52,18 @@ const stableStringify = (input: unknown): string => {
   return `{${entries.join(',')}}`
 }
 
+const parseCachedValue = (cached: unknown) => {
+  if (cached === null || cached === undefined) return cached
+  if (typeof cached === 'string') {
+    try {
+      return JSON.parse(cached)
+    } catch {
+      return cached
+    }
+  }
+  return cached
+}
+
 export function cacheMiddleware(ttlSeconds: number) {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Only cache GET requests
@@ -67,7 +79,7 @@ export function cacheMiddleware(ttlSeconds: number) {
         const cached = await redis.get(cacheKey)
         if (cached) {
           res.setHeader('X-Cache', 'HIT')
-          return res.json(JSON.parse(cached))
+          return res.json(parseCachedValue(cached))
         }
       } catch (err) {
         console.error('Redis cache read failed; falling back to memory cache', err)
@@ -79,7 +91,7 @@ export function cacheMiddleware(ttlSeconds: number) {
         const cached = await upstash.get<string>(cacheKey)
         if (cached) {
           res.setHeader('X-Cache', 'HIT')
-          return res.json(JSON.parse(cached))
+          return res.json(parseCachedValue(cached))
         }
       } catch (err) {
         console.error('Upstash cache read failed; falling back to memory cache', err)
