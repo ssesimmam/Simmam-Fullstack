@@ -85,8 +85,17 @@ end;
 $$;
 
 -- Ensure ticket_code uniqueness to avoid collisions
-alter table registrations
-  add constraint if not exists registrations_ticket_code_unique unique(ticket_code);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'registrations_ticket_code_unique'
+  ) then
+    alter table registrations
+      add constraint registrations_ticket_code_unique unique(ticket_code);
+  end if;
+end $$;
 
 -- Restrict RPC execution: only service_role should execute this RPC directly
 revoke execute on function create_registration_safe(uuid, uuid, text) from public, anon, authenticated;
