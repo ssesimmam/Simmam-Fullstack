@@ -54,8 +54,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 const app = express()
 app.set('trust proxy', 1)
 let server: ReturnType<typeof app.listen> | null = null
-const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/
-const allowedOrigins = new Set<string>()
+const allowedOrigins = [
+  'https://ssesimmam.com',
+  'https://www.ssesimmam.com',
+  'http://localhost:5173',
+]
 
 const shutdown = async (signal: string) => {
   console.warn(`Received ${signal}. Gracefully shutting down API server...`)
@@ -96,14 +99,6 @@ process.on('uncaughtException', async (error) => {
     process.exit(1)
   }
 })
-if (FRONTEND_URL) allowedOrigins.add(FRONTEND_URL)
-if (!IS_PROD) {
-  allowedOrigins.add('http://localhost:5173')
-  allowedOrigins.add('http://localhost:8080')
-  allowedOrigins.add('http://127.0.0.1:5173')
-  allowedOrigins.add('http://127.0.0.1:8080')
-}
-
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     if (!origin) {
@@ -111,17 +106,18 @@ const corsOptions: cors.CorsOptions = {
       return
     }
 
-    if (allowedOrigins.has(origin) || (!IS_PROD && localDevOriginPattern.test(origin))) {
-      callback(null, true)
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const corsError = new Error('The CORS policy for this site does not allow access from the specified Origin.') as Error & { statusCode?: number; code?: string }
+      corsError.statusCode = 403
+      corsError.code = 'cors_blocked'
+      callback(corsError)
       return
     }
 
-    const corsError = new Error(`CORS blocked origin: ${origin}`) as Error & { statusCode?: number; code?: string }
-    corsError.statusCode = 403
-    corsError.code = 'cors_blocked'
-    callback(corsError)
+      callback(null, true)
+    return
   },
-  credentials: false,
+  credentials: true,
   optionsSuccessStatus: 204,
 }
 
