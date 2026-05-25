@@ -1,38 +1,33 @@
-import { Request, Response, NextFunction } from "express";
+﻿import { Request, Response, NextFunction } from "express";
 import { monitorEventLoopDelay } from "perf_hooks";
 import os from "os";
 import IORedis from "ioredis";
 import { Redis as UpstashRedis } from "@upstash/redis";
 
-const ENABLE_DYNAMIC_LOAD_SHEDDING =
-  process.env.ENABLE_DYNAMIC_LOAD_SHEDDING === "true";
-const ENABLE_MEMORY_LOAD_SHEDDING =
-  process.env.ENABLE_MEMORY_LOAD_SHEDDING === "true";
+const ENABLE_DYNAMIC_LOAD_SHEDDING = process.env.ENABLE_DYNAMIC_LOAD_SHEDDING === "true";
+const ENABLE_MEMORY_LOAD_SHEDDING = process.env.ENABLE_MEMORY_LOAD_SHEDDING === "true";
 
 // ========================================
 // MEMORY FALLBACK (DEV ONLY)
 // ========================================
-const requestCounts: Record<
-  string,
-  { count: number; resetTime: number }
-> = {};
+const requestCounts: Record<string, { count: number; resetTime: number }> = {};
 
 // ========================================
 // DYNAMIC LOAD MONITOR
 // Sheds traffic when the server reaches ~85% capacity.
 //
 // Three signals are checked (any one triggers shedding):
-//   1. Event-loop lag  — proxy for CPU saturation
-//   2. Memory pressure — heap approaching system limits
-//   3. RPS backstop    — hard ceiling from k6 benchmarks
+//   1. Event-loop lag  ΓÇö proxy for CPU saturation
+//   2. Memory pressure ΓÇö heap approaching system limits
+//   3. RPS backstop    ΓÇö hard ceiling from k6 benchmarks
 //
 // k6 baseline (rate-limit OFF, 4000 VU):
-//   Peak throughput ≈ 2 141 req/s
-//   85 % of 2 141  ≈ 1 820 req/s → rounded to 1 800
+//   Peak throughput Γëê 2 141 req/s
+//   85 % of 2 141  Γëê 1 820 req/s ΓåÆ rounded to 1 800
 // ========================================
 
 // --- Event-loop lag ---
-const EL_LAG_THRESHOLD_MS = 100; // >100 ms p99 lag → overloaded
+const EL_LAG_THRESHOLD_MS = 100; // >100 ms p99 lag ΓåÆ overloaded
 let eventLoopP99 = 0;
 
 const histogram = monitorEventLoopDelay({ resolution: 20 });
@@ -40,7 +35,7 @@ histogram.enable();
 
 // Sample the histogram every 2 seconds and reset
 setInterval(() => {
-  eventLoopP99 = histogram.percentile(99) / 1e6; // ns → ms
+  eventLoopP99 = histogram.percentile(99) / 1e6; // ns ΓåÆ ms
   histogram.reset();
 }, 2_000);
 
@@ -94,18 +89,11 @@ function isServerOverloaded(): { overloaded: boolean; reason: string } {
 // ========================================
 // REDIS CONFIG
 // ========================================
-const redisUrl =
-  process.env.REDIS_URL ||
-  process.env.REDIS_TLS_URL ||
-  "";
+const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || "";
 
-const upstashUrl =
-  process.env.UPSTASH_REDIS_REST_URL ||
-  "";
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || "";
 
-const upstashToken =
-  process.env.UPSTASH_REDIS_REST_TOKEN ||
-  "";
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
 let redis: any = null;
 let upstash: UpstashRedis | null = null;
@@ -131,10 +119,7 @@ if (redisUrl) {
       token: upstashToken,
     });
   } catch (e) {
-    console.error(
-      "Failed to create Upstash Redis client",
-      e,
-    );
+    console.error("Failed to create Upstash Redis client", e);
 
     upstash = null;
   }
@@ -144,33 +129,17 @@ if (redisUrl) {
 // HELPERS
 // ========================================
 function getClientIp(req: any): string {
-  const cloudflareIp = req.headers[
-    "cf-connecting-ip"
-  ] as string | undefined;
+  const cloudflareIp = req.headers["cf-connecting-ip"] as string | undefined;
 
-  const realIp = req.headers[
-    "x-real-ip"
-  ] as string | undefined;
+  const realIp = req.headers["x-real-ip"] as string | undefined;
 
-  const forwardedIp = (
-    req.headers["x-forwarded-for"] as
-    | string
-    | undefined
-  )?.split(",")[0];
+  const forwardedIp = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0];
 
-  return (
-    cloudflareIp ||
-    realIp ||
-    forwardedIp ||
-    req.socket.remoteAddress ||
-    "unknown"
-  );
+  return cloudflareIp || realIp || forwardedIp || req.socket.remoteAddress || "unknown";
 }
 
 function getRouteKey(req: any): string {
-  const routePath = req?.route?.path
-    ? String(req.route.path)
-    : req.path || "unknown";
+  const routePath = req?.route?.path ? String(req.route.path) : req.path || "unknown";
 
   return `${req.method || "GET"}:${routePath}`;
 }
@@ -184,11 +153,7 @@ export function createSimpleLimiter(
   max: number,
   message: string,
 ) {
-  return async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // ========================================
       // DYNAMIC LOAD SHEDDING (85% threshold)
@@ -256,10 +221,7 @@ export function createSimpleLimiter(
       // ========================================
       // MEMORY FALLBACK
       // ========================================
-      if (
-        !requestCounts[key] ||
-        requestCounts[key].resetTime < now
-      ) {
+      if (!requestCounts[key] || requestCounts[key].resetTime < now) {
         requestCounts[key] = {
           count: 1,
           resetTime: now + windowMs,
@@ -319,13 +281,12 @@ export const authLimiter = createSimpleLimiter(
  * REGISTRATION APIs
  * Registration flow needs ~9 requests
  */
-export const registrationLimiter =
-  createSimpleLimiter(
-    "registration",
-    10 * 60 * 1000,
-    60,
-    "Too many registration attempts",
-  );
+export const registrationLimiter = createSimpleLimiter(
+  "registration",
+  10 * 60 * 1000,
+  60,
+  "Too many registration attempts",
+);
 
 /**
  * ADMIN APIs
