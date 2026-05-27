@@ -18,11 +18,17 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as CaptainsRouteImport } from './routes/captains'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserIndexRouteImport } from './routes/user/index'
+import { Route as PortalIndexRouteImport } from './routes/portal/index'
 import { Route as Wch1925LoginRouteImport } from './routes/wch1925/login'
 import { Route as Wch1925LayoutRouteImport } from './routes/wch1925/_layout'
 import { Route as UserProfileRouteImport } from './routes/user/profile'
 import { Route as UserMyScheduleRouteImport } from './routes/user/my-schedule'
 import { Route as UserLayoutRouteImport } from './routes/user/_layout'
+import { Route as PortalRegisterRouteImport } from './routes/portal/register'
+import { Route as PortalProfileRouteImport } from './routes/portal/profile'
+import { Route as PortalLiveRouteImport } from './routes/portal/live'
+import { Route as PortalEventsRouteImport } from './routes/portal/events'
+import { Route as PortalAdminRouteImport } from './routes/portal/admin'
 import { Route as Wch1925LayoutIndexRouteImport } from './routes/wch1925/_layout/index'
 import { Route as Wch1925LayoutUserManagementRouteImport } from './routes/wch1925/_layout/user-management'
 import { Route as Wch1925LayoutSettingsRouteImport } from './routes/wch1925/_layout/settings'
@@ -82,6 +88,11 @@ const UserIndexRoute = UserIndexRouteImport.update({
   path: '/user/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/portal/',
+  path: '/portal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Wch1925LoginRoute = Wch1925LoginRouteImport.update({
   id: '/wch1925/login',
   path: '/wch1925/login',
@@ -105,6 +116,31 @@ const UserMyScheduleRoute = UserMyScheduleRouteImport.update({
 const UserLayoutRoute = UserLayoutRouteImport.update({
   id: '/user/_layout',
   path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRegisterRoute = PortalRegisterRouteImport.update({
+  id: '/portal/register',
+  path: '/portal/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalProfileRoute = PortalProfileRouteImport.update({
+  id: '/portal/profile',
+  path: '/portal/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalLiveRoute = PortalLiveRouteImport.update({
+  id: '/portal/live',
+  path: '/portal/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalEventsRoute = PortalEventsRouteImport.update({
+  id: '/portal/events',
+  path: '/portal/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalAdminRoute = PortalAdminRouteImport.update({
+  id: '/portal/admin',
+  path: '/portal/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Wch1925LayoutIndexRoute = Wch1925LayoutIndexRouteImport.update({
@@ -187,11 +223,17 @@ export interface FileRoutesByFullPath {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/events': typeof PortalEventsRoute
+  '/portal/live': typeof PortalLiveRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/register': typeof PortalRegisterRoute
   '/user': typeof UserLayoutRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
   '/wch1925': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
+  '/portal/': typeof PortalIndexRoute
   '/user/': typeof UserIndexRoute
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
@@ -216,10 +258,16 @@ export interface FileRoutesByTo {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/events': typeof PortalEventsRoute
+  '/portal/live': typeof PortalLiveRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/register': typeof PortalRegisterRoute
   '/user': typeof UserIndexRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
   '/wch1925/login': typeof Wch1925LoginRoute
+  '/portal': typeof PortalIndexRoute
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
@@ -244,11 +292,17 @@ export interface FileRoutesById {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/events': typeof PortalEventsRoute
+  '/portal/live': typeof PortalLiveRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/register': typeof PortalRegisterRoute
   '/user/_layout': typeof UserLayoutRoute
   '/user/my-schedule': typeof UserMyScheduleRoute
   '/user/profile': typeof UserProfileRoute
   '/wch1925/_layout': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
+  '/portal/': typeof PortalIndexRoute
   '/user/': typeof UserIndexRoute
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/_layout/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
@@ -275,11 +329,17 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/portal/admin'
+    | '/portal/events'
+    | '/portal/live'
+    | '/portal/profile'
+    | '/portal/register'
     | '/user'
     | '/user/my-schedule'
     | '/user/profile'
     | '/wch1925'
     | '/wch1925/login'
+    | '/portal/'
     | '/user/'
     | '/wch1925/announcements'
     | '/wch1925/checkin'
@@ -304,10 +364,16 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/portal/admin'
+    | '/portal/events'
+    | '/portal/live'
+    | '/portal/profile'
+    | '/portal/register'
     | '/user'
     | '/user/my-schedule'
     | '/user/profile'
     | '/wch1925/login'
+    | '/portal'
     | '/wch1925/announcements'
     | '/wch1925/checkin'
     | '/wch1925/data-entry'
@@ -331,11 +397,17 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/portal/admin'
+    | '/portal/events'
+    | '/portal/live'
+    | '/portal/profile'
+    | '/portal/register'
     | '/user/_layout'
     | '/user/my-schedule'
     | '/user/profile'
     | '/wch1925/_layout'
     | '/wch1925/login'
+    | '/portal/'
     | '/user/'
     | '/wch1925/_layout/announcements'
     | '/wch1925/_layout/checkin'
@@ -361,11 +433,17 @@ export interface RootRouteChildren {
   MyScheduleRoute: typeof MyScheduleRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  PortalAdminRoute: typeof PortalAdminRoute
+  PortalEventsRoute: typeof PortalEventsRoute
+  PortalLiveRoute: typeof PortalLiveRoute
+  PortalProfileRoute: typeof PortalProfileRoute
+  PortalRegisterRoute: typeof PortalRegisterRoute
   UserLayoutRoute: typeof UserLayoutRoute
   UserMyScheduleRoute: typeof UserMyScheduleRoute
   UserProfileRoute: typeof UserProfileRoute
   Wch1925LayoutRoute: typeof Wch1925LayoutRouteWithChildren
   Wch1925LoginRoute: typeof Wch1925LoginRoute
+  PortalIndexRoute: typeof PortalIndexRoute
   UserIndexRoute: typeof UserIndexRoute
 }
 
@@ -434,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/': {
+      id: '/portal/'
+      path: '/portal'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wch1925/login': {
       id: '/wch1925/login'
       path: '/wch1925/login'
@@ -467,6 +552,41 @@ declare module '@tanstack/react-router' {
       path: '/user'
       fullPath: '/user'
       preLoaderRoute: typeof UserLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/register': {
+      id: '/portal/register'
+      path: '/portal/register'
+      fullPath: '/portal/register'
+      preLoaderRoute: typeof PortalRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/profile': {
+      id: '/portal/profile'
+      path: '/portal/profile'
+      fullPath: '/portal/profile'
+      preLoaderRoute: typeof PortalProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/live': {
+      id: '/portal/live'
+      path: '/portal/live'
+      fullPath: '/portal/live'
+      preLoaderRoute: typeof PortalLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/events': {
+      id: '/portal/events'
+      path: '/portal/events'
+      fullPath: '/portal/events'
+      preLoaderRoute: typeof PortalEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/admin': {
+      id: '/portal/admin'
+      path: '/portal/admin'
+      fullPath: '/portal/admin'
+      preLoaderRoute: typeof PortalAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wch1925/_layout/': {
@@ -617,11 +737,17 @@ const rootRouteChildren: RootRouteChildren = {
   MyScheduleRoute: MyScheduleRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  PortalAdminRoute: PortalAdminRoute,
+  PortalEventsRoute: PortalEventsRoute,
+  PortalLiveRoute: PortalLiveRoute,
+  PortalProfileRoute: PortalProfileRoute,
+  PortalRegisterRoute: PortalRegisterRoute,
   UserLayoutRoute: UserLayoutRoute,
   UserMyScheduleRoute: UserMyScheduleRoute,
   UserProfileRoute: UserProfileRoute,
   Wch1925LayoutRoute: Wch1925LayoutRouteWithChildren,
   Wch1925LoginRoute: Wch1925LoginRoute,
+  PortalIndexRoute: PortalIndexRoute,
   UserIndexRoute: UserIndexRoute,
 }
 export const routeTree = rootRouteImport
