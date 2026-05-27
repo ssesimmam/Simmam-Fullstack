@@ -11,12 +11,16 @@ import supabase from '@/lib/supabase'
 import { toast } from 'sonner'
 
 export function ProfilePage() {
-  const [user, setUser] = useState(getUser)
+  const [user, setUser] = useState<UserProfile | null>(null)
   const [syncingProfile, setSyncingProfile] = useState(false)
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setUser(getUser())
+  }, [])
 
   const isProfileComplete = useCallback((profile: UserProfile | null | undefined) =>
     !!profile?.name?.trim() &&

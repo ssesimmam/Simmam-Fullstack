@@ -35,7 +35,7 @@ const C = {
 /* ─── helpers ──────────────────────────────────────────────── */
 
 function getHousePoints(house: House) {
-  return Number(house.points2025 ?? 0);
+  return Number(house.points2026 ?? house.points2025 ?? 0);
 }
 
 const ELEMENT_ICONS: Record<string, typeof Flame> = {

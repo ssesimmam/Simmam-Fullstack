@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { AdminUser, AdminRole } from '@/types/admin'
 import { ROLE_PERMISSIONS, ROUTE_PERMISSIONS } from '@/types/admin'
 import supabase from '@/lib/supabase'
+import { resolveApiBase } from '@/lib/apiBase'
 
 interface AuthContextType {
   user: AdminUser | null
@@ -95,8 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const apiBase = (() => {
         const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-        if (!raw) return ''
-        return raw.replace(/\/$/, '')
+        return resolveApiBase(raw, '')
       })()
       const response = await fetch(`${apiBase}/api/wch1925/auth`, {
         method: 'POST',

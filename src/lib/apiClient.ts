@@ -66,6 +66,7 @@ export type CreateRegistrationPayload = {
 }
 
 import supabase from '@/lib/supabase'
+import { readJsonPayload, resolveApiBase } from '@/lib/apiBase'
 
 // ─── Custom API Error ─────────────────────────────────────────────────────────
 // Carries the HTTP status code so the UI can react to server-level failures
@@ -99,8 +100,7 @@ export function isMaintenanceError(error: unknown): error is ApiError {
 
 const apiBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-  if (!raw) return '/api'
-  return `${raw.replace(/\/$/, '')}/api`
+  return resolveApiBase(raw, '/api')
 })()
 
 async function getUserAuthHeaders(): Promise<Record<string, string>> {
@@ -135,8 +135,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
   })
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
+  const payload = await readJsonPayload(response)
 
   if (!response.ok) {
     const message = payload?.error || payload?.message || `Request failed (${response.status})`

@@ -1,11 +1,11 @@
 import supabase from '@/lib/supabase'
 import { ApiError } from '@/lib/apiClient'
 import { getStoredAdminAccessToken } from '@/lib/auth'
+import { readJsonPayload, resolveApiBase } from '@/lib/apiBase'
 
 const adminBase = (() => {
   const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-  if (!raw) return '/api/wch1925'
-  return `${raw.replace(/\/$/, '')}/api/wch1925`
+  return resolveApiBase(raw, '/api/wch1925')
 })()
 
 async function getAdminAuthHeaders(): Promise<Record<string, string>> {
@@ -46,8 +46,7 @@ async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
     return (await response.text()) as unknown as T
   }
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
+  const payload = await readJsonPayload(response)
 
   if (!response.ok) {
     throw new ApiError(payload?.error || payload?.message || `Request failed (${response.status})`, response.status)
