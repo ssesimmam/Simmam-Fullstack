@@ -9,6 +9,7 @@ import { exportAdminRegistrationsCsv, fetchAdminRegistrations } from '@/lib/admi
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { formatIstDateTime } from '@/lib/dateTime'
 
 export const Route = createFileRoute('/wch1925/_layout/registrations')({
   component: RegistrationsPage,
@@ -151,7 +152,7 @@ function RegistrationsPage() {
                     <td className="p-3 font-mono text-xs text-gray-400">{row.reg_no || '-'}</td>
                     <td className="p-3">{row.participant_name}</td>
                     <td className="p-3">{row.event_name}</td>
-                    <td className="p-3 text-gray-400">{row.registration_date ? new Date(row.registration_date).toLocaleString() : '-'}</td>
+                    <td className="p-3 text-gray-400">{row.registration_date ? formatIstDateTime(row.registration_date) : '-'}</td>
                     <td className="p-3 uppercase text-xs tracking-wide text-gray-300">{row.registration_status}</td>
                   </tr>
                 ))

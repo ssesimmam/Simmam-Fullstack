@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
+import { formatIstDayLabel } from '@/lib/dateTime'
 
 export const Route = createFileRoute('/wch1925/_layout/data-entry')({
   component: DataEntryPage,
@@ -550,7 +551,7 @@ function DataEntryPage() {
                     </div>
                     <div className="hidden md:block text-right text-xs text-gray-500">
                       <div>
-                        {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'}
+                        {event.date ? formatIstDayLabel(event.date, { day: 'numeric', month: 'short' }) : 'Date TBA'}
                       </div>
                       <div>{event.time || 'Time TBA'}</div>
                     </div>
@@ -987,7 +988,7 @@ function DataEntryPage() {
                     <div className="text-white font-medium text-sm">{event.name}</div>
                     <div className="text-gray-500 text-xs">{event.category} • <span className="capitalize">{event.status}</span></div>
                     <div className="mt-1 text-xs text-gray-500">
-                      {event.date ? new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date TBA'} • {event.time || 'Time TBA'}
+                      {event.date ? formatIstDayLabel(event.date, { day: 'numeric', month: 'short' }) : 'Date TBA'} • {event.time || 'Time TBA'}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

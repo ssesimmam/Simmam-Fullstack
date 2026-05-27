@@ -6,6 +6,7 @@ import { Calendar, CheckCircle2, ClipboardList, Users, UserRoundPlus } from 'luc
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
 import { fetchAdminDashboardSummary, type AdminDashboardSummary } from '@/lib/adminApi'
+import { formatIstDateTime } from '@/lib/dateTime'
 
 export const Route = createFileRoute('/wch1925/_layout/')({
   component: AdminDashboard,
@@ -107,7 +108,7 @@ function AdminDashboard() {
               <div key={item.id} className="bg-black border border-[#333] rounded-lg p-3 flex items-start justify-between gap-3">
                 <div>
                   <div className="text-white font-medium">{item.participant_name || 'Unknown User'}</div>
-                  <div className="text-xs text-gray-500 mt-1">{item.event_name} • {item.registration_date ? new Date(item.registration_date).toLocaleString() : '-'}</div>
+                  <div className="text-xs text-gray-500 mt-1">{item.event_name} • {item.registration_date ? formatIstDateTime(item.registration_date) : '-'}</div>
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-gray-400">{item.registration_status}</span>
               </div>

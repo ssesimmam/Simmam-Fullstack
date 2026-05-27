@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { formatIstDateTime } from '@/lib/dateTime'
 import {
   createAdminAnnouncement,
   deleteAdminAnnouncement,
@@ -251,11 +252,11 @@ function AnnouncementsPage() {
                       <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
                         <span className="inline-flex items-center gap-1">
                           <CalendarClock className="h-3.5 w-3.5" />
-                          {item.starts_at ? new Date(item.starts_at).toLocaleString() : 'Starts immediately'}
+                          {item.starts_at ? formatIstDateTime(item.starts_at) : 'Starts immediately'}
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Bell className="h-3.5 w-3.5" />
-                          {item.ends_at ? `Ends ${new Date(item.ends_at).toLocaleString()}` : 'No end time'}
+                          {item.ends_at ? `Ends ${formatIstDateTime(item.ends_at)}` : 'No end time'}
                         </span>
                       </div>
                     </div>

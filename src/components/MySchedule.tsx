@@ -3,21 +3,17 @@ import { Link } from '@tanstack/react-router'
 import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkles } from 'lucide-react'
 
 import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type Registration } from '@/lib/registrationStore'
+import { formatIstDateTime, formatIstDayLabel } from '@/lib/dateTime'
 
 function RegistrationCard({ reg }: { reg: Registration }) {
-  const dayLabel = new Date(`${reg.date}T12:00:00`).toLocaleDateString('en-IN', {
+  const dayLabel = formatIstDayLabel(reg.date, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   })
 
-  const registeredAt = new Date(reg.registeredAt).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const registeredAt = formatIstDateTime(reg.registeredAt)
 
   return (
     <article
@@ -203,7 +199,7 @@ export function MySchedule() {
 
                 let dayHeading = 'Registered Events'
                 if (key !== 'general') {
-                  dayHeading = new Date(`${key}T12:00:00`).toLocaleDateString('en-IN', {
+                  dayHeading = formatIstDayLabel(key, {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',

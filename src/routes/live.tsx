@@ -5,6 +5,7 @@ import { Particles } from '@/components/Particles';
 import { useData } from '@/lib/store';
 import { Calendar, MapPin, Clock, Trophy, Medal, Zap, Check } from 'lucide-react';
 import { showtimeEvents } from '@/lib/showtimeEvents';
+import { formatIstDayLabel } from '@/lib/dateTime';
 
 export const Route = createFileRoute('/live')({
   component: LivePage,
@@ -85,7 +86,7 @@ function LivePage() {
                 const endTime = (event as any).end_time || showtime?.endTime || 'TBA';
                 const venue = event.venue || showtime?.venue || 'Venue TBA';
                 const dayLabel = eventDate
-                  ? new Date(`${eventDate}T12:00:00`).toLocaleDateString('en-IN', {
+                  ? formatIstDayLabel(eventDate, {
                       weekday: 'short',
                       day: 'numeric',
                       month: 'short',

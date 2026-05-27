@@ -9,6 +9,7 @@ import { Plus, Minus, Save, Trophy, TrendingUp, TrendingDown, History } from 'lu
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { formatIstDateTime } from '@/lib/dateTime'
 
 export const Route = createFileRoute('/wch1925/_layout/leaderboard')({
   component: LeaderboardManagement,
@@ -229,7 +230,7 @@ function LeaderboardManagement() {
                 </div>
                 <div className="text-right text-xs text-gray-600">
                   <p>By {log.issuedBy}</p>
-                  <p>{new Date(log.timestamp).toLocaleString()}</p>
+                  <p>{formatIstDateTime(log.timestamp)}</p>
                 </div>
               </div>
             ))}

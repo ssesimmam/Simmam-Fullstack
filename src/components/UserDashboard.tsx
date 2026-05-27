@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { getUserRegistrations, getCheckedInEvents, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
 import { useData } from '@/lib/store'
+import { formatIstDayLabel } from '@/lib/dateTime'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ function DashboardEventCard({
   const status = STATUS_CONFIG[variant]
 
   const dayLabel = date
-    ? new Date(`${date}T12:00:00`).toLocaleDateString('en-IN', {
+    ? formatIstDayLabel(date, {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -152,7 +153,7 @@ function DetailedODCard({
   endTime,
 }: Omit<DashboardEventCardProps, 'variant'>) {
   const fullDate = date
-    ? new Date(`${date}T12:00:00`).toLocaleDateString('en-IN', {
+    ? formatIstDayLabel(date, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

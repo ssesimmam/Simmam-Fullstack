@@ -297,7 +297,7 @@ export function EventsShowtime() {
   const festivalDates = useMemo(() => {
     const uniqueDates = Array.from(new Set(allDisplayEvents.map((event) => event.date)));
     return uniqueDates.map((dateKey) => {
-      const dateObj = new Date(`${dateKey}T12:00:00`);
+      const dateObj = new Date(`${dateKey}T12:00:00+05:30`);
       const short = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
       const month = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
       return {
