@@ -110,6 +110,7 @@ let server: ReturnType<typeof app.listen> | null = null
 const allowedOrigins = [
   'https://ssesimmam.com',
   'https://www.ssesimmam.com',
+  'https://magnificent-mindfulness-production-2c5c.up.railway.app',
   'http://localhost:5173',
   'http://localhost:8080',
   'http://localhost:8081',
