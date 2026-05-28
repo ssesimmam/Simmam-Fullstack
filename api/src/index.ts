@@ -2194,7 +2194,7 @@ const bootstrap = async () => {
     console.error('Failed to seed event catalog:', err?.message || err)
   }
 
-  if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true') {
+  if (!server) {
     server = app.listen(PORT, '0.0.0.0')
     console.log(`API server listening on http://0.0.0.0:${PORT}`)
   }
