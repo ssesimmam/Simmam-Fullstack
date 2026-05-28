@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import simats from "@/assets/simats-logo.png";
 import { LionEmblem } from "./LionEmblem";
 
@@ -7,17 +8,11 @@ import { LionEmblem } from "./LionEmblem";
    Link definitions
 ───────────────────────────────────────────── */
 const leftLinks = [
-  { href: "/#home", label: "Home" },
-  { href: "/#dashboard", label: "Dashboard" },
-  { href: "/#teams", label: "Teams" },
-  { href: "/#leaderboard", label: "SIMMAM'25" },
+  { href: "/", label: "Dashboard" },
 ];
 
 const rightLinks = [
   { href: "/events", label: "Events" },
-  { href: "/captains", label: "Crew" },
-  { href: "/#archive", label: "Gallery" },
-  { href: "/#contact", label: "Contact" },
 ];
 
 const allLinks = [...leftLinks, ...rightLinks];
@@ -117,15 +112,15 @@ export function Navbar() {
                   flex: 1,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                 }}
                 aria-label="Primary left navigation"
               >
                 {leftLinks.map((l) => (
-                  <a key={l.href} href={l.href} className={desktopLink}>
+                  <Link key={l.href} to={l.href} className={desktopLink}>
                     <span>{l.label}</span>
                     <span className={desktopUnderline} />
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </div>
@@ -159,15 +154,15 @@ export function Navbar() {
                   flex: 1,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-start",
                 }}
                 aria-label="Primary right navigation"
               >
                 {rightLinks.map((l) => (
-                  <a key={l.href} href={l.href} className={desktopLink}>
+                  <Link key={l.href} to={l.href} className={desktopLink}>
                     <span>{l.label}</span>
                     <span className={desktopUnderline} />
-                  </a>
+                  </Link>
                 ))}
               </nav>
               {/* Invisible spacer mirrors SIMATS logo width to guarantee perfect symmetry */}
@@ -336,9 +331,9 @@ export function Navbar() {
         {/* Link list */}
         <nav aria-label="Mobile navigation" style={{ padding: "0 0.75rem 1rem" }}>
           {allLinks.map((l, i) => (
-            <a
+            <Link
               key={l.href}
-              href={l.href}
+              to={l.href}
               onClick={closeMenu}
               style={{
                 display: "flex",
@@ -370,7 +365,7 @@ export function Navbar() {
                 {String(i + 1).padStart(2, "0")}
               </span>
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 

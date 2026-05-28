@@ -1,4 +1,14 @@
-import { createRegistration, fetchUserRegistrations, upsertUserProfile } from '@/lib/apiClient'
+/**
+ * Registration Store — migrated to React Query backend-driven architecture.
+ *
+ * User profile is now stored in sessionStorage only as a lightweight cache.
+ * Registrations are fetched from the backend via useRegistrations() hook.
+ *
+ * This module provides compatibility exports for components that haven't been
+ * migrated to the React Query hooks yet.
+ */
+
+import { upsertUserProfile } from '@/api/registrations'
 
 export type UserProfile = {
   email: string
@@ -22,11 +32,18 @@ export type Registration = {
   checkedIn?: boolean
 }
 
+export type CheckedInEntry = {
+  eventName: string
+  event: string
+  house: string
+  checkIn: boolean
+}
+
 const USER_KEY = 'simmam_user'
 
-export function getUser(): UserProfile | null {
-  if (typeof window === 'undefined') return null
+// ─── User Profile (session cache) ─────────────────────────────────────────────
 
+export function getUser(): UserProfile | null {
   try {
     const raw = sessionStorage.getItem(USER_KEY)
     return raw ? JSON.parse(raw) : null
@@ -37,8 +54,6 @@ export function getUser(): UserProfile | null {
 
 export function saveUser(user: UserProfile): void {
   sessionStorage.setItem(USER_KEY, JSON.stringify(user))
-
-  // Keep backend profile in sync, but do not block the UI on this call.
   void upsertUserProfile({
     email: user.email,
     name: user.name,
@@ -46,71 +61,54 @@ export function saveUser(user: UserProfile): void {
     register_number: user.registerNumber,
     house: user.house,
     picture_url: user.picture,
-  }).catch(() => {
-    // Silent fallback: the user profile is still available in session storage.
-  })
+  }).catch(() => {})
 }
 
 export function clearUser(): void {
   sessionStorage.removeItem(USER_KEY)
 }
 
-/** Wipes the user session AND all their localStorage registrations. */
 export function clearAllUserData(email: string): void {
   sessionStorage.removeItem(USER_KEY)
   const regKey = `simmam_regs_${email.toLowerCase()}`
   localStorage.removeItem(regKey)
 }
 
+// ─── Registrations (legacy compatibility — use useRegistrations() hook instead) ──
+
+/** @deprecated Use useRegistrations() hook instead */
 export function getUserRegistrations(email: string): Registration[] {
-  if (typeof window === 'undefined') return []
-
-  const key = `simmam_regs_${email}`
-
   try {
-    const raw = localStorage.getItem(key)
+    const raw = localStorage.getItem(`simmam_regs_${email}`)
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
   }
 }
 
+/** Sync from backend — returns registrations and also writes to local cache */
 export async function syncUserRegistrations(email: string): Promise<Registration[]> {
-  const rows = await fetchUserRegistrations(email)
-  const mapped: Registration[] = rows.map((item) => ({
-    eventId: item.event_id,
-    eventName: item.event_name,
-    date: item.date,
-    timeSlot: item.time_slot,
-    endTime: item.end_time,
-    venue: item.venue,
-    category: item.category,
-    registeredAt: item.registered_at,
-    ticketCode: item.ticket_code,
-    checkedIn: !!item.checked_in,
+  const { getRegistrations } = await import('@/api/registrations')
+  const rows = await getRegistrations(email)
+  const mapped: Registration[] = rows.map((r) => ({
+    eventId: r.event_id,
+    eventName: r.event_name,
+    date: r.date,
+    timeSlot: r.time_slot,
+    endTime: r.end_time,
+    venue: r.venue,
+    category: r.category,
+    registeredAt: r.registered_at,
+    ticketCode: r.ticket_code,
+    checkedIn: !!r.checked_in,
   }))
-
-  saveUserRegistrations(email, mapped)
+  localStorage.setItem(`simmam_regs_${email}`, JSON.stringify(mapped))
   return mapped
 }
 
-function saveUserRegistrations(email: string, registrations: Registration[]): void {
-  const key = `simmam_regs_${email}`
-  localStorage.setItem(key, JSON.stringify(registrations))
-}
-
-export function isRegistered(email: string, eventId: string): boolean {
-  const registrations = getUserRegistrations(email)
-  return registrations.some((registration) => registration.eventId === eventId)
-}
-
 export function isRegisteredForEvent(email: string, eventId: string | undefined, eventName: string): boolean {
-  const registrations = getUserRegistrations(email)
-  return registrations.some((registration) => {
-    const byId = !!eventId && registration.eventId === eventId
-    const byName = registration.eventName.toLowerCase() === eventName.toLowerCase()
-    return byId || byName
-  })
+  const regs = getUserRegistrations(email)
+  return regs.some((r) => (!!eventId && r.eventId === eventId) || r.eventName.toLowerCase() === eventName.toLowerCase())
 }
 
 export async function registerForEvent(
@@ -118,23 +116,15 @@ export async function registerForEvent(
   event: Omit<Registration, 'registeredAt' | 'ticketCode'> & { backendEventId?: string },
   turnstileToken?: string,
 ): Promise<{ success: boolean; alreadyRegistered: boolean }> {
-  const registrations = getUserRegistrations(email)
-
-  if (
-    registrations.some(
-      (registration) =>
-        registration.eventId === event.eventId ||
-        registration.eventName.toLowerCase() === event.eventName.toLowerCase(),
-    )
-  ) {
+  const regs = getUserRegistrations(email)
+  if (regs.some((r) => r.eventId === event.eventId || r.eventName.toLowerCase() === event.eventName.toLowerCase())) {
     return { success: false, alreadyRegistered: true }
   }
 
   const user = getUser()
-  if (!user) {
-    throw new Error('user_session_missing')
-  }
+  if (!user) throw new Error('user_session_missing')
 
+  const { createRegistration } = await import('@/api/registrations')
   const response = await createRegistration({
     email: user.email,
     name: user.name,
@@ -145,63 +135,16 @@ export async function registerForEvent(
     turnstile_token: turnstileToken,
   })
 
-  const ticketCode = response.ticket_code || generateTicketCode(email, event.eventId)
-  const newRegistration: Registration = {
+  const newReg: Registration = {
     ...event,
     registeredAt: new Date().toISOString(),
-    ticketCode,
+    ticketCode: response.ticket_code || `SMM-${Date.now().toString(36).toUpperCase()}`,
   }
-
-  saveUserRegistrations(email, [...registrations, newRegistration])
-
-  // Fetch authoritative rows from backend after local optimistic update.
+  localStorage.setItem(`simmam_regs_${email}`, JSON.stringify([...regs, newReg]))
   await syncUserRegistrations(email)
   return { success: true, alreadyRegistered: false }
 }
 
-export function unregisterFromEvent(email: string, eventId: string): void {
-  const registrations = getUserRegistrations(email)
-  saveUserRegistrations(
-    email,
-    registrations.filter((registration) => registration.eventId !== eventId),
-  )
-}
-
-function generateTicketCode(email: string, eventId: string): string {
-  const hash = simpleHash(`${email}-${eventId}-${Date.now()}`)
-  return `SMM-${hash.slice(0, 4).toUpperCase()}-${hash.slice(4, 8).toUpperCase()}`
-}
-
-function simpleHash(value: string): string {
-  let hash = 0
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
-  }
-
-  return hash.toString(36).padStart(8, '0')
-}
-
-// ─── Check-In Helpers ─────────────────────────────────────────────────────────
-
-export type CheckedInEntry = {
-  eventName: string
-  event: string
-  house: string
-  checkIn: boolean
-}
-
-/**
- * Returns all participant records where the user's email matches and checkIn is true.
- * Participants come from the admin store (useData().participants).
- */
-export function getCheckedInEvents(
-  email: string,
-  participants: CheckedInEntry[],
-): CheckedInEntry[] {
-  return participants.filter(
-    (p) =>
-      (p as any).email?.toLowerCase() === email.toLowerCase() &&
-      p.checkIn === true,
-  )
+export function getCheckedInEvents(email: string, participants: CheckedInEntry[]): CheckedInEntry[] {
+  return participants.filter((p) => (p as any).email?.toLowerCase() === email.toLowerCase() && p.checkIn === true)
 }

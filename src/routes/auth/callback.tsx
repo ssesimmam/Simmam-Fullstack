@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import supabase from '@/lib/supabase'
+import { fetchUserProfileByEmail } from '@/lib/apiClient'
+import { saveUser, syncUserRegistrations, type UserProfile } from '@/lib/registrationStore'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackPage,
@@ -16,8 +18,29 @@ function AuthCallbackPage() {
     const processSession = async () => {
       try {
         // Exchange code/tokens securely via Supabase PKCE flow
-        const { error: sessionError } = await supabase.auth.getSession()
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
         if (sessionError) throw sessionError
+
+        const user = sessionData?.session?.user
+        if (user?.email) {
+          const userProfile = await fetchUserProfileByEmail(user.email.toLowerCase())
+          if (userProfile) {
+            const newUser: UserProfile = {
+              email: userProfile.email.toLowerCase(),
+              name: userProfile.name,
+              picture: userProfile.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userProfile.name)}`,
+              registerNumber: userProfile.register_number || '',
+              mobileNumber: userProfile.mobile_number,
+              house: userProfile.house || '',
+            }
+            saveUser(newUser)
+            try {
+              await syncUserRegistrations(newUser.email)
+            } catch {
+              // ignore sync failure
+            }
+          }
+        }
 
         // Safely strip auth tokens from URL avoiding any history leaks
         window.history.replaceState({}, document.title, window.location.pathname)
