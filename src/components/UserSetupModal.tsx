@@ -2,7 +2,16 @@ import { useState, useEffect } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
-import { useData } from '@/lib/store'
+import { useHouses } from '@/features/events/useEvents'
+
+const HOUSE_EXTRAS: Record<string, { short: string; logo: string }> = {
+  'Agniyas': { short: 'AG', logo: '/houses/agniyas.png' },
+  'Dronas': { short: 'DR', logo: '/houses/dronas.jpg' },
+  'Marutas': { short: 'MA', logo: '/houses/marutas.png' },
+  'Rudras': { short: 'RU', logo: '/houses/rudras.png' },
+  'Suryas': { short: 'SU', logo: '/houses/suryas.png' },
+  'Vajras': { short: 'VA', logo: '/houses/vajras.png' },
+}
 
 interface UserSetupModalProps {
   onSave: () => void
@@ -11,7 +20,12 @@ interface UserSetupModalProps {
 }
 
 export function UserSetupModal({ onSave, onClose, preventDismiss = false }: UserSetupModalProps) {
-  const { houses } = useData()
+  const { data: dbHouses = [] } = useHouses()
+  const houses = dbHouses.map(h => ({
+    ...h,
+    short: HOUSE_EXTRAS[h.name]?.short || h.name.substring(0, 2).toUpperCase(),
+    logo: HOUSE_EXTRAS[h.name]?.logo || `/houses/${h.name.toLowerCase()}.png`
+  }))
 
   // Do not access sessionStorage during render. Hydrate on mount.
   const [formName, setFormName] = useState('')
@@ -56,12 +70,12 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
 
     try {
       const backendProfile = await fetchUserProfileByEmail(normalizedEmail)
-      if (!existingProfile && backendProfile.user) {
+      if (!existingProfile && backendProfile) {
         setError('This email is already registered. Please log in instead.')
         setSubmitting(false)
         return
       }
-      if (existingProfile && existingProfile.email !== normalizedEmail && backendProfile.user) {
+      if (existingProfile && existingProfile.email !== normalizedEmail && backendProfile) {
         setError('This email is already registered. Please use a different email or log in.')
         setSubmitting(false)
         return

@@ -1,5 +1,10 @@
 import path from 'path'
 import dotenv from 'dotenv'
+import dns from 'node:dns'
+
+if (process.env.NODE_ENV !== 'production') {
+  dns.setDefaultResultOrder('ipv4first')
+}
 
 dotenv.config({
   path: path.resolve(__dirname, '../../.env')
@@ -66,7 +71,17 @@ if (
   throw new Error('FATAL: Invalid Supabase service role key')
 }
 
-const supabase = createClient(SUPABASE_URL, serviceRole)
+const supabase = createClient(SUPABASE_URL, serviceRole, {
+  auth: { persistSession: false },
+  global: { 
+    fetch: (url, options) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timeoutId));
+    }
+  }
+})
 
 const app = express()
 app.set('trust proxy', 1)
@@ -76,6 +91,7 @@ const allowedOrigins = [
   'https://www.ssesimmam.com',
   'http://localhost:5173',
   'http://localhost:8080',
+  'http://localhost:8081',
 ]
 
 const shutdown = async (signal: string) => {
@@ -314,6 +330,10 @@ const requireSignedInUser = async (req: express.Request, res: express.Response, 
     return res.status(403).json({ error: 'email_mismatch' })
   }
 
+  if (!authEmail.endsWith('@saveetha.com')) {
+    return res.status(403).json({ error: 'unauthorized_domain', message: 'Only @saveetha.com accounts are allowed.' })
+  }
+
   ;(req as any).authenticatedUser = {
     id: user.id,
     email: authEmail,
@@ -479,6 +499,10 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
 
+app.get('/api/debug-env', (req, res) => {
+  res.json({ supabase: SUPABASE_URL, serviceRolePrefix: serviceRole?.slice(0, 10) })
+})
+
 // Get events
 app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => {
   try {
@@ -496,8 +520,8 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
     if (error) throw error
     res.json({ data: data || [] })
   } catch (err: any) {
-    console.error(err)
-    res.status(500).json({ error: err.message || 'unknown' })
+    console.error('Events error:', err.message, 'Cause:', err.cause)
+    res.status(500).json({ error: err.message, cause: err.cause?.message || String(err.cause) })
   }
 })
 
@@ -2143,11 +2167,15 @@ const bootstrap = async () => {
     console.error('Failed to seed event catalog:', err?.message || err)
   }
 
-  server = app.listen(PORT, '0.0.0.0')
-  console.log(`API server listening on http://0.0.0.0:${PORT}`)
+  if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true') {
+    server = app.listen(PORT, '0.0.0.0')
+    console.log(`API server listening on http://0.0.0.0:${PORT}`)
+  }
 }
 
-bootstrap()
+if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true' || require.main === module) {
+  bootstrap()
+}
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not_found' })
@@ -2179,3 +2207,5 @@ app.use((err: unknown, req: express.Request, res: express.Response, next: expres
 
   res.status(statusCode).json({ error: code, requestId: (req as any).requestId })
 })
+
+export default app

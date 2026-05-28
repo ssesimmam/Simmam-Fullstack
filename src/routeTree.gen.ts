@@ -10,25 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as MyScheduleRouteImport } from './routes/my-schedule'
-import { Route as LiveScoresRouteImport } from './routes/live-scores'
-import { Route as LiveRouteImport } from './routes/live'
 import { Route as EventsRouteImport } from './routes/events'
-import { Route as CaptainsRouteImport } from './routes/captains'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UserIndexRouteImport } from './routes/user/index'
-import { Route as PortalIndexRouteImport } from './routes/portal/index'
+import { Route as EventsIndexRouteImport } from './routes/events/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as Wch1925LoginRouteImport } from './routes/wch1925/login'
 import { Route as Wch1925LayoutRouteImport } from './routes/wch1925/_layout'
-import { Route as UserProfileRouteImport } from './routes/user/profile'
-import { Route as UserMyScheduleRouteImport } from './routes/user/my-schedule'
-import { Route as UserLayoutRouteImport } from './routes/user/_layout'
-import { Route as PortalRegisterRouteImport } from './routes/portal/register'
-import { Route as PortalProfileRouteImport } from './routes/portal/profile'
-import { Route as PortalLiveRouteImport } from './routes/portal/live'
-import { Route as PortalEventsRouteImport } from './routes/portal/events'
-import { Route as PortalAdminRouteImport } from './routes/portal/admin'
+import { Route as EventsRegisterRouteImport } from './routes/events/register'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardMyScheduleRouteImport } from './routes/dashboard/my-schedule'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Wch1925LayoutIndexRouteImport } from './routes/wch1925/_layout/index'
 import { Route as Wch1925LayoutUserManagementRouteImport } from './routes/wch1925/_layout/user-management'
@@ -49,34 +40,14 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyScheduleRoute = MyScheduleRouteImport.update({
-  id: '/my-schedule',
-  path: '/my-schedule',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LiveScoresRoute = LiveScoresRouteImport.update({
-  id: '/live-scores',
-  path: '/live-scores',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LiveRoute = LiveRouteImport.update({
-  id: '/live',
-  path: '/live',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CaptainsRoute = CaptainsRouteImport.update({
-  id: '/captains',
-  path: '/captains',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -84,15 +55,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserIndexRoute = UserIndexRouteImport.update({
-  id: '/user/',
-  path: '/user/',
-  getParentRoute: () => rootRouteImport,
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EventsRoute,
 } as any)
-const PortalIndexRoute = PortalIndexRouteImport.update({
-  id: '/portal/',
-  path: '/portal/',
-  getParentRoute: () => rootRouteImport,
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const Wch1925LoginRoute = Wch1925LoginRouteImport.update({
   id: '/wch1925/login',
@@ -104,45 +75,20 @@ const Wch1925LayoutRoute = Wch1925LayoutRouteImport.update({
   path: '/wch1925',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserProfileRoute = UserProfileRouteImport.update({
-  id: '/user/profile',
-  path: '/user/profile',
-  getParentRoute: () => rootRouteImport,
+const EventsRegisterRoute = EventsRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => EventsRoute,
 } as any)
-const UserMyScheduleRoute = UserMyScheduleRouteImport.update({
-  id: '/user/my-schedule',
-  path: '/user/my-schedule',
-  getParentRoute: () => rootRouteImport,
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const UserLayoutRoute = UserLayoutRouteImport.update({
-  id: '/user/_layout',
-  path: '/user',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalRegisterRoute = PortalRegisterRouteImport.update({
-  id: '/portal/register',
-  path: '/portal/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalProfileRoute = PortalProfileRouteImport.update({
-  id: '/portal/profile',
-  path: '/portal/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalLiveRoute = PortalLiveRouteImport.update({
-  id: '/portal/live',
-  path: '/portal/live',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalEventsRoute = PortalEventsRouteImport.update({
-  id: '/portal/events',
-  path: '/portal/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalAdminRoute = PortalAdminRouteImport.update({
-  id: '/portal/admin',
-  path: '/portal/admin',
-  getParentRoute: () => rootRouteImport,
+const DashboardMyScheduleRoute = DashboardMyScheduleRouteImport.update({
+  id: '/my-schedule',
+  path: '/my-schedule',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -222,26 +168,17 @@ const Wch1925LayoutCheckinNewRoute = Wch1925LayoutCheckinNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/captains': typeof CaptainsRoute
-  '/events': typeof EventsRoute
-  '/live': typeof LiveRoute
-  '/live-scores': typeof LiveScoresRoute
-  '/my-schedule': typeof MyScheduleRoute
-  '/profile': typeof ProfileRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/events': typeof EventsRouteWithChildren
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/portal/admin': typeof PortalAdminRoute
-  '/portal/events': typeof PortalEventsRoute
-  '/portal/live': typeof PortalLiveRoute
-  '/portal/profile': typeof PortalProfileRoute
-  '/portal/register': typeof PortalRegisterRoute
-  '/user': typeof UserLayoutRoute
-  '/user/my-schedule': typeof UserMyScheduleRoute
-  '/user/profile': typeof UserProfileRoute
+  '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/events/register': typeof EventsRegisterRoute
   '/wch1925': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
-  '/portal/': typeof PortalIndexRoute
-  '/user/': typeof UserIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
@@ -258,24 +195,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/captains': typeof CaptainsRoute
-  '/events': typeof EventsRoute
-  '/live': typeof LiveRoute
-  '/live-scores': typeof LiveScoresRoute
-  '/my-schedule': typeof MyScheduleRoute
-  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/portal/admin': typeof PortalAdminRoute
-  '/portal/events': typeof PortalEventsRoute
-  '/portal/live': typeof PortalLiveRoute
-  '/portal/profile': typeof PortalProfileRoute
-  '/portal/register': typeof PortalRegisterRoute
-  '/user': typeof UserIndexRoute
-  '/user/my-schedule': typeof UserMyScheduleRoute
-  '/user/profile': typeof UserProfileRoute
+  '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/events/register': typeof EventsRegisterRoute
   '/wch1925/login': typeof Wch1925LoginRoute
-  '/portal': typeof PortalIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/events': typeof EventsIndexRoute
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
@@ -293,26 +220,17 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/captains': typeof CaptainsRoute
-  '/events': typeof EventsRoute
-  '/live': typeof LiveRoute
-  '/live-scores': typeof LiveScoresRoute
-  '/my-schedule': typeof MyScheduleRoute
-  '/profile': typeof ProfileRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/events': typeof EventsRouteWithChildren
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/portal/admin': typeof PortalAdminRoute
-  '/portal/events': typeof PortalEventsRoute
-  '/portal/live': typeof PortalLiveRoute
-  '/portal/profile': typeof PortalProfileRoute
-  '/portal/register': typeof PortalRegisterRoute
-  '/user/_layout': typeof UserLayoutRoute
-  '/user/my-schedule': typeof UserMyScheduleRoute
-  '/user/profile': typeof UserProfileRoute
+  '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/events/register': typeof EventsRegisterRoute
   '/wch1925/_layout': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
-  '/portal/': typeof PortalIndexRoute
-  '/user/': typeof UserIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/_layout/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
@@ -331,26 +249,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/captains'
+    | '/dashboard'
     | '/events'
-    | '/live'
-    | '/live-scores'
-    | '/my-schedule'
-    | '/profile'
     | '/register'
     | '/auth/callback'
-    | '/portal/admin'
-    | '/portal/events'
-    | '/portal/live'
-    | '/portal/profile'
-    | '/portal/register'
-    | '/user'
-    | '/user/my-schedule'
-    | '/user/profile'
+    | '/dashboard/my-schedule'
+    | '/dashboard/profile'
+    | '/events/register'
     | '/wch1925'
     | '/wch1925/login'
-    | '/portal/'
-    | '/user/'
+    | '/dashboard/'
+    | '/events/'
     | '/wch1925/announcements'
     | '/wch1925/checkin'
     | '/wch1925/data-entry'
@@ -367,24 +276,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/captains'
-    | '/events'
-    | '/live'
-    | '/live-scores'
-    | '/my-schedule'
-    | '/profile'
     | '/register'
     | '/auth/callback'
-    | '/portal/admin'
-    | '/portal/events'
-    | '/portal/live'
-    | '/portal/profile'
-    | '/portal/register'
-    | '/user'
-    | '/user/my-schedule'
-    | '/user/profile'
+    | '/dashboard/my-schedule'
+    | '/dashboard/profile'
+    | '/events/register'
     | '/wch1925/login'
-    | '/portal'
+    | '/dashboard'
+    | '/events'
     | '/wch1925/announcements'
     | '/wch1925/checkin'
     | '/wch1925/data-entry'
@@ -401,26 +300,17 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/captains'
+    | '/dashboard'
     | '/events'
-    | '/live'
-    | '/live-scores'
-    | '/my-schedule'
-    | '/profile'
     | '/register'
     | '/auth/callback'
-    | '/portal/admin'
-    | '/portal/events'
-    | '/portal/live'
-    | '/portal/profile'
-    | '/portal/register'
-    | '/user/_layout'
-    | '/user/my-schedule'
-    | '/user/profile'
+    | '/dashboard/my-schedule'
+    | '/dashboard/profile'
+    | '/events/register'
     | '/wch1925/_layout'
     | '/wch1925/login'
-    | '/portal/'
-    | '/user/'
+    | '/dashboard/'
+    | '/events/'
     | '/wch1925/_layout/announcements'
     | '/wch1925/_layout/checkin'
     | '/wch1925/_layout/data-entry'
@@ -438,26 +328,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CaptainsRoute: typeof CaptainsRoute
-  EventsRoute: typeof EventsRoute
-  LiveRoute: typeof LiveRoute
-  LiveScoresRoute: typeof LiveScoresRoute
-  MyScheduleRoute: typeof MyScheduleRoute
-  ProfileRoute: typeof ProfileRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  EventsRoute: typeof EventsRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
-  PortalAdminRoute: typeof PortalAdminRoute
-  PortalEventsRoute: typeof PortalEventsRoute
-  PortalLiveRoute: typeof PortalLiveRoute
-  PortalProfileRoute: typeof PortalProfileRoute
-  PortalRegisterRoute: typeof PortalRegisterRoute
-  UserLayoutRoute: typeof UserLayoutRoute
-  UserMyScheduleRoute: typeof UserMyScheduleRoute
-  UserProfileRoute: typeof UserProfileRoute
   Wch1925LayoutRoute: typeof Wch1925LayoutRouteWithChildren
   Wch1925LoginRoute: typeof Wch1925LoginRoute
-  PortalIndexRoute: typeof PortalIndexRoute
-  UserIndexRoute: typeof UserIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -469,34 +345,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-schedule': {
-      id: '/my-schedule'
-      path: '/my-schedule'
-      fullPath: '/my-schedule'
-      preLoaderRoute: typeof MyScheduleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/live-scores': {
-      id: '/live-scores'
-      path: '/live-scores'
-      fullPath: '/live-scores'
-      preLoaderRoute: typeof LiveScoresRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/live': {
-      id: '/live'
-      path: '/live'
-      fullPath: '/live'
-      preLoaderRoute: typeof LiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/events': {
       id: '/events'
       path: '/events'
@@ -504,11 +352,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/captains': {
-      id: '/captains'
-      path: '/captains'
-      fullPath: '/captains'
-      preLoaderRoute: typeof CaptainsRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -518,19 +366,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/': {
-      id: '/user/'
-      path: '/user'
-      fullPath: '/user/'
-      preLoaderRoute: typeof UserIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/events/': {
+      id: '/events/'
+      path: '/'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof EventsRoute
     }
-    '/portal/': {
-      id: '/portal/'
-      path: '/portal'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof PortalIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/wch1925/login': {
       id: '/wch1925/login'
@@ -546,61 +394,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/profile': {
-      id: '/user/profile'
-      path: '/user/profile'
-      fullPath: '/user/profile'
-      preLoaderRoute: typeof UserProfileRouteImport
-      parentRoute: typeof rootRouteImport
+    '/events/register': {
+      id: '/events/register'
+      path: '/register'
+      fullPath: '/events/register'
+      preLoaderRoute: typeof EventsRegisterRouteImport
+      parentRoute: typeof EventsRoute
     }
-    '/user/my-schedule': {
-      id: '/user/my-schedule'
-      path: '/user/my-schedule'
-      fullPath: '/user/my-schedule'
-      preLoaderRoute: typeof UserMyScheduleRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/user/_layout': {
-      id: '/user/_layout'
-      path: '/user'
-      fullPath: '/user'
-      preLoaderRoute: typeof UserLayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/register': {
-      id: '/portal/register'
-      path: '/portal/register'
-      fullPath: '/portal/register'
-      preLoaderRoute: typeof PortalRegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/profile': {
-      id: '/portal/profile'
-      path: '/portal/profile'
-      fullPath: '/portal/profile'
-      preLoaderRoute: typeof PortalProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/live': {
-      id: '/portal/live'
-      path: '/portal/live'
-      fullPath: '/portal/live'
-      preLoaderRoute: typeof PortalLiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/events': {
-      id: '/portal/events'
-      path: '/portal/events'
-      fullPath: '/portal/events'
-      preLoaderRoute: typeof PortalEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/admin': {
-      id: '/portal/admin'
-      path: '/portal/admin'
-      fullPath: '/portal/admin'
-      preLoaderRoute: typeof PortalAdminRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/my-schedule': {
+      id: '/dashboard/my-schedule'
+      path: '/my-schedule'
+      fullPath: '/dashboard/my-schedule'
+      preLoaderRoute: typeof DashboardMyScheduleRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -703,6 +516,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardRouteChildren {
+  DashboardMyScheduleRoute: typeof DashboardMyScheduleRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardMyScheduleRoute: DashboardMyScheduleRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
+interface EventsRouteChildren {
+  EventsRegisterRoute: typeof EventsRegisterRoute
+  EventsIndexRoute: typeof EventsIndexRoute
+}
+
+const EventsRouteChildren: EventsRouteChildren = {
+  EventsRegisterRoute: EventsRegisterRoute,
+  EventsIndexRoute: EventsIndexRoute,
+}
+
+const EventsRouteWithChildren =
+  EventsRoute._addFileChildren(EventsRouteChildren)
+
 interface Wch1925LayoutCheckinRouteChildren {
   Wch1925LayoutCheckinNewRoute: typeof Wch1925LayoutCheckinNewRoute
 }
@@ -750,36 +592,13 @@ const Wch1925LayoutRouteWithChildren = Wch1925LayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CaptainsRoute: CaptainsRoute,
-  EventsRoute: EventsRoute,
-  LiveRoute: LiveRoute,
-  LiveScoresRoute: LiveScoresRoute,
-  MyScheduleRoute: MyScheduleRoute,
-  ProfileRoute: ProfileRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  EventsRoute: EventsRouteWithChildren,
   RegisterRoute: RegisterRoute,
   AuthCallbackRoute: AuthCallbackRoute,
-  PortalAdminRoute: PortalAdminRoute,
-  PortalEventsRoute: PortalEventsRoute,
-  PortalLiveRoute: PortalLiveRoute,
-  PortalProfileRoute: PortalProfileRoute,
-  PortalRegisterRoute: PortalRegisterRoute,
-  UserLayoutRoute: UserLayoutRoute,
-  UserMyScheduleRoute: UserMyScheduleRoute,
-  UserProfileRoute: UserProfileRoute,
   Wch1925LayoutRoute: Wch1925LayoutRouteWithChildren,
   Wch1925LoginRoute: Wch1925LoginRoute,
-  PortalIndexRoute: PortalIndexRoute,
-  UserIndexRoute: UserIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

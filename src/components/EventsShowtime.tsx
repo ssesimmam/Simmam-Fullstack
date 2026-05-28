@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { getUser, getUserRegistrations, isRegisteredForEvent, syncUserRegistrations } from "@/lib/registrationStore";
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
-import { useData } from "@/lib/store";
+import { useEvents, usePublicSettings } from "@/features/events/useEvents";
+import supabase from "@/lib/supabase";
 
 type DisplayEvent = {
   id: string;
@@ -122,7 +123,8 @@ function EventCard({ event, user, onRegister, registered, registrationOpen }: Ev
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function EventsShowtime() {
-  const { events: adminEvents, settings } = useData();
+  const { data: adminEvents = [] } = useEvents();
+  const { data: settings } = usePublicSettings();
 
   // If global registration is closed, show a stunning "Closed" full-page experience
   if (settings && !settings.registrationsOpen) {
@@ -170,7 +172,7 @@ export function EventsShowtime() {
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Live Standings</h3>
                 <p className="text-[11px] text-white/45">Stay up-to-date with live point logs and leaderboard standings.</p>
               </Link>
-              <Link to="/my-schedule" className="p-4 rounded-xl border border-white/5 bg-white/5 hover:border-white/10 transition block">
+              <Link to="/dashboard/my-schedule" className="p-4 rounded-xl border border-white/5 bg-white/5 hover:border-white/10 transition block">
                 <Calendar className="h-5 w-5 text-[#D4AF37] mb-2" />
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-1">My Schedule</h3>
                 <p className="text-[11px] text-white/45">Review all your confirmed registrations and schedule slots.</p>
@@ -246,6 +248,17 @@ export function EventsShowtime() {
     setRegistrationTick((t) => t + 1);
   };
 
+  const handleGlobalLogin = async () => {
+    window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: window.location.pathname }));
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { hd: 'saveetha.com' },
+      },
+    });
+  };
+
   useEffect(() => {
     let mounted = true;
     const sync = async () => {
@@ -280,12 +293,12 @@ export function EventsShowtime() {
       .map((event) => ({
         id: event.id,
         name: event.name,
-        mainCategory: event.mainCategory,
+        mainCategory: (event as any).main_category || (event as any).category || 'Other',
         date: (event as any).date || '',
-        timeSlot: event.time || 'TBD',
-        endTime: (event as any).endTime || '',
+        timeSlot: (event as any).time_slot || 'TBD',
+        endTime: (event as any).end_time || '',
         venue: event.venue || 'Venue TBA',
-        registrationOpen: event.registration_open,
+        registrationOpen: (event as any).registration_open || false,
       }))
       .filter((event) => !!event.date)
       .sort((left, right) => {
@@ -391,7 +404,7 @@ export function EventsShowtime() {
                 Signed in as <strong>{user.name}</strong>
               </span>
               <Link
-                to="/my-schedule"
+                to="/dashboard/my-schedule"
                 className="text-[10px] tracking-wider text-[#D4AF37]/70 hover:text-[#D4AF37] transition ml-1"
               >
                 MY SCHEDULE →
@@ -400,13 +413,13 @@ export function EventsShowtime() {
           </div>
         ) : (
           <div className="mt-4">
-            <Link
-              to="/profile"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition"
+            <button
+              onClick={handleGlobalLogin}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition cursor-pointer"
             >
               <User className="w-3.5 h-3.5" />
               Log In
-            </Link>
+            </button>
           </div>
         )}
       </div>
@@ -529,7 +542,7 @@ export function EventsShowtime() {
         {user && (
           <div className="mt-10 text-center">
             <Link
-              to="/my-schedule"
+              to="/dashboard/my-schedule"
               id="view-my-schedule-btn"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] text-sm font-bold hover:bg-[#D4AF37]/10 transition-all"
             >
