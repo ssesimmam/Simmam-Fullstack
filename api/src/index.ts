@@ -56,6 +56,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
+const FRONTEND_URLS = process.env.FRONTEND_URLS
 const IS_PROD = process.env.NODE_ENV === 'production'
 
 function normalizeOrigin(value: string | undefined): string | null {
@@ -67,6 +68,15 @@ function normalizeOrigin(value: string | undefined): string | null {
   } catch {
     return trimmed.replace(/\/$/, '')
   }
+}
+
+function parseAllowedOrigins(): string[] {
+  const envOrigins = [FRONTEND_URL, FRONTEND_URLS]
+    .flatMap((value) => (value ? value.split(',') : []))
+    .map(normalizeOrigin)
+    .filter((value): value is string => Boolean(value))
+
+  return Array.from(new Set(envOrigins))
 }
 
 if (!SUPABASE_URL || SUPABASE_URL.includes('your-project.supabase.co')) {
@@ -103,7 +113,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:8080',
   'http://localhost:8081',
-  ...(normalizeOrigin(FRONTEND_URL) ? [normalizeOrigin(FRONTEND_URL)!] : []),
+  ...parseAllowedOrigins(),
 ]
 
 const shutdown = async (signal: string) => {

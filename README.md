@@ -127,7 +127,7 @@ This repository is ready for a two-service Railway deployment without Docker:
 
 2. **Backend service**
    - Keep the API on its own Railway service.
-   - Set `FRONTEND_URL` to the deployed frontend origin so the API CORS allowlist accepts browser requests from that domain.
+   - Set `FRONTEND_URL` to the deployed frontend origin, or `FRONTEND_URLS` to a comma-separated list of allowed frontend origins such as `https://www.ssesimmam.com,https://ssesimmam.com`.
 
 3. **Production preview locally**
    ```bash
