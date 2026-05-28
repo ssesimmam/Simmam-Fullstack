@@ -17,6 +17,7 @@ import { getUser, getUserRegistrations, isRegisteredForEvent, syncUserRegistrati
 import { AuthModal, type RegistrationEvent } from "./AuthModal";
 import { useEvents, usePublicSettings } from "@/features/events/useEvents";
 import supabase from "@/lib/supabase";
+import { getAuthCallbackUrl } from "@/lib/frontendOrigin";
 
 type DisplayEvent = {
   id: string;
@@ -253,7 +254,7 @@ export function EventsShowtime() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getAuthCallbackUrl(),
         queryParams: { hd: 'saveetha.com' },
       },
     });

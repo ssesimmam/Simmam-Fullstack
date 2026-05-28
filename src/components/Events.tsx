@@ -33,7 +33,7 @@ export function Events() {
       const matchesSearch =
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (e.category ?? '').toLowerCase().includes(searchQuery.toLowerCase())
-      return matchesCategory && matchesSearch && e.is_floated !== false
+      return matchesCategory && matchesSearch
     })
   }, [events, filter, searchQuery])
 

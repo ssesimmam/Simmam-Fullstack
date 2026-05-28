@@ -7,10 +7,14 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 dotenv.config({
+  path: path.resolve(__dirname, '../.env')
+})
+
+dotenv.config({
   path: path.resolve(__dirname, '../../.env')
 })
 
-console.log('ENV LOADED FROM:', path.resolve(__dirname, '../../.env'))
+console.log('ENV LOADED FROM:', path.resolve(__dirname, '../.env'), 'then', path.resolve(__dirname, '../../.env'))
 console.log('CWD:', process.cwd())
 console.log('SERVICE ROLE EXISTS:', !!process.env.SUPABASE_SERVICE_ROLE)
 console.log('SERVICE ROLE PREFIX:', process.env.SUPABASE_SERVICE_ROLE?.slice(0, 10))
@@ -112,6 +116,7 @@ const app = express()
 app.set('trust proxy', 1)
 let server: ReturnType<typeof app.listen> | null = null
 const allowedOrigins = [
+  'https://live.ssesimmam.com',
   'https://ssesimmam.com',
   'https://www.ssesimmam.com',
   'https://magnificent-mindfulness-production-2c5c.up.railway.app',

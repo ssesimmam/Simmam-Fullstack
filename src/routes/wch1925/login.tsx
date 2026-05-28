@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import { useAuth, getAuthorizedAdminRedirect, getStoredAdminUser } from '@/lib/auth'
+import { getAuthCallbackUrl } from '@/lib/frontendOrigin'
 import type { AdminRole } from '@/types/admin'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -112,7 +113,7 @@ function LoginPage() {
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getAuthCallbackUrl(),
         },
       })
       if (authError) {

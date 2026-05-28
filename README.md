@@ -120,6 +120,7 @@ This repository is ready for a two-service Railway deployment without Docker:
    - Start command: `npm start`
    - Set these Railway variables before the build runs:
      - `VITE_API_URL` to your backend Railway URL, for example `https://your-backend.up.railway.app`
+      - `VITE_FRONTEND_URL` to the deployed frontend origin you want OAuth callbacks and admin redirects to use (for this deployment: `https://live.ssesimmam.com`)
      - `VITE_SUPABASE_URL`
      - `VITE_SUPABASE_ANON_KEY`
      - `VITE_TURNSTILE_SITE_KEY`
@@ -127,7 +128,8 @@ This repository is ready for a two-service Railway deployment without Docker:
 
 2. **Backend service**
    - Keep the API on its own Railway service.
-   - Set `FRONTEND_URL` to the deployed frontend origin, or `FRONTEND_URLS` to a comma-separated list of allowed frontend origins such as `https://www.ssesimmam.com,https://ssesimmam.com`.
+   - Set `FRONTEND_URL` to the deployed frontend origin, or `FRONTEND_URLS` to a comma-separated list of allowed frontend origins such as `https://live.ssesimmam.com,https://www.ssesimmam.com,https://ssesimmam.com`.
+   - Mirror the same frontend origin into `VITE_FRONTEND_URL` on the frontend service if you want OAuth callbacks to always resolve to that host.
 
 3. **Production preview locally**
    ```bash

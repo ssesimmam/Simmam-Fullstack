@@ -12,6 +12,7 @@ import {
 } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
 import supabase from '@/lib/supabase'
+import { getAuthCallbackUrl } from '@/lib/frontendOrigin'
 
 export type RegistrationEvent = {
   id: string
@@ -137,7 +138,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getAuthCallbackUrl(),
           queryParams: { hd: 'saveetha.com' },
         },
       })
