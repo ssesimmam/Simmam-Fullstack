@@ -1,4 +1,4 @@
-export type House = {
+export interface House extends Record<string, any> {
   id?: string;
   name: string;
   tagline: string;

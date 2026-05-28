@@ -23,11 +23,11 @@ export function ProfilePage() {
   }, [])
 
   const isProfileComplete = useCallback((profile: UserProfile | null | undefined) =>
-    !!profile?.name?.trim() &&
-    !!profile?.registerNumber?.trim() &&
-    !!profile?.mobileNumber?.trim() &&
-    !!profile?.email?.trim() &&
-    !!profile?.house?.trim(),
+    !!profile?.name?.toString().trim() &&
+    !!profile?.registerNumber?.toString().trim() &&
+    !!profile?.mobileNumber?.toString().trim() &&
+    !!profile?.email?.toString().trim() &&
+    !!profile?.house?.toString().trim(),
   [])
 
   useEffect(() => {
@@ -48,17 +48,17 @@ export function ProfilePage() {
 
       try {
         const result = await fetchUserProfileByEmail(user.email)
-        if (cancelled || !result.user) {
+        if (cancelled || !result) {
           return
         }
 
         const syncedUser: UserProfile = {
-          email: result.user.email.toLowerCase(),
-          name: result.user.name || user.name,
-          picture: result.user.picture_url || user.picture,
-          registerNumber: result.user.register_number || user.registerNumber,
-          mobileNumber: result.user.mobile_number || user.mobileNumber,
-          house: result.user.house || user.house,
+          email: result.email.toLowerCase(),
+          name: result.name || user.name,
+          picture: result.picture_url || user.picture,
+          registerNumber: result.register_number || user.registerNumber,
+          mobileNumber: result.mobile_number || user.mobileNumber,
+          house: result.house || user.house,
         }
 
         saveUser(syncedUser)
@@ -138,8 +138,7 @@ export function ProfilePage() {
 
     setSyncingProfile(true)
     try {
-      const backendProfile = await fetchUserProfileByEmail(email)
-      const userData = backendProfile.user
+      const userData = await fetchUserProfileByEmail(email)
       const profile: UserProfile = {
         email,
         name: userData?.name || (u.user_metadata?.name as string) || '',
@@ -163,6 +162,20 @@ export function ProfilePage() {
 
       // start inactivity timer and listeners
       setupActivityListeners(true)
+    } catch (err: any) {
+      console.error('Session handling error:', err)
+      toast.error(err.message || 'Failed to load user profile from the server.')
+      // If we failed to fetch the profile (e.g. backend down), we should still set the user locally
+      // so they aren't stuck on "Login Required", but mark them as needing setup.
+      const fallbackProfile: UserProfile = {
+        email,
+        name: u.user_metadata?.name as string || '',
+        picture: u.user_metadata?.avatar_url as string || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(email)}`,
+        registerNumber: '',
+        house: '',
+      }
+      setUser(fallbackProfile)
+      setShowSetupModal(true)
     } finally {
       setSyncingProfile(false)
     }
@@ -202,15 +215,10 @@ export function ProfilePage() {
 
     void init()
 
-    // logout on tab close
-    const beforeUnload = () => { void signOutLocal() }
-    window.addEventListener('beforeunload', beforeUnload)
-
     return () => {
-      window.removeEventListener('beforeunload', beforeUnload)
       setupActivityListeners(false)
     }
-  }, [handleSession, setupActivityListeners, signOutLocal])
+  }, [handleSession, setupActivityListeners])
 
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
