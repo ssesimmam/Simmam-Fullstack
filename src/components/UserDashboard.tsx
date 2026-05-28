@@ -7,8 +7,8 @@ import {
   Sparkles,
   User,
 } from 'lucide-react'
-import { getUserRegistrations, getCheckedInEvents, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
-import { useData } from '@/lib/store'
+import { getUserRegistrations, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
+import { useHouses } from '@/features/events/useEvents'
 import { formatIstDayLabel } from '@/lib/dateTime'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -88,11 +88,7 @@ function DashboardEventCard({
   const status = STATUS_CONFIG[variant]
 
   const dayLabel = date
-    ? formatIstDayLabel(date, {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-      })
+    ? formatIstDayLabel(date)
     : null
 
   return (
@@ -153,12 +149,7 @@ function DetailedODCard({
   endTime,
 }: Omit<DashboardEventCardProps, 'variant'>) {
   const fullDate = date
-    ? formatIstDayLabel(date, {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
+    ? formatIstDayLabel(date)
     : 'Date TBD'
 
   return (
@@ -269,7 +260,7 @@ interface UserDashboardProps {
 }
 
 export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
-  const { participants, houses } = useData()
+  const { data: houses = [] } = useHouses()
   const [activeTab, setActiveTab] = useState<Tab>('registered')
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
@@ -295,22 +286,8 @@ export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
     loadData()
   }, [loadData])
 
-  // Derive check-in data from authoritative registration rows first,
-  // then fall back to admin participants (for realtime admin view).
-  const checkedInFromRegistrations = registrations.filter((r) => !!r.checkedIn)
-
-  const checkedInFromParticipants = registrations.filter((reg) =>
-    getCheckedInEvents(user.email, participants as any).some((ci) =>
-      (ci as any).event?.toLowerCase() === reg.eventName.toLowerCase() ||
-      (ci as any).eventName?.toLowerCase() === reg.eventName.toLowerCase(),
-    ),
-  )
-
-  // Merge unique checked-in registrations (by eventId)
-  const checkedInMap = new Map<string, Registration>()
-  ;[...checkedInFromRegistrations, ...checkedInFromParticipants].forEach((r) => checkedInMap.set(r.eventId, r))
-  const checkedInRegs = Array.from(checkedInMap.values())
-
+  // Derive check-in data from authoritative registration rows directly
+  const checkedInRegs = registrations.filter((r) => !!r.checkedIn)
   const odEligibleRegs = checkedInRegs // OD eligible == checked-in
 
   const TABS: { key: Tab; label: string; count: number }[] = [
@@ -351,7 +328,7 @@ export function UserDashboard({ user, onSignOut }: UserDashboardProps) {
                     color: userHouse.accent,
                   }}
                 >
-                  {userHouse.short} · {userHouse.name}
+                  {userHouse.name}
                 </span>
               )}
             </div>

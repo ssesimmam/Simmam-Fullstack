@@ -6,12 +6,7 @@ import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type R
 import { formatIstDateTime, formatIstDayLabel } from '@/lib/dateTime'
 
 function RegistrationCard({ reg }: { reg: Registration }) {
-  const dayLabel = formatIstDayLabel(reg.date, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const dayLabel = formatIstDayLabel(reg.date)
 
   const registeredAt = formatIstDateTime(reg.registeredAt)
 
@@ -199,11 +194,7 @@ export function MySchedule() {
 
                 let dayHeading = 'Registered Events'
                 if (key !== 'general') {
-                  dayHeading = formatIstDayLabel(key, {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                  })
+                  dayHeading = formatIstDayLabel(key)
                 }
 
                 return (

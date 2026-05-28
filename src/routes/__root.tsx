@@ -1,12 +1,26 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Outlet, Link, createRootRoute } from '@tanstack/react-router'
+import { Toaster } from 'sonner'
+import { AuthProvider } from '@/lib/auth'
+import favicon from '../assets/simmam-lion.png'
 
-import "../instrument";
-
-import { AuthProvider } from "@/lib/auth";
-import { DataProvider } from "@/lib/store";
-import favicon from "../assets/simmam-lion.png";
-import appCss from "../styles.css?url";
+export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'SIMMAM 2026 — Events & Dashboard' },
+      { name: 'description', content: 'Register for events, track your schedule, and manage the SIMMAM 2026 admin dashboard.' },
+      { name: 'author', content: 'SIMATS Engineering' },
+      { property: 'og:title', content: 'SIMMAM 2026' },
+      { property: 'og:type', content: 'website' },
+    ],
+    links: [
+      { rel: 'icon', href: favicon, type: 'image/png' },
+    ],
+  }),
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+})
 
 function NotFoundComponent() {
   return (
@@ -14,153 +28,32 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">The page you're looking for doesn't exist or has been moved.</p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
+          <Link to="/events" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Go to Events
           </Link>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SIMMAM 2026 — SIMATS Engineering Culturals" },
-      { name: "description", content: "The national-level cultural festival of SIMATS Engineering." },
-      { name: "author", content: "SIMATS Engineering" },
-      { property: "og:title", content: "SIMMAM 2026" },
-      { property: "og:description", content: "Unleash talent. Unite departments. Celebrate excellence." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: favicon, type: "image/png" },
-      { rel: "apple-touch-icon", href: favicon },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-});
-
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
+import { useEffect } from 'react'
 
 function RootComponent() {
   useEffect(() => {
-    // Suppress 404 errors from tracking/external scripts (hybridaction, favicon, etc.)
-    const originalWarn = console.warn;
-    const originalError = console.error;
-
-    const suppressPattern = /hybridaction|Failed to load resource|favicon/i;
-
-    console.warn = (...args) => {
-      const message = String(args[0]);
-      if (!suppressPattern.test(message)) {
-        originalWarn.apply(console, args);
-      }
-    };
-
-    console.error = (...args) => {
-      const message = String(args[0]);
-      if (!suppressPattern.test(message)) {
-        originalError.apply(console, args);
-      }
-    };
-
-    // Suppress error events from network requests
-    const handleError = (event: Event) => {
-      if (event instanceof ErrorEvent) {
-        const url = event.filename || "";
-        const msg = event.message || "";
-        if (
-          url.includes("hybridaction") ||
-          url.includes("favicon") ||
-          msg.includes("Failed to load") ||
-          msg.includes("zybTracker")
-        ) {
-          event.preventDefault();
-        }
-      }
-    };
-
-    window.addEventListener("error", handleError, true);
-
-    const cardSelector = [
-      "section",
-      ".glass",
-      ".glass-strong",
-      ".hover-lift",
-      ".rounded-2xl",
-      ".rounded-3xl",
-    ].join(", ");
-
-    const cards = Array.from(document.querySelectorAll<HTMLElement>(cardSelector)).filter(
-      (element) => !element.closest("header") && !element.closest("nav"),
-    );
-
-    cards.forEach((card) => {
-      card.classList.add("scroll-card");
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("scroll-card-visible");
-          }
-        });
-      },
-      {
-        rootMargin: "0px 0px -10% 0px",
-        threshold: 0.12,
-      },
-    );
-
-    cards.forEach((card) => observer.observe(card));
-
-    return () => {
-      console.warn = originalWarn;
-      console.error = originalError;
-      window.removeEventListener("error", handleError, true);
-      observer.disconnect();
-    };
-  }, []);
+    // Fallback: If Supabase ignored the redirectTo and dumped the ?code= param on the root/current page
+    const searchParams = new URLSearchParams(window.location.search)
+    if (searchParams.has('code') && !window.location.pathname.includes('/auth/callback')) {
+      window.location.href = `/auth/callback${window.location.search}`
+    }
+  }, [])
 
   return (
     <AuthProvider>
-      <DataProvider>
-        <Outlet />
-      </DataProvider>
+      <Outlet />
+      <Toaster richColors position="top-right" />
     </AuthProvider>
-  );
+  )
 }

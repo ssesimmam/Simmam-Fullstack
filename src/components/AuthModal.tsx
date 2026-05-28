@@ -67,19 +67,19 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
           return
         }
 
-        const result = await fetchUserProfileByEmail(email)
-        if (!result.user) {
+        const userProfile = await fetchUserProfileByEmail(email)
+        if (!userProfile) {
           if (mounted) setFormError('No profile found for that email. Please sign up first.')
           return
         }
 
         const newUser: UserProfile = {
-          email: result.user.email.toLowerCase(),
-          name: result.user.name,
-          picture: result.user.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(result.user.name)}`,
-          registerNumber: result.user.register_number || '',
-          mobileNumber: result.user.mobile_number,
-          house: result.user.house || '',
+          email: userProfile.email.toLowerCase(),
+          name: userProfile.name,
+          picture: userProfile.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userProfile.name)}`,
+          registerNumber: userProfile.register_number || '',
+          mobileNumber: userProfile.mobile_number,
+          house: userProfile.house || '',
         }
 
         saveUser(newUser)
@@ -133,7 +133,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     try {
       localStorage.setItem('simmam_pending_registration_event_id', event.id)
-      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/events' }))
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: window.location.pathname }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

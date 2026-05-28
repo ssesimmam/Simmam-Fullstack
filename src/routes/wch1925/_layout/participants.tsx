@@ -123,7 +123,7 @@ function ParticipantsPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: house.accent }}
+                      style={{ backgroundColor: house.accent || 'gray' }}
                     />
                     <div className="text-gray-500 font-medium">{house.name}</div>
                   </div>
@@ -191,7 +191,7 @@ function ParticipantsPage() {
                             <div className="flex items-center gap-3">
                               <div
                                 className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: group.houseAccent }}
+                                style={{ backgroundColor: group.houseAccent || 'gray' }}
                               />
                               <span className="text-white font-medium">{group.houseName}</span>
                               <span className="text-gray-500 text-sm">

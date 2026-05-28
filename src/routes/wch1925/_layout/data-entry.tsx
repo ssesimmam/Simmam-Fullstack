@@ -46,7 +46,7 @@ export const Route = createFileRoute('/wch1925/_layout/data-entry')({
 
 function DataEntryPage() {
   const { user } = useAuth()
-  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant, refreshData } = useData()
+  const { events, houses, participants, updateEvent, addEvent, updateParticipant, addParticipant, refreshData, findAdminEventByName } = useData()
   const [activeTab, setActiveTab] = useState<'events' | 'participants' | 'live'>('events')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -551,7 +551,7 @@ function DataEntryPage() {
                     </div>
                     <div className="hidden md:block text-right text-xs text-gray-500">
                       <div>
-                        {event.date ? formatIstDayLabel(event.date, { day: 'numeric', month: 'short' }) : 'Date TBA'}
+                        {event.date ? formatIstDayLabel(event.date) : 'Date TBA'}
                       </div>
                       <div>{event.time || 'Time TBA'}</div>
                     </div>
@@ -988,7 +988,7 @@ function DataEntryPage() {
                     <div className="text-white font-medium text-sm">{event.name}</div>
                     <div className="text-gray-500 text-xs">{event.category} • <span className="capitalize">{event.status}</span></div>
                     <div className="mt-1 text-xs text-gray-500">
-                      {event.date ? formatIstDayLabel(event.date, { day: 'numeric', month: 'short' }) : 'Date TBA'} • {event.time || 'Time TBA'}
+                      {event.date ? formatIstDayLabel(event.date) : 'Date TBA'} • {event.time || 'Time TBA'}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

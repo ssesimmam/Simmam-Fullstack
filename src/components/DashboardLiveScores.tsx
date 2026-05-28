@@ -42,25 +42,21 @@ export function DashboardLiveScores() {
   const houseScores = useMemo(
     () =>
       houses
-      .map((h) => {
+      .map((h: any) => {
         const participation = participationScores[h.name] || 0;
-        const totalPoints = Number(h.points2026 ?? h.points2025 ?? 0);
         return {
           name: h.name,
-          short: h.short,
-          element: h.element,
-          points: totalPoints,
+          short: h.name,
+          element: h.element || 'Unknown',
+          points: h.points || 0,
           color: h.accent,
           accent: h.accent,
-          gradient: h.gradient,
+          gradient: h.gradient || `linear-gradient(135deg, ${h.accent}, #000)`,
           breakdown: { 
             winners: h.breakdown?.winners || 0, 
             runners: h.breakdown?.runners || 0, 
             participation: participation 
-          },
-          logo: h.logo,
-          logoScale: h.logoScale,
-          isOriginalShape: h.isOriginalShape,
+          }
         };
       })
       .sort((a, b) => b.points - a.points),
@@ -177,9 +173,11 @@ export function DashboardLiveScores() {
                         </span>
                         
                         <div
-                          className={`w-14 h-14 flex items-center justify-center shrink-0 transition-all ${house.isOriginalShape ? "" : "bg-black/40 border-2 rounded-full overflow-hidden"}`}
+                          className={`w-14 h-14 flex items-center justify-center shrink-0 transition-all bg-black/40 border-2 rounded-full overflow-hidden`}
                         >
-                          <img src={house.logo} alt={`${house.name} crest`} className={`w-full h-full object-contain ${house.isOriginalShape ? "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" : ""} ${house.logoScale || "scale-125"}`} />
+                          <div className="w-full h-full bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center font-display font-bold text-2xl text-white/50" style={{ backgroundColor: `${house.color}20`, borderColor: `${house.color}40` }}>
+                            {house.name.substring(0, 1)}
+                          </div>
                         </div>
 
                         <div className="flex flex-col">
