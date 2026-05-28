@@ -1,8 +1,19 @@
+import path from 'path'
+import dotenv from 'dotenv'
+
+dotenv.config({
+  path: path.resolve(__dirname, '../../.env')
+})
+
+console.log('ENV LOADED FROM:', path.resolve(__dirname, '../../.env'))
+console.log('CWD:', process.cwd())
+console.log('SERVICE ROLE EXISTS:', !!process.env.SUPABASE_SERVICE_ROLE)
+console.log('SERVICE ROLE PREFIX:', process.env.SUPABASE_SERVICE_ROLE?.slice(0, 10))
+
 import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
-import dotenv from 'dotenv'
 import helmet from 'helmet'
 import compression from 'compression'
 import morgan from 'morgan'
@@ -10,7 +21,6 @@ import * as Sentry from '@sentry/node'
 import { randomUUID } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
-import path from 'path'
 import { requireTurnstile, verifyTurnstileToken } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
@@ -34,22 +44,29 @@ import {
   validateRequest,
 } from './validation'
 
-dotenv.config()
 
 require('./instrument')
 
 const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE
+const serviceRole = process.env.SUPABASE_SERVICE_ROLE
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
 const IS_PROD = process.env.NODE_ENV === 'production'
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE in env')
-  process.exit(1)
+if (!SUPABASE_URL || SUPABASE_URL.includes('your-project.supabase.co')) {
+  throw new Error('FATAL: Invalid SUPABASE_URL in env')
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
+if (
+  !serviceRole ||
+  serviceRole.trim() === '' ||
+  serviceRole.includes('REAL_') ||
+  serviceRole.includes('your-supabase')
+) {
+  throw new Error('FATAL: Invalid Supabase service role key')
+}
+
+const supabase = createClient(SUPABASE_URL, serviceRole)
 
 const app = express()
 app.set('trust proxy', 1)
@@ -58,6 +75,7 @@ const allowedOrigins = [
   'https://ssesimmam.com',
   'https://www.ssesimmam.com',
   'http://localhost:5173',
+  'http://localhost:8080',
 ]
 
 const shutdown = async (signal: string) => {

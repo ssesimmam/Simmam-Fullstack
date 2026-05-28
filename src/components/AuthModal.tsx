@@ -133,10 +133,11 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     try {
       localStorage.setItem('simmam_pending_registration_event_id', event.id)
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/events' }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.href,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { hd: 'saveetha.com' },
         },
       })

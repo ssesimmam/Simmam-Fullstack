@@ -108,10 +108,11 @@ function LoginPage() {
     window.localStorage.setItem('simmam_admin_google_signin', '1')
 
     try {
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'admin', redirectTo: search.redirectTo || '/wch1925' }))
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/wch1925/login`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (authError) {
