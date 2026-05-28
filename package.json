@@ -8,6 +8,8 @@
     "build": "node build-vercel.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
+    "start": "node ./railway-start.mjs",
+    "build:railway": "node build-vercel.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
