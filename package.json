@@ -3,10 +3,14 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:spa": "vite build",
+    "start": "node server.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."

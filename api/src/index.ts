@@ -58,6 +58,17 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
 const IS_PROD = process.env.NODE_ENV === 'production'
 
+function normalizeOrigin(value: string | undefined): string | null {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+
+  try {
+    return new URL(trimmed).origin
+  } catch {
+    return trimmed.replace(/\/$/, '')
+  }
+}
+
 if (!SUPABASE_URL || SUPABASE_URL.includes('your-project.supabase.co')) {
   throw new Error('FATAL: Invalid SUPABASE_URL in env')
 }
@@ -92,6 +103,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:8080',
   'http://localhost:8081',
+  ...(normalizeOrigin(FRONTEND_URL) ? [normalizeOrigin(FRONTEND_URL)!] : []),
 ]
 
 const shutdown = async (signal: string) => {

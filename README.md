@@ -111,6 +111,32 @@ The digital manifestation of SIMMAM 2026 is brought to life by this dedicated te
    npm run build
    ```
 
+## 🚀 Railway Deployment
+
+This repository is ready for a two-service Railway deployment without Docker:
+
+1. **Frontend service**
+   - Build command: `npm run build`
+   - Start command: `npm start`
+   - Set these Railway variables before the build runs:
+     - `VITE_API_URL` to your backend Railway URL, for example `https://your-backend.up.railway.app`
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+     - `VITE_TURNSTILE_SITE_KEY`
+     - `VITE_SENTRY_DSN` if you use frontend Sentry reporting
+
+2. **Backend service**
+   - Keep the API on its own Railway service.
+   - Set `FRONTEND_URL` to the deployed frontend origin so the API CORS allowlist accepts browser requests from that domain.
+
+3. **Production preview locally**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+   The static server serves `dist/` and falls back to `index.html` for SPA routes.
+
 ---
 
 ## 📜 License
