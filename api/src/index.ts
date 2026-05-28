@@ -66,7 +66,11 @@ function normalizeOrigin(value: string | undefined): string | null {
   try {
     return new URL(trimmed).origin
   } catch {
-    return trimmed.replace(/\/$/, '')
+    try {
+      return new URL(`https://${trimmed}`).origin
+    } catch {
+      return trimmed.replace(/\/$/, '')
+    }
   }
 }
 
