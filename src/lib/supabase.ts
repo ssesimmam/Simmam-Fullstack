@@ -4,6 +4,21 @@ const url = import.meta.env.VITE_SUPABASE_URL as string
 
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
+if (!url || url.includes('your-project.supabase.co')) {
+  throw new Error('FATAL: Invalid VITE_SUPABASE_URL configuration')
+}
+
+if (
+  !anonKey ||
+  anonKey.trim() === '' ||
+  anonKey.includes('REAL_') ||
+  anonKey.includes('your-supabase')
+) {
+  throw new Error(
+    'FATAL: Invalid Supabase anon key'
+  )
+}
+
 const createServerSupabaseStub = () => {
   const emptyAuthResult = { data: { session: null, user: null }, error: null }
   const emptyUserResult = { data: { user: null }, error: null }
@@ -44,10 +59,10 @@ const createServerSupabaseStub = () => {
 }
 
 const createBrowserSupabase = () => {
-  // Guard client creation to avoid duplicate GoTrueClient instances during HMR.
   const globalForSupabase = (globalThis as any) as { __simmam_supabase?: any }
   return (globalForSupabase.__simmam_supabase ??= createClient(url, anonKey, {
     auth: {
+      flowType: 'pkce',
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,

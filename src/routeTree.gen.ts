@@ -29,6 +29,7 @@ import { Route as PortalProfileRouteImport } from './routes/portal/profile'
 import { Route as PortalLiveRouteImport } from './routes/portal/live'
 import { Route as PortalEventsRouteImport } from './routes/portal/events'
 import { Route as PortalAdminRouteImport } from './routes/portal/admin'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Wch1925LayoutIndexRouteImport } from './routes/wch1925/_layout/index'
 import { Route as Wch1925LayoutUserManagementRouteImport } from './routes/wch1925/_layout/user-management'
 import { Route as Wch1925LayoutSettingsRouteImport } from './routes/wch1925/_layout/settings'
@@ -143,6 +144,11 @@ const PortalAdminRoute = PortalAdminRouteImport.update({
   path: '/portal/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Wch1925LayoutIndexRoute = Wch1925LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/portal/admin': typeof PortalAdminRoute
   '/portal/events': typeof PortalEventsRoute
   '/portal/live': typeof PortalLiveRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/portal/admin': typeof PortalAdminRoute
   '/portal/events': typeof PortalEventsRoute
   '/portal/live': typeof PortalLiveRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/my-schedule': typeof MyScheduleRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/portal/admin': typeof PortalAdminRoute
   '/portal/events': typeof PortalEventsRoute
   '/portal/live': typeof PortalLiveRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/auth/callback'
     | '/portal/admin'
     | '/portal/events'
     | '/portal/live'
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/auth/callback'
     | '/portal/admin'
     | '/portal/events'
     | '/portal/live'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/my-schedule'
     | '/profile'
     | '/register'
+    | '/auth/callback'
     | '/portal/admin'
     | '/portal/events'
     | '/portal/live'
@@ -433,6 +445,7 @@ export interface RootRouteChildren {
   MyScheduleRoute: typeof MyScheduleRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   PortalAdminRoute: typeof PortalAdminRoute
   PortalEventsRoute: typeof PortalEventsRoute
   PortalLiveRoute: typeof PortalLiveRoute
@@ -589,6 +602,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wch1925/_layout/': {
       id: '/wch1925/_layout/'
       path: '/'
@@ -737,6 +757,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyScheduleRoute: MyScheduleRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   PortalAdminRoute: PortalAdminRoute,
   PortalEventsRoute: PortalEventsRoute,
   PortalLiveRoute: PortalLiveRoute,

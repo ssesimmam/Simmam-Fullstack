@@ -215,10 +215,11 @@ export function ProfilePage() {
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
     try {
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/profile' }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/profile`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { hd: 'saveetha.com' },
         },
       })
