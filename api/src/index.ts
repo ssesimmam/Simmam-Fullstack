@@ -543,7 +543,7 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
 
     let query = supabase
       .from('events')
-      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,created_by,created_at,updated_at')
 
     if (category) query = query.eq('main_category', category)
     if (date) query = query.eq('date', date)
@@ -699,7 +699,7 @@ app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, r
   try {
     const { data, error } = await supabase
       .from('events')
-      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,created_by,created_at,updated_at')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,created_by,created_at,updated_at')
       .order('date', { ascending: true })
       .order('time_slot', { ascending: true })
     if (error) throw error
