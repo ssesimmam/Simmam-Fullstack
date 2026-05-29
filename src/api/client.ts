@@ -43,10 +43,21 @@ export async function getUserAuthHeaders(): Promise<Record<string, string>> {
     const fallback = getAccessTokenFromLocalStorage()
     if (fallback) return { Authorization: `Bearer ${fallback}` }
 
+    if (import.meta.env.DEV) {
+      // Helpful debug: warn when no token could be resolved during development
+      // so it's easier to track why backend returns `missing_auth_token`.
+      // Do NOT log tokens themselves.
+      // eslint-disable-next-line no-console
+      console.warn('[apiClient] No Supabase access token found for request — check auth session and VITE_SUPABASE_* envs')
+    }
     return {}
   } catch {
     const fallback = getAccessTokenFromLocalStorage()
     if (fallback) return { Authorization: `Bearer ${fallback}` }
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn('[apiClient] Failed to read Supabase session; using localStorage fallback?')
+    }
     return {}
   }
 }
