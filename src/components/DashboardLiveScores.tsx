@@ -67,14 +67,8 @@ export function DashboardLiveScores() {
   const leader = houseScores[0];
   const floatedEvents = events.filter((event) => event.is_floated);
 
-  const dynamicStats: Stat[] = [
-    { label: "Total Teams", value: houses.length, hint: "All active houses in SIMMAM", accent: "gold", href: "/#teams" },
-    { label: "Total Participants", value: participants.length, hint: "Across all events", accent: "red" },
-    { label: "Total Events", value: floatedEvents.length, hint: "Currently floated from admin panel", accent: "gold", href: "/events" },
-    { label: "Festival Days", value: 3, hint: "Three days. One legend.", accent: "red" },
-    { label: "1st Place Holder", value: 1, suffix: leader ? ` — ${leader.name}` : " — ...", hint: "Leading the rankings", accent: "gold", href: "/#leaderboard" },
-    { label: "Highest Score", value: leader?.points || 0, suffix: leader ? ` — ${leader.name}` : " — ...", hint: leader ? `${leader.name} — Current Best` : "...", accent: "red", href: "/#leaderboard" },
-  ];
+  // Removed the six dashboard stat cards — keep array empty to hide them
+  const dynamicStats: Stat[] = [];
 
   return (
     <section id="dashboard" className="relative py-24 md:py-32">
