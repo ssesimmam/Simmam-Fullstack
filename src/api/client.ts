@@ -39,11 +39,7 @@ export async function getUserAuthHeaders(): Promise<Record<string, string>> {
     const token = data.session?.access_token
     if (token) return { Authorization: `Bearer ${token}` }
 
-    // Force a round-trip to re-establish session after OAuth redirect before cache hydrates
-    await supabase.auth.getUser().catch(() => null)
-    const refreshed = (await supabase.auth.getSession()).data.session
-    if (refreshed?.access_token) return { Authorization: `Bearer ${refreshed.access_token}` }
-    // Try localStorage fallback (in case SDK hasn't hydrated session yet)
+    // Try localStorage fallback if the SDK session has not hydrated yet.
     const fallback = getAccessTokenFromLocalStorage()
     if (fallback) return { Authorization: `Bearer ${fallback}` }
 
@@ -115,10 +111,6 @@ export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
     // Fallback: check stored admin token
     const stored = localStorage.getItem('simmam_admin_access_token')
     if (stored?.trim()) return { Authorization: `Bearer ${stored.trim()}` }
-
-    await supabase.auth.getUser().catch(() => null)
-    const refreshed = (await supabase.auth.getSession()).data.session
-    if (refreshed?.access_token) return { Authorization: `Bearer ${refreshed.access_token}` }
 
     const refreshedStored = localStorage.getItem('simmam_admin_access_token')
     if (refreshedStored?.trim()) return { Authorization: `Bearer ${refreshedStored.trim()}` }

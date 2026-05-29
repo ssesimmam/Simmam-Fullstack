@@ -54,11 +54,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
     const syncSessionUser = async () => {
       try {
-        // Use getUser() instead of getSession() — getUser() makes a server round-trip
-        // and reliably returns the user even right after an OAuth redirect before the
-        // local session cache is hydrated.
-        const { data: userData } = await supabase.auth.getUser()
-        const email = userData?.user?.email?.toLowerCase()
+        const { data: sessionData } = await supabase.auth.getSession()
+        const email = sessionData?.session?.user?.email?.toLowerCase()
 
         if (!mounted || !email) return
 

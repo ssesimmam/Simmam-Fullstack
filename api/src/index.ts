@@ -543,14 +543,44 @@ app.get('/api/events', publicLimiter, cacheMiddleware(300), async (req, res) => 
 
     let query = supabase
       .from('events')
-      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,created_by,created_at,updated_at')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,requirements,rules_regulation,created_by,created_at,updated_at')
 
     if (category) query = query.eq('main_category', category)
     if (date) query = query.eq('date', date)
 
     const { data, error } = await query.order('date', { ascending: true }).order('time_slot', { ascending: true })
     if (error) throw error
-    res.json({ data: data || [] })
+
+    // Merge legacy text columns into `rules` so frontend shows them
+    const normalized = (data || []).map((ev: any) => {
+      const rulesArr: string[] = []
+
+      if (ev.rules && Array.isArray(ev.rules) && ev.rules.length > 0) {
+        rulesArr.push(...ev.rules.filter(Boolean))
+      }
+
+      const extractLines = (txt: any): string[] => {
+        if (!txt || typeof txt !== 'string') return []
+        let parts = txt.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+        if (parts.length <= 1) {
+          const byNumber = txt.split(/\d+[\.)]\s*/).map((s) => s.trim()).filter(Boolean)
+          if (byNumber.length > 1) parts = byNumber
+          else {
+            const byPunct = txt.split(/\s{2,}|\s-\s/).map((s) => s.trim()).filter(Boolean)
+            if (byPunct.length > 1) parts = byPunct
+          }
+        }
+        return parts
+      }
+
+      rulesArr.push(...extractLines(ev.rules_regulation))
+      rulesArr.push(...extractLines(ev.requirements))
+
+      const unique = Array.from(new Set(rulesArr.map((r) => r.trim()).filter(Boolean)))
+      return { ...ev, rules: unique.length > 0 ? unique : null }
+    })
+
+    res.json({ data: normalized })
   } catch (err: any) {
     console.error('Events error:', err.message, 'Cause:', err.cause)
     res.status(500).json({ error: err.message, cause: err.cause?.message || String(err.cause) })
@@ -699,7 +729,7 @@ app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, r
   try {
     const { data, error } = await supabase
       .from('events')
-      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,created_by,created_at,updated_at')
+      .select('id,name,slug,description,category,main_category,venue,date,time_slot,end_time,registration_open,checkin_enabled,is_floated,is_live_tomorrow,status,capacity,prize_info,rules,requirements,rules_regulation,created_by,created_at,updated_at')
       .order('date', { ascending: true })
       .order('time_slot', { ascending: true })
     if (error) throw error
