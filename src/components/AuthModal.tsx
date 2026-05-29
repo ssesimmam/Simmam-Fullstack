@@ -11,6 +11,7 @@ import {
   type UserProfile,
 } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
+import { getPublicConfig } from '@/api/config'
 import supabase from '@/lib/supabase'
 import { getAuthCallbackUrl } from '@/lib/frontendOrigin'
 
@@ -44,13 +45,45 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>()
   const [turnstileError, setTurnstileError] = useState('')
   const [turnstileKey, setTurnstileKey] = useState(0)
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(() => {
+    const rawKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+    const trimmedKey = rawKey?.trim()
+    if (!trimmedKey || trimmedKey === 'your-turnstile-site-key' || trimmedKey.includes('REAL_')) {
+      return null
+    }
+    return trimmedKey
+  })
+  const [turnstileConfigLoading, setTurnstileConfigLoading] = useState(false)
+  const [turnstileConfigError, setTurnstileConfigError] = useState('')
 
-  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
-  if (!turnstileSiteKey && import.meta.env.DEV) {
-    console.warn('[AuthModal] VITE_TURNSTILE_SITE_KEY is not set — Turnstile widget will fail silently.')
-  }
   useEffect(() => {
     let mounted = true
+
+    const loadTurnstileConfig = async () => {
+      if (turnstileSiteKey) return
+
+      setTurnstileConfigLoading(true)
+      try {
+        const config = await getPublicConfig()
+        const siteKey = config.turnstileSiteKey?.trim()
+        if (!mounted) return
+
+        if (siteKey) {
+          setTurnstileSiteKey(siteKey)
+          setTurnstileConfigError('')
+        } else {
+          setTurnstileConfigError('Captcha site key is not configured yet.')
+        }
+      } catch {
+        if (mounted) {
+          setTurnstileConfigError('Captcha configuration could not be loaded.')
+        }
+      } finally {
+        if (mounted) setTurnstileConfigLoading(false)
+      }
+    }
+
+    void loadTurnstileConfig()
 
     const syncSessionUser = async () => {
       try {
@@ -292,8 +325,12 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
                   {!alreadyReg && (
                     <div className="mb-6">
-                      {!turnstileSiteKey ? (
-                        <p className="text-xs text-red-400">Captcha is misconfigured. Please contact support.</p>
+                      {turnstileConfigLoading && !turnstileSiteKey ? (
+                        <p className="text-xs text-white/50">Loading captcha...</p>
+                      ) : !turnstileSiteKey ? (
+                        <p className="text-xs text-red-400">
+                          {turnstileConfigError || 'Captcha is unavailable right now. Please contact support.'}
+                        </p>
                       ) : (
                         <Turnstile
                           key={turnstileKey}

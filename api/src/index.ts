@@ -531,6 +531,17 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
 
+app.get('/api/public-config', publicLimiter, (_req, res) => {
+  res.json({
+    data: {
+      turnstileSiteKey:
+        process.env.TURNSTILE_SITE_KEY ||
+        process.env.VITE_TURNSTILE_SITE_KEY ||
+        null,
+    },
+  })
+})
+
 app.get('/api/debug-env', (req, res) => {
   res.json({ supabase: SUPABASE_URL, serviceRolePrefix: serviceRole?.slice(0, 10) })
 })
