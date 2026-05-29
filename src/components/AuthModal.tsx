@@ -1,6 +1,7 @@
 import { Turnstile } from './Turnstile'
 import { useState, useEffect } from 'react'
 import { Check, LogIn, Shield, X } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 
 import {
   getUser,
@@ -302,6 +303,13 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                     </svg>
                     {authLoading ? 'Signing in...' : 'Continue with Google'}
                   </button>
+                  <Link
+                    to="/dashboard/profile"
+                    search={{ signup: '1' }}
+                    className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/8 px-4 py-3 text-sm font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/12"
+                  >
+                    Sign Up
+                  </Link>
                   {formError && <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>}
                 </div>
               )}

@@ -412,7 +412,7 @@ export function EventsShowtime() {
             </div>
           </div>
         ) : (
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={handleGlobalLogin}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition cursor-pointer"
@@ -420,6 +420,13 @@ export function EventsShowtime() {
               <User className="w-3.5 h-3.5" />
               Log In
             </button>
+            <Link
+              to="/dashboard/profile"
+              search={{ signup: '1' }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-white/80 hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition cursor-pointer"
+            >
+              Sign Up
+            </Link>
           </div>
         )}
       </div>
