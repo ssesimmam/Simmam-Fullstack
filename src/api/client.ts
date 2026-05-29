@@ -43,11 +43,67 @@ export async function getUserAuthHeaders(): Promise<Record<string, string>> {
     await supabase.auth.getUser().catch(() => null)
     const refreshed = (await supabase.auth.getSession()).data.session
     if (refreshed?.access_token) return { Authorization: `Bearer ${refreshed.access_token}` }
+    // Try localStorage fallback (in case SDK hasn't hydrated session yet)
+    const fallback = getAccessTokenFromLocalStorage()
+    if (fallback) return { Authorization: `Bearer ${fallback}` }
 
     return {}
   } catch {
+    const fallback = getAccessTokenFromLocalStorage()
+    if (fallback) return { Authorization: `Bearer ${fallback}` }
     return {}
   }
+}
+
+// Fallback helper: try to read an access token from localStorage if SDK
+// session resolution fails (helps during early page load/hydration races).
+function getAccessTokenFromLocalStorage(): string | null {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null
+
+    // Common Supabase keys used by different versions
+    const candidates = [
+      'supabase.auth.token',
+      'sb:token',
+      'supabase.auth.session',
+    ]
+
+    for (const key of candidates) {
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      try {
+        const parsed = JSON.parse(raw)
+        // Various shapes: { currentSession: { access_token } } or { access_token }
+        if (parsed?.currentSession?.access_token) return parsed.currentSession.access_token
+        if (parsed?.persistedSession?.access_token) return parsed.persistedSession.access_token
+        if (parsed?.access_token) return parsed.access_token
+        // Some clients persist an object with 'currentSession' nested differently
+        if (parsed?.currentSession?.provider_token) return parsed.currentSession.provider_token
+      } catch {
+        // raw string may itself be the token
+        if (raw && raw.length > 20 && raw.includes('.')) return raw
+      }
+    }
+
+    // Generic scan: try parse any localStorage value that looks like a session
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key) continue
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed?.access_token) return parsed.access_token
+        if (parsed?.currentSession?.access_token) return parsed.currentSession.access_token
+      } catch {
+        // ignore
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return null
 }
 
 export async function getAdminAuthHeaders(): Promise<Record<string, string>> {

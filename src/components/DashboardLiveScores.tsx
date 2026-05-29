@@ -166,13 +166,7 @@ export function DashboardLiveScores() {
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         
-                        <div
-                          className={`w-14 h-14 flex items-center justify-center shrink-0 transition-all bg-black/40 border-2 rounded-full overflow-hidden`}
-                        >
-                          <div className="w-full h-full bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center font-display font-bold text-2xl text-white/50" style={{ backgroundColor: `${house.color}20`, borderColor: `${house.color}40` }}>
-                            {house.name.substring(0, 1)}
-                          </div>
-                        </div>
+                        {/* Profile holder removed as requested */}
 
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
