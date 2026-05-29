@@ -290,7 +290,6 @@ export function EventsShowtime() {
 
   const allDisplayEvents = useMemo<DisplayEvent[]>(() => {
     return adminEvents
-      .filter((event) => event.is_floated)
       .map((event) => ({
         id: event.id,
         name: event.name,
