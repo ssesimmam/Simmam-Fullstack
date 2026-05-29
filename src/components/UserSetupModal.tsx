@@ -4,13 +4,13 @@ import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
 import { useHouses } from '@/features/events/useEvents'
 
-const HOUSE_EXTRAS: Record<string, { short: string; logo: string }> = {
-  'Agniyas': { short: 'AG', logo: '/houses/agniyas.png' },
-  'Dronas': { short: 'DR', logo: '/houses/dronas.jpg' },
-  'Marutas': { short: 'MA', logo: '/houses/marutas.png' },
-  'Rudras': { short: 'RU', logo: '/houses/rudras.png' },
-  'Suryas': { short: 'SU', logo: '/houses/suryas.png' },
-  'Vajras': { short: 'VA', logo: '/houses/vajras.png' },
+const HOUSE_EXTRAS: Record<string, { short: string }> = {
+  'Agniyas': { short: 'AG' },
+  'Dronas': { short: 'DR' },
+  'Marutas': { short: 'MA' },
+  'Rudras': { short: 'RU' },
+  'Suryas': { short: 'SU' },
+  'Vajras': { short: 'VA' },
 }
 
 interface UserSetupModalProps {
@@ -24,7 +24,6 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
   const houses = dbHouses.map(h => ({
     ...h,
     short: HOUSE_EXTRAS[h.name]?.short || h.name.substring(0, 2).toUpperCase(),
-    logo: HOUSE_EXTRAS[h.name]?.logo || `/houses/${h.name.toLowerCase()}.png`
   }))
 
   // Do not access sessionStorage during render. Hydrate on mount.
@@ -263,26 +262,11 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                               : {}
                           }
                         >
-                          {/* House logo */}
-                          <img
-                            src={house.logo}
-                            alt={house.name}
-                            className="h-8 w-8 object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none'
-                            }}
-                          />
                           <span
-                            className="text-xs font-bold tracking-wide"
-                            style={{ color: isSelected ? house.accent : 'rgba(255,255,255,0.55)' }}
+                            className="text-sm font-bold tracking-wide"
+                            style={{ color: isSelected ? house.accent : 'rgba(255,255,255,0.85)' }}
                           >
                             {house.name}
-                          </span>
-                          <span
-                            className="text-[9px] tracking-widest"
-                            style={{ color: isSelected ? `${house.accent}99` : 'rgba(255,255,255,0.25)' }}
-                          >
-                            {house.short}
                           </span>
                           {isSelected && (
                             <div
