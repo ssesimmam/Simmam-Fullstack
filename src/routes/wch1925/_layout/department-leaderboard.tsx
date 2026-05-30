@@ -61,9 +61,10 @@ function DepartmentLeaderboard() {
   const canonicalHouseNames = houseList.map((h: any) => h.name)
 
   // If canonical names exist, use them in that order; otherwise use found house keys
-  const houseKeys = (canonicalHouseNames.length > 0 ? canonicalHouseNames : Object.keys(housesByName)).filter(
-    (hn) => hn in housesByName
-  )
+  const houseKeys = [
+    ...canonicalHouseNames.filter((hn) => hn in housesByName),
+    ...Object.keys(housesByName).filter((hn) => !canonicalHouseNames.includes(hn)),
+  ]
 
   return (
     <div className="space-y-8 pb-12">

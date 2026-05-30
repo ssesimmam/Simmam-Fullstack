@@ -44,6 +44,7 @@ create table if not exists users (
   mobile_number text,
   picture_url text,
   house text,
+  department text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint users_email_format_chk check (position('@' in email::text) > 1)
@@ -423,8 +424,9 @@ AS $$
 SELECT
   u.house AS house_name,
   u.department AS department,
-  COUNT(r.id) AS participation_count
-FROM registrations r
+  COUNT(c.id) AS participation_count
+FROM checkins c
+JOIN registrations r ON c.registration_id = r.id
 JOIN users u ON r.user_id = u.id
 WHERE u.house IS NOT NULL
   AND u.house <> ''

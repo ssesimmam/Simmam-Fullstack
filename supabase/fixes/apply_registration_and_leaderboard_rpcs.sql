@@ -75,7 +75,7 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.create_registration_safe(uuid, uuid, text, text) FROM public, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.create_registration_safe(uuid, uuid, text, text) TO service_role;
 
--- 2) Department leaderboard RPC: counts registrations grouped by user.house and user.department
+-- 2) Department leaderboard RPC: counts checkins grouped by user.house and user.department
 CREATE OR REPLACE FUNCTION public.get_house_department_participation()
 RETURNS TABLE (
   house_name text,
@@ -88,8 +88,9 @@ AS $$
 SELECT
   u.house AS house_name,
   u.department AS department,
-  COUNT(r.id) AS participation_count
-FROM registrations r
+  COUNT(c.id) AS participation_count
+FROM checkins c
+JOIN registrations r ON c.registration_id = r.id
 JOIN users u ON r.user_id = u.id
 WHERE u.house IS NOT NULL AND u.house <> ''
   AND u.department IS NOT NULL AND u.department <> ''
