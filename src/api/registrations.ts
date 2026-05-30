@@ -8,6 +8,7 @@ export interface UserProfileDTO {
   mobile_number?: string
   register_number?: string
   house?: string
+  department?: string
   picture_url?: string
 }
 
@@ -39,9 +40,14 @@ export interface CreateRegistrationPayload {
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function getUserProfile(email: string): Promise<UserProfileDTO | null> {
-  const encoded = encodeURIComponent(email.trim().toLowerCase())
-  const payload = await publicRequest<{ user: UserProfileDTO | null }>(`/users/${encoded}/registrations`)
-  return payload.user
+  try {
+    const encoded = encodeURIComponent(email.trim().toLowerCase())
+    const payload = await publicRequest<{ user: UserProfileDTO | null }>(`/users/${encoded}/registrations`)
+    return payload.user || null
+  } catch (err: any) {
+    if (err.status === 404) return null
+    throw err
+  }
 }
 
 export async function getRegistrations(email: string): Promise<RegistrationDTO[]> {
@@ -78,8 +84,10 @@ export async function upsertUserProfile(payload: {
   mobile_number?: string
   register_number?: string
   house?: string
+  department?: string
   picture_url?: string
 }): Promise<void> {
+  console.log('Saving user payload:', payload);
   await publicRequest('/users/upsert', {
     method: 'POST',
     body: JSON.stringify(payload),

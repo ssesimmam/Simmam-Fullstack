@@ -21,6 +21,7 @@ function AuthCallbackPage() {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
         if (sessionError) throw sessionError
 
+        let isNewUser = false
         const user = sessionData?.session?.user
         if (user?.email) {
           const userProfile = await fetchUserProfileByEmail(user.email.toLowerCase())
@@ -32,6 +33,7 @@ function AuthCallbackPage() {
               registerNumber: userProfile.register_number || '',
               mobileNumber: userProfile.mobile_number,
               house: userProfile.house || '',
+              department: userProfile.department || '',
             }
             saveUser(newUser)
             try {
@@ -39,6 +41,8 @@ function AuthCallbackPage() {
             } catch {
               // ignore sync failure
             }
+          } else {
+            isNewUser = true
           }
         }
 
@@ -55,6 +59,12 @@ function AuthCallbackPage() {
             intent = JSON.parse(intentStr)
           } catch {}
           window.sessionStorage.removeItem('simmam_oauth_intent')
+        }
+
+        // Force new users to complete their profile
+        if (isNewUser) {
+          navigate({ to: '/dashboard/profile', search: { signup: '1' }, replace: true } as any)
+          return
         }
 
         // Navigate safely to intended destination
@@ -79,7 +89,7 @@ function AuthCallbackPage() {
         }
 
         // Determine correct fallback based on architecture roles
-        const fallback = intent.source === 'admin' ? '/wch1925/login' : '/profile'
+        const fallback = intent.source === 'admin' ? '/wch1925/login' : '/events'
 
         setTimeout(() => {
           if (mounted) navigate({ to: fallback, replace: true })

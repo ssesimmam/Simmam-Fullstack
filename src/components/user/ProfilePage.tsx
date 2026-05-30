@@ -28,7 +28,8 @@ export function ProfilePage() {
     !!profile?.registerNumber?.toString().trim() &&
     !!profile?.mobileNumber?.toString().trim() &&
     !!profile?.email?.toString().trim() &&
-    !!profile?.house?.toString().trim(),
+    !!profile?.house?.toString().trim() &&
+    !!profile?.department?.toString().trim(),
   [])
 
   useEffect(() => {
@@ -53,13 +54,15 @@ export function ProfilePage() {
           return
         }
 
+        const currentUser = getUser() || user
         const syncedUser: UserProfile = {
           email: result.email.toLowerCase(),
-          name: result.name || user.name,
-          picture: result.picture_url || user.picture,
-          registerNumber: result.register_number || user.registerNumber,
-          mobileNumber: result.mobile_number || user.mobileNumber,
-          house: result.house || user.house,
+          name: result.name || currentUser.name,
+          picture: result.picture_url || currentUser.picture,
+          registerNumber: result.register_number || currentUser.registerNumber,
+          mobileNumber: result.mobile_number || currentUser.mobileNumber,
+          house: result.house || currentUser.house || '',
+          department: result.department || currentUser.department || '',
         }
 
         saveUser(syncedUser)
@@ -78,7 +81,7 @@ export function ProfilePage() {
     return () => {
       cancelled = true
     }
-  }, [user?.email, user, isProfileComplete])
+  }, [user?.email, isProfileComplete])
 
   const refreshUser = () => {
     setUser(getUser())
@@ -149,13 +152,11 @@ export function ProfilePage() {
           `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userData?.name || u.user_metadata?.name || email)}`,
         registerNumber: userData?.register_number || '',
         mobileNumber: userData?.mobile_number || undefined,
-        house: userData?.house || '',
+        house: userData?.house ?? '',
+        department: userData?.department ?? '',
       }
 
-      // Upsert into profiles table (optional)
-      try {
-        await supabase.from('profiles').upsert({ id: u.id, email: profile.email, name: profile.name, avatar_url: profile.picture })
-      } catch {}
+      // Legacy profile table write removed. The database is now strictly driven by the backend `/users/upsert` endpoint.
 
       saveUser(profile)
       setUser(profile)
@@ -174,6 +175,7 @@ export function ProfilePage() {
         picture: u.user_metadata?.avatar_url as string || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(email)}`,
         registerNumber: '',
         house: '',
+        department: '',
       }
       setUser(fallbackProfile)
       setShowSetupModal(true)
@@ -224,7 +226,7 @@ export function ProfilePage() {
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
     try {
-      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/profile' }))
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/dashboard/profile' }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -298,9 +300,9 @@ export function ProfilePage() {
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">
                 <User className="h-10 w-10 text-[#D4AF37]" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">Login Required</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">Login / Sign Up</h2>
               <p className="text-white/40 text-sm mb-8">
-                Login with your Saveetha email to access your SIMMAM 2026 dashboard.
+                Sign in with your Saveetha Google account to access your SIMMAM 2026 dashboard.
               </p>
               <div className="space-y-3">
                 <button
@@ -327,6 +329,7 @@ export function ProfilePage() {
 
       {showSetupModal && (
         <UserSetupModal
+          existingProfile={user}
           preventDismiss={!isProfileComplete(user)}
           onSave={() => {
             refreshUser()
@@ -334,7 +337,7 @@ export function ProfilePage() {
           }}
           onClose={() => {
             setShowSetupModal(false)
-            void navigate({ to: '/profile', replace: true })
+            void navigate({ to: '/events', replace: true })
           }}
         />
       )}

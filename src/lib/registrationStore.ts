@@ -17,6 +17,7 @@ export type UserProfile = {
   picture: string
   registerNumber: string
   house: string
+  department?: string
 }
 
 export type Registration = {
@@ -60,6 +61,7 @@ export function saveUser(user: UserProfile): void {
     mobile_number: user.mobileNumber,
     register_number: user.registerNumber,
     house: user.house,
+    department: user.department,
     picture_url: user.picture,
   }).catch(() => {})
 }

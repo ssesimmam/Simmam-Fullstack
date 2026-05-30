@@ -2062,7 +2062,7 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { email, name, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const { email, name, mobile_number, register_number, house, department, picture_url } = parsedBody.data
     const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
 
     const { data, error } = await supabase
@@ -2074,11 +2074,12 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
           mobile_number: normalizedMobileNumber,
           register_number,
           house,
+          department,
           picture_url,
         },
         { onConflict: 'email' },
       )
-      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
+      .select('id,name,email,mobile_number,register_number,house,department,picture_url,created_at,updated_at')
       .limit(1)
 
     if (error) throw error
@@ -2188,7 +2189,7 @@ app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, a
     }
 
     const email = parsedParams.data.email.toLowerCase()
-    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)
+    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,department,picture_url').eq('email', email).limit(1)
     if (userErr) throw userErr
     const user = Array.isArray(userData) ? userData[0] : userData
     if (!user) return res.json({ user: null, registrations: [] })
