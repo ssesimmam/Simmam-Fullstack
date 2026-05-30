@@ -32,6 +32,7 @@ export interface CreateRegistrationPayload {
   name: string
   register_number: string
   house: string
+  department?: string
   event_id?: string
   event_name?: string
   turnstile_token?: string
@@ -87,7 +88,7 @@ export async function upsertUserProfile(payload: {
   department?: string
   picture_url?: string
 }): Promise<void> {
-  console.log('Saving user payload:', payload);
+  console.log('[UPSERT-1780154728641] department value:', payload.department, 'full payload:', JSON.stringify(payload));
   await publicRequest('/users/upsert', {
     method: 'POST',
     body: JSON.stringify(payload),
