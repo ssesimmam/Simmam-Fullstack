@@ -85,6 +85,7 @@ export const publicRegistrationBodySchema = z.object({
   name: nonEmptyString.max(120),
   register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
   house: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
   event_id: z.string().uuid().optional(),
   event_name: z.union([z.string(), z.null(), z.undefined()]).optional(),
   turnstile_token: z.union([nonEmptyString, z.null(), z.undefined()]).optional(),
@@ -95,6 +96,7 @@ export const adminRegistrationCreateBodySchema = z.object({
   name: nonEmptyString.max(120),
   register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
   house: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
   event_id: z.string().uuid().optional(),
   event_name: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });

@@ -1508,7 +1508,7 @@ app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { email, name, register_number, house, event_id, event_name } = parsedBody.data
+    const { email, name, register_number, house, department, event_id, event_name } = parsedBody.data
 
     let resolvedEventId = event_id as string | undefined
     if (!resolvedEventId && event_name) {
@@ -1529,6 +1529,7 @@ app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
       p_name: name,
       p_register_number: register_number,
       p_house: house,
+      p_department: department,
       p_event_id: resolvedEventId,
     })
 
@@ -2120,7 +2121,7 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { email, name, register_number, house, event_id, event_name } = parsedBody.data
+    const { email, name, register_number, house, department, event_id, event_name } = parsedBody.data
 
     let resolvedEventId = event_id as string | undefined
 
@@ -2156,6 +2157,7 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
     const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration_safe', {
       p_user_id: userId,
       p_event_id: resolvedEventId,
+      p_department: department,
     })
 
     if (rpcErr) {

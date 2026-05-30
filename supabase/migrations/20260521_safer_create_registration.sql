@@ -17,6 +17,7 @@ where e.id = sub.event_id;
 create or replace function create_registration_safe(
   p_user_id uuid,
   p_event_id uuid,
+  p_department text default null,
   p_ticket_code text default null
 )
 returns table(registration_id uuid, ticket_code text)
@@ -36,6 +37,12 @@ begin
 
   if p_event_id is null then
     raise exception 'event_id_required';
+  end if;
+
+  if p_department is not null then
+    update users
+    set department = coalesce(nullif(trim(p_department), ''), users.department)
+    where id = p_user_id;
   end if;
 
   -- Lock the event row to serialize only this event (minimal contention)
@@ -98,7 +105,7 @@ begin
 end $$;
 
 -- Restrict RPC execution: only service_role should execute this RPC directly
-revoke execute on function create_registration_safe(uuid, uuid, text) from public, anon, authenticated;
-grant execute on function create_registration_safe(uuid, uuid, text) to service_role;
+revoke execute on function create_registration_safe(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function create_registration_safe(uuid, uuid, text, text) to service_role;
 
 commit;

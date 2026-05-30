@@ -45,6 +45,7 @@ create or replace function create_registration(
   p_name text,
   p_register_number text,
   p_house text,
+  p_department text default null,
   p_event_id uuid
 )
 returns table(registration_id uuid, ticket_code text)
@@ -69,17 +70,19 @@ begin
 
   perform pg_advisory_xact_lock(hashtext(p_event_id::text)::bigint);
 
-  insert into users (name, email, register_number, house)
+  insert into users (name, email, register_number, house, department)
   values (
     coalesce(nullif(trim(p_name), ''), split_part(lower(trim(p_email)), '@', 1)),
     lower(trim(p_email)),
     nullif(trim(p_register_number), ''),
-    nullif(trim(p_house), '')
+    nullif(trim(p_house), ''),
+    nullif(trim(p_department), '')
   )
   on conflict (email) do update set
     name = coalesce(excluded.name, users.name),
     register_number = coalesce(excluded.register_number, users.register_number),
-    house = coalesce(excluded.house, users.house)
+    house = coalesce(excluded.house, users.house),
+    department = coalesce(excluded.department, users.department)
   returning id into v_user_id;
 
   select e.registration_open, e.capacity
@@ -120,6 +123,9 @@ begin
   return next;
 end;
 $$;
+
+revoke execute on function create_registration(text, text, text, text, text, uuid) from anon;
+grant execute on function create_registration(text, text, text, text, text, uuid) to authenticated, service_role;
 
 create or replace function admin_checkin(
   p_registration_id uuid,
@@ -196,7 +202,7 @@ end;
 $$;
 
 -- Keep function grants aligned with server-only execution for the safer RPC.
-revoke execute on function create_registration_safe(uuid, uuid, text) from public, anon, authenticated;
-grant execute on function create_registration_safe(uuid, uuid, text) to service_role;
+revoke execute on function create_registration_safe(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function create_registration_safe(uuid, uuid, text, text) to service_role;
 
 commit;

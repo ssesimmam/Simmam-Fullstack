@@ -32,6 +32,7 @@ export interface CreateRegistrationPayload {
   name: string
   register_number: string
   house: string
+  department?: string
   event_id?: string
   event_name?: string
   turnstile_token?: string

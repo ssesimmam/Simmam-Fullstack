@@ -132,6 +132,7 @@ export async function registerForEvent(
     name: user.name,
     register_number: user.registerNumber,
     house: user.house,
+    department: user.department,
     event_id: event.backendEventId,
     event_name: event.eventName,
     turnstile_token: turnstileToken,

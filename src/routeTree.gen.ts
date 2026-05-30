@@ -30,6 +30,7 @@ import { Route as Wch1925LayoutParticipantsRouteImport } from './routes/wch1925/
 import { Route as Wch1925LayoutLeaderboardRouteImport } from './routes/wch1925/_layout/leaderboard'
 import { Route as Wch1925LayoutHousesRouteImport } from './routes/wch1925/_layout/houses'
 import { Route as Wch1925LayoutEventsRouteImport } from './routes/wch1925/_layout/events'
+import { Route as Wch1925LayoutDepartmentLeaderboardRouteImport } from './routes/wch1925/_layout/department-leaderboard'
 import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
 import { Route as Wch1925LayoutCheckinRouteImport } from './routes/wch1925/_layout/checkin'
 import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925/_layout/announcements'
@@ -144,6 +145,12 @@ const Wch1925LayoutEventsRoute = Wch1925LayoutEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => Wch1925LayoutRoute,
 } as any)
+const Wch1925LayoutDepartmentLeaderboardRoute =
+  Wch1925LayoutDepartmentLeaderboardRouteImport.update({
+    id: '/department-leaderboard',
+    path: '/department-leaderboard',
+    getParentRoute: () => Wch1925LayoutRoute,
+  } as any)
 const Wch1925LayoutDataEntryRoute = Wch1925LayoutDataEntryRouteImport.update({
   id: '/data-entry',
   path: '/data-entry',
@@ -182,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -206,6 +214,7 @@ export interface FileRoutesByTo {
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -234,6 +243,7 @@ export interface FileRoutesById {
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/_layout/checkin': typeof Wch1925LayoutCheckinRouteWithChildren
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
+  '/wch1925/_layout/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/_layout/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/_layout/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/_layout/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/wch1925/announcements'
     | '/wch1925/checkin'
     | '/wch1925/data-entry'
+    | '/wch1925/department-leaderboard'
     | '/wch1925/events'
     | '/wch1925/houses'
     | '/wch1925/leaderboard'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/wch1925/announcements'
     | '/wch1925/checkin'
     | '/wch1925/data-entry'
+    | '/wch1925/department-leaderboard'
     | '/wch1925/events'
     | '/wch1925/houses'
     | '/wch1925/leaderboard'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/wch1925/_layout/announcements'
     | '/wch1925/_layout/checkin'
     | '/wch1925/_layout/data-entry'
+    | '/wch1925/_layout/department-leaderboard'
     | '/wch1925/_layout/events'
     | '/wch1925/_layout/houses'
     | '/wch1925/_layout/leaderboard'
@@ -485,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutEventsRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
+    '/wch1925/_layout/department-leaderboard': {
+      id: '/wch1925/_layout/department-leaderboard'
+      path: '/department-leaderboard'
+      fullPath: '/wch1925/department-leaderboard'
+      preLoaderRoute: typeof Wch1925LayoutDepartmentLeaderboardRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
+    }
     '/wch1925/_layout/data-entry': {
       id: '/wch1925/_layout/data-entry'
       path: '/data-entry'
@@ -560,6 +580,7 @@ interface Wch1925LayoutRouteChildren {
   Wch1925LayoutAnnouncementsRoute: typeof Wch1925LayoutAnnouncementsRoute
   Wch1925LayoutCheckinRoute: typeof Wch1925LayoutCheckinRouteWithChildren
   Wch1925LayoutDataEntryRoute: typeof Wch1925LayoutDataEntryRoute
+  Wch1925LayoutDepartmentLeaderboardRoute: typeof Wch1925LayoutDepartmentLeaderboardRoute
   Wch1925LayoutEventsRoute: typeof Wch1925LayoutEventsRoute
   Wch1925LayoutHousesRoute: typeof Wch1925LayoutHousesRoute
   Wch1925LayoutLeaderboardRoute: typeof Wch1925LayoutLeaderboardRoute
@@ -575,6 +596,8 @@ const Wch1925LayoutRouteChildren: Wch1925LayoutRouteChildren = {
   Wch1925LayoutAnnouncementsRoute: Wch1925LayoutAnnouncementsRoute,
   Wch1925LayoutCheckinRoute: Wch1925LayoutCheckinRouteWithChildren,
   Wch1925LayoutDataEntryRoute: Wch1925LayoutDataEntryRoute,
+  Wch1925LayoutDepartmentLeaderboardRoute:
+    Wch1925LayoutDepartmentLeaderboardRoute,
   Wch1925LayoutEventsRoute: Wch1925LayoutEventsRoute,
   Wch1925LayoutHousesRoute: Wch1925LayoutHousesRoute,
   Wch1925LayoutLeaderboardRoute: Wch1925LayoutLeaderboardRoute,
