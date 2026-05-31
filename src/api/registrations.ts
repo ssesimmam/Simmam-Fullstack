@@ -37,6 +37,15 @@ export interface CreateRegistrationPayload {
   turnstile_token?: string
 }
 
+function normalizeMobileNumber(value: string | undefined): string | undefined {
+  if (!value) return undefined
+
+  const digits = String(value).replace(/\D/g, '')
+  if (digits.length < 10) return undefined
+
+  return digits.slice(-10)
+}
+
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function getUserProfile(email: string): Promise<UserProfileDTO | null> {
@@ -82,8 +91,13 @@ export async function upsertUserProfile(payload: {
   house?: string
   picture_url?: string
 }): Promise<void> {
+  const mobile_number = normalizeMobileNumber(payload.mobile_number)
+
   await publicRequest('/users/upsert', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      ...(mobile_number ? { mobile_number } : {}),
+    }),
   })
 }

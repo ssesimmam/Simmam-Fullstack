@@ -54,15 +54,22 @@ export function getUser(): UserProfile | null {
 }
 
 export async function saveUser(user: UserProfile): Promise<void> {
-  await upsertUserProfile({
-    email: user.email,
-    name: user.name,
-    mobile_number: user.mobileNumber,
-    register_number: user.registerNumber,
-    department: user.department,
-    house: user.house,
-    picture_url: user.picture,
-  })
+  try {
+    await upsertUserProfile({
+      email: user.email,
+      name: user.name,
+      mobile_number: user.mobileNumber,
+      register_number: user.registerNumber,
+      department: user.department,
+      house: user.house,
+      picture_url: user.picture,
+    })
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn('[registrationStore] profile sync skipped:', error)
+    }
+  }
 
   sessionStorage.setItem(USER_KEY, JSON.stringify(user))
 }
