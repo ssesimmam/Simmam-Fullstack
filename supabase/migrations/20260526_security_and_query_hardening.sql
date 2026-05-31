@@ -201,6 +201,35 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_announcements_updated_at on announcements;
+create trigger trg_announcements_updated_at
+before update on announcements
+for each row execute function set_updated_at();
+
+alter table announcements enable row level security;
+
+drop policy if exists announcements_select_all on announcements;
+create policy announcements_select_all
+on announcements
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists announcements_admin_write on announcements;
+create policy announcements_admin_write
+on announcements
+for insert
+to authenticated
+with check (is_admin_user(current_app_user_id()));
+
+drop policy if exists announcements_admin_update_delete on announcements;
+create policy announcements_admin_update_delete
+on announcements
+for update
+to authenticated
+using (is_admin_user(current_app_user_id()))
+with check (is_admin_user(current_app_user_id()));
+
 -- Keep function grants aligned with server-only execution for the safer RPC.
 revoke execute on function create_registration_safe(uuid, uuid, text, text) from public, anon, authenticated;
 grant execute on function create_registration_safe(uuid, uuid, text, text) to service_role;
