@@ -7,6 +7,7 @@ export interface UserProfileDTO {
   name: string
   mobile_number?: string
   register_number?: string
+  department?: string
   house?: string
   picture_url?: string
 }
@@ -77,6 +78,7 @@ export async function upsertUserProfile(payload: {
   name: string
   mobile_number?: string
   register_number?: string
+  department: string
   house?: string
   picture_url?: string
 }): Promise<void> {

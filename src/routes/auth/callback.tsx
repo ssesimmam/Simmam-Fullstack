@@ -31,9 +31,10 @@ function AuthCallbackPage() {
               picture: userProfile.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userProfile.name)}`,
               registerNumber: userProfile.register_number || '',
               mobileNumber: userProfile.mobile_number,
+              department: userProfile.department || '',
               house: userProfile.house || '',
             }
-            saveUser(newUser)
+            await saveUser(newUser)
             try {
               await syncUserRegistrations(newUser.email)
             } catch {

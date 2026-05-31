@@ -33,6 +33,7 @@ import fs from 'fs'
 import { requireTurnstile, verifyTurnstileToken } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
 import { cacheMiddleware } from './middleware/cacheMiddleware'
+import { getDepartmentsForHouse } from './data/houseDepartments'
 import {
   adminRegistrationCreateBodySchema,
   adminSettingsBodySchema,
@@ -736,6 +737,17 @@ app.get('/api/wch1925/leaderboard', adminLimiter, cacheMiddleware(60), async (_r
   }
 })
 
+app.get('/api/wch1925/department-analytics', adminLimiter, cacheMiddleware(60), async (_req, res) => {
+  try {
+    const { data, error } = await supabase.rpc('get_department_analytics')
+    if (error) throw error
+    res.json({ data: data || [] })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
 app.get('/api/wch1925/events', adminLimiter, cacheMiddleware(60), async (_req, res) => {
   try {
     const { data, error } = await supabase
@@ -1040,7 +1052,7 @@ app.get('/api/wch1925/users', async (req, res) => {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
 
-    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,house,created_at').order('created_at', { ascending: false })
+    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,department,house,created_at').order('created_at', { ascending: false })
     if (house) query = query.eq('house', house)
 
     const { data, error } = await query.limit(500)
@@ -1061,6 +1073,7 @@ app.get('/api/wch1925/users', async (req, res) => {
       name: row.name,
       email: row.email,
       mobile_number: row.mobile_number || '',
+      department: row.department || '',
       house: row.house || '',
       register_number: row.register_number || '',
       created_at: row.created_at,
@@ -1080,7 +1093,7 @@ app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const { name, email, mobile_number, register_number, department, house, picture_url } = parsedBody.data
 
     const { data, error } = await supabase
       .from('users')
@@ -1090,12 +1103,13 @@ app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
           email: String(email).toLowerCase(),
           mobile_number: mobile_number === undefined || mobile_number === null ? null : String(mobile_number).trim(),
           register_number: register_number ? String(register_number).trim().toUpperCase() : null,
+          department: department ? String(department).trim() : null,
           house: house ? String(house).trim() : null,
           picture_url: picture_url || null,
         },
         { onConflict: 'email' },
       )
-      .select('id,name,email,mobile_number,register_number,house,created_at')
+      .select('id,name,email,mobile_number,register_number,department,house,created_at')
       .single()
 
     if (error) throw error
@@ -1336,7 +1350,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
 
     const { data: user, error: userErr } = await supabase
       .from('users')
-      .select('id,name,email,mobile_number,register_number,house,created_at')
+      .select('id,name,email,mobile_number,register_number,department,house,created_at')
       .eq('id', id)
       .single()
 
@@ -1358,6 +1372,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
         name: user.name,
         email: user.email,
         mobile_number: user.mobile_number || '',
+        department: user.department || '',
         house: user.house || '',
         register_number: user.register_number || '',
         created_at: user.created_at,
@@ -1412,13 +1427,14 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
     }
 
     const { id } = parsedParams.data
-    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const { name, email, mobile_number, register_number, department, house, picture_url } = parsedBody.data
 
     const payload: any = {}
     if (name) payload.name = name
     if (email) payload.email = String(email).toLowerCase()
     if (mobile_number !== undefined) payload.mobile_number = mobile_number
     if (register_number) payload.register_number = register_number
+    if (department) payload.department = department
     if (house) payload.house = house
     if (picture_url) payload.picture_url = picture_url
 
@@ -1430,7 +1446,7 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
       .from('users')
       .update(payload)
       .eq('id', id)
-      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
+      .select('id,name,email,mobile_number,register_number,department,house,picture_url,created_at,updated_at')
       .single()
 
     if (error) throw error
@@ -2062,23 +2078,59 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { email, name, mobile_number, register_number, house, picture_url } = parsedBody.data
-    const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
+    const { email, name, mobile_number, register_number, department, house, picture_url } = parsedBody.data
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const normalizedName = String(name).trim()
+    const normalizedRegisterNumber = String(register_number).trim().toUpperCase()
+    const normalizedMobileNumber = String(mobile_number).trim()
+    const normalizedDepartment = String(department).trim()
+    const normalizedHouse = String(house).trim()
+
+    if (!getDepartmentsForHouse(normalizedHouse).includes(normalizedDepartment)) {
+      return res.status(400).json({ error: 'invalid_department_for_house' })
+    }
+
+    const [registerConflict, mobileConflict] = await Promise.all([
+      supabase
+        .from('users')
+        .select('id')
+        .eq('register_number', normalizedRegisterNumber)
+        .neq('email', normalizedEmail)
+        .limit(1),
+      supabase
+        .from('users')
+        .select('id')
+        .eq('mobile_number', normalizedMobileNumber)
+        .neq('email', normalizedEmail)
+        .limit(1),
+    ])
+
+    if (registerConflict.error) throw registerConflict.error
+    if (mobileConflict.error) throw mobileConflict.error
+
+    if ((registerConflict.data || []).length > 0) {
+      return res.status(409).json({ error: 'register_number_already_registered' })
+    }
+
+    if ((mobileConflict.data || []).length > 0) {
+      return res.status(409).json({ error: 'mobile_number_already_registered' })
+    }
 
     const { data, error } = await supabase
       .from('users')
       .upsert(
         {
-          email: String(email).toLowerCase(),
-          name,
+          email: normalizedEmail,
+          name: normalizedName,
           mobile_number: normalizedMobileNumber,
-          register_number,
-          house,
+          register_number: normalizedRegisterNumber,
+          department: normalizedDepartment,
+          house: normalizedHouse,
           picture_url,
         },
         { onConflict: 'email' },
       )
-      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
+      .select('id,name,email,mobile_number,register_number,department,house,picture_url,created_at,updated_at')
       .limit(1)
 
     if (error) throw error
@@ -2188,7 +2240,7 @@ app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, a
     }
 
     const email = parsedParams.data.email.toLowerCase()
-    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,house,register_number,picture_url').eq('email', email).limit(1)
+    const { data: userData, error: userErr } = await supabase.from('users').select('id,name,email,mobile_number,department,house,register_number,picture_url').eq('email', email).limit(1)
     if (userErr) throw userErr
     const user = Array.isArray(userData) ? userData[0] : userData
     if (!user) return res.json({ user: null, registrations: [] })

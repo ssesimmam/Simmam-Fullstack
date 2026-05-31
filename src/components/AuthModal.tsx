@@ -111,10 +111,11 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
           picture: userProfile.picture_url || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userProfile.name)}`,
           registerNumber: userProfile.register_number || '',
           mobileNumber: userProfile.mobile_number,
+          department: userProfile.department || '',
           house: userProfile.house || '',
         }
 
-        saveUser(newUser)
+        await saveUser(newUser)
         await syncUserRegistrations(email)
         
         if (mounted) {

@@ -8,6 +8,7 @@ export interface AdminUserDTO {
   email: string
   house: string
   register_number: string
+  department?: string
   created_at: string
 }
 

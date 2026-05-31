@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
-import { fetchUserProfileByEmail } from '@/lib/apiClient'
 import { useHouses } from '@/features/events/useEvents'
+import { getDepartmentsForHouse } from '@/lib/houseDepartments'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from 'sonner'
 
 const HOUSE_EXTRAS: Record<string, { short: string }> = {
   'Agniyas': { short: 'AG' },
@@ -30,6 +32,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
   const [formName, setFormName] = useState('')
   const [formRegNo, setFormRegNo] = useState('')
   const [formMobile, setFormMobile] = useState('')
+  const [formDepartment, setFormDepartment] = useState('')
   const [formEmail, setFormEmail] = useState('')
   const [formHouse, setFormHouse] = useState('')
   const [error, setError] = useState('')
@@ -45,6 +48,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
         setFormName(existing.name ?? '')
         setFormRegNo(existing.registerNumber ?? '')
         setFormMobile(existing.mobileNumber ?? '')
+        setFormDepartment(existing.department ?? '')
         setFormEmail(existing.email ?? '')
         setFormHouse(existing.house ?? '')
       }
@@ -52,6 +56,13 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
       // ignore
     }
   }, [])
+
+  useEffect(() => {
+    const allowedDepartments = getDepartmentsForHouse(formHouse)
+    if (formDepartment && !allowedDepartments.includes(formDepartment)) {
+      setFormDepartment('')
+    }
+  }, [formDepartment, formHouse])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,41 +74,37 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
     if (!/^\d{10}$/.test(formMobile.trim())) { setError('Mobile number must be 10 digits.'); return }
     if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) { setError('Email must end with @saveetha.com.'); return }
     if (!formHouse) { setError('Please select your house.'); return }
+    if (!formDepartment) { setError('Please select your department.'); return }
+
+    const allowedDepartments = getDepartmentsForHouse(formHouse)
+    if (!allowedDepartments.includes(formDepartment)) {
+      setError('Please select a valid department for your house.')
+      return
+    }
 
     setSubmitting(true)
     const normalizedEmail = formEmail.trim().toLowerCase()
 
     try {
-      const backendProfile = await fetchUserProfileByEmail(normalizedEmail)
-      if (!existingProfile && backendProfile) {
-        setError('This email is already registered. Please log in instead.')
-        setSubmitting(false)
-        return
+      const user: UserProfile = {
+        email: normalizedEmail,
+        name: formName.trim(),
+        picture: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(formName.trim())}`,
+        registerNumber: formRegNo.trim().toUpperCase(),
+        mobileNumber: formMobile.trim().replace(/\D/g, ''),
+        department: formDepartment.trim(),
+        house: formHouse,
       }
-      if (existingProfile && existingProfile.email !== normalizedEmail && backendProfile) {
-        setError('This email is already registered. Please use a different email or log in.')
-        setSubmitting(false)
-        return
-      }
+
+      await saveUser(user)
+      toast.success(existingProfile ? 'Profile updated successfully' : 'Sign up successful')
+      onSave()
+      onClose()
     } catch (err: any) {
-      setError(err?.message || 'Unable to verify email registration status.')
+      setError(err?.message || 'Failed to save profile. Please try again.')
+    } finally {
       setSubmitting(false)
-      return
     }
-
-    const user: UserProfile = {
-      email: normalizedEmail,
-      name: formName.trim(),
-      picture: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(formName.trim())}`,
-      registerNumber: formRegNo.trim().toUpperCase(),
-      mobileNumber: formMobile.trim(),
-      house: formHouse,
-    }
-
-    saveUser(user)
-    setSubmitting(false)
-    onSave()
-    onClose()
   }
 
   return (
@@ -280,6 +287,24 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                       )
                     })}
                   </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
+                    Department
+                  </label>
+                  <Select value={formDepartment} onValueChange={setFormDepartment} disabled={!formHouse}>
+                    <SelectTrigger className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:ring-1 focus:ring-[#D4AF37]/25">
+                      <SelectValue placeholder={formHouse ? 'Select your department' : 'Select your house first'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getDepartmentsForHouse(formHouse).map((department) => (
+                        <SelectItem key={department} value={department}>
+                          {department}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Error */}

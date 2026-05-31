@@ -27,6 +27,7 @@ export function ProfilePage() {
     !!profile?.name?.toString().trim() &&
     !!profile?.registerNumber?.toString().trim() &&
     !!profile?.mobileNumber?.toString().trim() &&
+    !!profile?.department?.toString().trim() &&
     !!profile?.email?.toString().trim() &&
     !!profile?.house?.toString().trim(),
   [])
@@ -59,10 +60,11 @@ export function ProfilePage() {
           picture: result.picture_url || user.picture,
           registerNumber: result.register_number || user.registerNumber,
           mobileNumber: result.mobile_number || user.mobileNumber,
+          department: result.department || user.department,
           house: result.house || user.house,
         }
 
-        saveUser(syncedUser)
+        void saveUser(syncedUser).catch(() => {})
         setUser(syncedUser)
       } catch {
         // Keep the session-backed profile if the API is unavailable.
@@ -149,6 +151,7 @@ export function ProfilePage() {
           `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userData?.name || u.user_metadata?.name || email)}`,
         registerNumber: userData?.register_number || '',
         mobileNumber: userData?.mobile_number || undefined,
+          department: userData?.department || '',
         house: userData?.house || '',
       }
 
@@ -157,7 +160,7 @@ export function ProfilePage() {
         await supabase.from('profiles').upsert({ id: u.id, email: profile.email, name: profile.name, avatar_url: profile.picture })
       } catch {}
 
-      saveUser(profile)
+      void saveUser(profile).catch(() => {})
       setUser(profile)
       setShowSetupModal(!isProfileComplete(profile))
 
@@ -173,6 +176,7 @@ export function ProfilePage() {
         name: u.user_metadata?.name as string || '',
         picture: u.user_metadata?.avatar_url as string || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(email)}`,
         registerNumber: '',
+        department: '',
         house: '',
       }
       setUser(fallbackProfile)

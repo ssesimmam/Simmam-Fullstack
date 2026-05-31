@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 const nonEmptyString = z.string().trim().min(1);
+const mobileNumberString = z
+  .union([z.string(), z.number()])
+  .transform((value) => String(value).replace(/\D/g, '').trim())
+  .refine((value) => /^\d{10}$/.test(value), {
+    message: 'Mobile number must be 10 digits',
+  });
 const optionalText = z.union([z.string(), z.null(), z.undefined()]).transform((value) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -29,6 +35,7 @@ export const userCreateBodySchema = z.object({
   email: z.string().email(),
   mobile_number: z.union([z.string(), z.number()]).optional().nullable(),
   register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
   house: z.union([z.string(), z.null(), z.undefined()]).optional(),
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
@@ -73,9 +80,10 @@ export const checkinBodySchema = z.object({
 export const userUpsertBodySchema = z.object({
   email: z.string().email(),
   name: nonEmptyString.max(120),
-  mobile_number: z.union([z.string(), z.number()]).optional().nullable(),
-  register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  house: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  mobile_number: mobileNumberString,
+  register_number: nonEmptyString.max(40),
+  department: nonEmptyString.max(120),
+  house: nonEmptyString.max(120),
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
 

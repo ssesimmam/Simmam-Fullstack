@@ -42,6 +42,7 @@ create table if not exists users (
   email citext not null unique,
   register_number text,
   mobile_number text,
+  department text,
   picture_url text,
   house text,
   created_at timestamptz not null default now(),
@@ -51,6 +52,9 @@ create table if not exists users (
 
 alter table if exists users
   add column if not exists mobile_number text;
+
+alter table if exists users
+  add column if not exists department text;
 
 create table if not exists houses (
   id uuid primary key default gen_random_uuid(),
@@ -204,6 +208,10 @@ create index if not exists events_registration_open_idx on events(registration_o
 create index if not exists registrations_event_idx on registrations(event_id);
 create index if not exists registrations_user_idx on registrations(user_id);
 create index if not exists registrations_registered_at_idx on registrations(registered_at desc);
+
+create index if not exists users_register_number_idx on users(register_number);
+create index if not exists users_mobile_number_idx on users(mobile_number);
+create index if not exists users_department_idx on users(department);
 
 create index if not exists participants_event_idx on participants(event_id);
 create index if not exists participants_email_idx on participants(email);

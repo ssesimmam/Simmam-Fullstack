@@ -40,6 +40,13 @@ export interface AttendanceReportDTO {
   attendance_rate: number
 }
 
+export interface DepartmentAnalyticsDTO {
+  department: string
+  house_name: string
+  total_registrations: number
+  percentage: number
+}
+
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function getAdminLeaderboard(): Promise<AdminLeaderboardDTO[]> {
@@ -65,5 +72,10 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
 
 export async function getAttendanceReport(): Promise<AttendanceReportDTO[]> {
   const result = await adminRequest<{ data: AttendanceReportDTO[] }>('/attendance-report')
+  return result.data ?? []
+}
+
+export async function getDepartmentAnalytics(): Promise<DepartmentAnalyticsDTO[]> {
+  const result = await adminRequest<{ data: DepartmentAnalyticsDTO[] }>('/department-analytics')
   return result.data ?? []
 }

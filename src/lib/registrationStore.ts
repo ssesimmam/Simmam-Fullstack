@@ -16,6 +16,7 @@ export type UserProfile = {
   mobileNumber?: string
   picture: string
   registerNumber: string
+  department: string
   house: string
 }
 
@@ -52,16 +53,18 @@ export function getUser(): UserProfile | null {
   }
 }
 
-export function saveUser(user: UserProfile): void {
-  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
-  void upsertUserProfile({
+export async function saveUser(user: UserProfile): Promise<void> {
+  await upsertUserProfile({
     email: user.email,
     name: user.name,
     mobile_number: user.mobileNumber,
     register_number: user.registerNumber,
+    department: user.department,
     house: user.house,
     picture_url: user.picture,
-  }).catch(() => {})
+  })
+
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
 }
 
 export function clearUser(): void {

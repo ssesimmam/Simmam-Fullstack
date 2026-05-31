@@ -30,7 +30,7 @@ const MENU_ITEMS = {
       icon: Trophy,
     },
     {
-      title: 'Department Leaderboard',
+      title: 'Department Analytics',
       href: '/wch1925/department-leaderboard',
       icon: Database,
     },
@@ -84,7 +84,7 @@ const MENU_ITEMS = {
       icon: Trophy,
     },
     {
-      title: 'Department Leaderboard',
+      title: 'Department Analytics',
       href: '/wch1925/department-leaderboard',
       icon: Database,
     },
