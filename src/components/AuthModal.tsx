@@ -101,7 +101,11 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
         const userProfile = await fetchUserProfileByEmail(email)
         if (!userProfile) {
-          if (mounted) setFormError('No profile found for that email. Please sign up first.')
+          window.sessionStorage.setItem(
+            'simmam_oauth_intent',
+            JSON.stringify({ source: 'public', redirectTo: '/dashboard/profile?signup=1' }),
+          )
+          window.location.assign('/dashboard/profile?signup=1')
           return
         }
 
