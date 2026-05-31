@@ -27,7 +27,6 @@ export function ProfilePage() {
     !!profile?.name?.toString().trim() &&
     !!profile?.registerNumber?.toString().trim() &&
     !!profile?.mobileNumber?.toString().trim() &&
-    !!profile?.department?.toString().trim() &&
     !!profile?.email?.toString().trim() &&
     !!profile?.house?.toString().trim(),
   [])

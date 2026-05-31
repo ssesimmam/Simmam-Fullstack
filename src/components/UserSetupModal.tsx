@@ -74,10 +74,9 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
     if (!/^\d{10}$/.test(formMobile.trim())) { setError('Mobile number must be 10 digits.'); return }
     if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) { setError('Email must end with @saveetha.com.'); return }
     if (!formHouse) { setError('Please select your house.'); return }
-    if (!formDepartment) { setError('Please select your department.'); return }
 
     const allowedDepartments = getDepartmentsForHouse(formHouse)
-    if (!allowedDepartments.includes(formDepartment)) {
+    if (formDepartment && !allowedDepartments.includes(formDepartment)) {
       setError('Please select a valid department for your house.')
       return
     }
@@ -219,6 +218,31 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
                     />
                   </div>
+                </div>
+
+                {/* Department (optional add-on) */}
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
+                    Department <span className="text-white/20">(optional)</span>
+                  </label>
+                  <Select value={formDepartment} onValueChange={setFormDepartment}>
+                    <SelectTrigger className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/25">
+                      <SelectValue placeholder={formHouse ? 'Choose your department' : 'Select a house first'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getDepartmentsForHouse(formHouse).length > 0 ? (
+                        getDepartmentsForHouse(formHouse).map((department) => (
+                          <SelectItem key={department} value={department}>
+                            {department}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="__none" disabled>
+                          Select a house first
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* SIMATS Email */}

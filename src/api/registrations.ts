@@ -78,7 +78,7 @@ export async function upsertUserProfile(payload: {
   name: string
   mobile_number?: string
   register_number?: string
-  department: string
+  department?: string
   house?: string
   picture_url?: string
 }): Promise<void> {

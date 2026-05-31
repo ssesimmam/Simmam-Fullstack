@@ -80,7 +80,7 @@ function AuthCallbackPage() {
         }
 
         // Determine correct fallback based on architecture roles
-        const fallback = intent.source === 'admin' ? '/wch1925/login' : '/profile'
+        const fallback = intent.source === 'admin' ? '/wch1925/login' : '/dashboard/profile'
 
         setTimeout(() => {
           if (mounted) navigate({ to: fallback, replace: true })

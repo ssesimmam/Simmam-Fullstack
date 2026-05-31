@@ -13,6 +13,14 @@ const optionalText = z.union([z.string(), z.null(), z.undefined()]).transform((v
   return trimmed.length > 0 ? trimmed : null;
 });
 
+const optionalMobileNumber = z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((value) => {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).replace(/\D/g, '').trim();
+  return normalized.length > 0 ? normalized : null;
+}).refine((value) => value === null || /^\d{10}$/.test(value), {
+  message: 'Mobile number must be 10 digits',
+});
+
 export const authBodySchema = z.object({
   email: z.string().email().optional(),
   role: nonEmptyString,
@@ -80,10 +88,10 @@ export const checkinBodySchema = z.object({
 export const userUpsertBodySchema = z.object({
   email: z.string().email(),
   name: nonEmptyString.max(120),
-  mobile_number: mobileNumberString,
-  register_number: nonEmptyString.max(40),
-  department: nonEmptyString.max(120),
-  house: nonEmptyString.max(120),
+  mobile_number: optionalMobileNumber.optional(),
+  register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  house: z.union([z.string(), z.null(), z.undefined()]).optional(),
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
 

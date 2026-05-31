@@ -2081,38 +2081,61 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
     const { email, name, mobile_number, register_number, department, house, picture_url } = parsedBody.data
     const normalizedEmail = String(email).trim().toLowerCase()
     const normalizedName = String(name).trim()
-    const normalizedRegisterNumber = String(register_number).trim().toUpperCase()
-    const normalizedMobileNumber = String(mobile_number).trim()
-    const normalizedDepartment = String(department).trim()
-    const normalizedHouse = String(house).trim()
+    const normalizedRegisterNumber = register_number ? String(register_number).trim().toUpperCase() : ''
+    const normalizedMobileNumber = mobile_number ? String(mobile_number).trim().replace(/\D/g, '') : ''
+    const normalizedDepartment = department ? String(department).trim() : ''
+    const normalizedHouse = house ? String(house).trim() : ''
 
-    if (!getDepartmentsForHouse(normalizedHouse).includes(normalizedDepartment)) {
+    const { data: existingRows, error: existingErr } = await supabase
+      .from('users')
+      .select('id,mobile_number,register_number,department,house')
+      .eq('email', normalizedEmail)
+      .limit(1)
+
+    if (existingErr) throw existingErr
+
+    const existingUser = Array.isArray(existingRows) ? existingRows[0] : existingRows
+    const resolvedMobileNumber = normalizedMobileNumber || String(existingUser?.mobile_number || '').trim().replace(/\D/g, '')
+    const resolvedRegisterNumber = normalizedRegisterNumber || String(existingUser?.register_number || '').trim().toUpperCase()
+    const resolvedDepartment = normalizedDepartment || String(existingUser?.department || '').trim()
+    const resolvedHouse = normalizedHouse || String(existingUser?.house || '').trim()
+
+    if (resolvedDepartment && resolvedHouse && !getDepartmentsForHouse(resolvedHouse).includes(resolvedDepartment)) {
       return res.status(400).json({ error: 'invalid_department_for_house' })
     }
 
-    const [registerConflict, mobileConflict] = await Promise.all([
-      supabase
-        .from('users')
-        .select('id')
-        .eq('register_number', normalizedRegisterNumber)
-        .neq('email', normalizedEmail)
-        .limit(1),
-      supabase
-        .from('users')
-        .select('id')
-        .eq('mobile_number', normalizedMobileNumber)
-        .neq('email', normalizedEmail)
-        .limit(1),
-    ])
+    const conflictChecks: Promise<any>[] = []
+    if (resolvedRegisterNumber) {
+      conflictChecks.push(
+        supabase
+          .from('users')
+          .select('id')
+          .eq('register_number', resolvedRegisterNumber)
+          .neq('email', normalizedEmail)
+          .limit(1),
+      )
+    }
+    if (resolvedMobileNumber) {
+      conflictChecks.push(
+        supabase
+          .from('users')
+          .select('id')
+          .eq('mobile_number', resolvedMobileNumber)
+          .neq('email', normalizedEmail)
+          .limit(1),
+      )
+    }
 
-    if (registerConflict.error) throw registerConflict.error
-    if (mobileConflict.error) throw mobileConflict.error
+    const [registerConflict, mobileConflict] = await Promise.all(conflictChecks)
 
-    if ((registerConflict.data || []).length > 0) {
+    if (registerConflict?.error) throw registerConflict.error
+    if (mobileConflict?.error) throw mobileConflict.error
+
+    if (registerConflict && (registerConflict.data || []).length > 0) {
       return res.status(409).json({ error: 'register_number_already_registered' })
     }
 
-    if ((mobileConflict.data || []).length > 0) {
+    if (mobileConflict && (mobileConflict.data || []).length > 0) {
       return res.status(409).json({ error: 'mobile_number_already_registered' })
     }
 
@@ -2122,10 +2145,10 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
         {
           email: normalizedEmail,
           name: normalizedName,
-          mobile_number: normalizedMobileNumber,
-          register_number: normalizedRegisterNumber,
-          department: normalizedDepartment,
-          house: normalizedHouse,
+          mobile_number: resolvedMobileNumber || null,
+          register_number: resolvedRegisterNumber || null,
+          department: resolvedDepartment || null,
+          house: resolvedHouse || null,
           picture_url,
         },
         { onConflict: 'email' },
