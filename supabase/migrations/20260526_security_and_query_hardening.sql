@@ -45,7 +45,7 @@ create or replace function create_registration(
   p_name text,
   p_register_number text,
   p_house text,
-  p_department text default null,
+  p_department text,
   p_event_id uuid
 )
 returns table(registration_id uuid, ticket_code text)
@@ -124,9 +124,6 @@ begin
 end;
 $$;
 
-revoke execute on function create_registration(text, text, text, text, text, uuid) from anon;
-grant execute on function create_registration(text, text, text, text, text, uuid) to authenticated, service_role;
-
 create or replace function admin_checkin(
   p_registration_id uuid,
   p_device_info text default null
@@ -201,37 +198,8 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_announcements_updated_at on announcements;
-create trigger trg_announcements_updated_at
-before update on announcements
-for each row execute function set_updated_at();
-
-alter table announcements enable row level security;
-
-drop policy if exists announcements_select_all on announcements;
-create policy announcements_select_all
-on announcements
-for select
-to anon, authenticated
-using (true);
-
-drop policy if exists announcements_admin_write on announcements;
-create policy announcements_admin_write
-on announcements
-for insert
-to authenticated
-with check (is_admin_user(current_app_user_id()));
-
-drop policy if exists announcements_admin_update_delete on announcements;
-create policy announcements_admin_update_delete
-on announcements
-for update
-to authenticated
-using (is_admin_user(current_app_user_id()))
-with check (is_admin_user(current_app_user_id()));
-
 -- Keep function grants aligned with server-only execution for the safer RPC.
-revoke execute on function create_registration_safe(uuid, uuid, text, text) from public, anon, authenticated;
-grant execute on function create_registration_safe(uuid, uuid, text, text) to service_role;
+revoke execute on function create_registration_safe(uuid, uuid, text) from public, anon, authenticated;
+grant execute on function create_registration_safe(uuid, uuid, text) to service_role;
 
 commit;

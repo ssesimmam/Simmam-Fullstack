@@ -333,7 +333,7 @@ create or replace function create_registration(
   p_name text,
   p_register_number text,
   p_house text,
-  p_department text default null,
+  p_department text,
   p_event_id uuid
 )
 returns table(registration_id uuid, ticket_code text)
@@ -410,34 +410,6 @@ begin
   ticket_code := v_ticket;
   return next;
 end;
-$$;
-
-create or replace function get_house_department_participation()
-RETURNS TABLE (
-  house_name text,
-  department text,
-  participation_count bigint
-)
-LANGUAGE sql
-SET search_path = pg_catalog, public, extensions
-AS $$
-SELECT
-  u.house AS house_name,
-  u.department AS department,
-  COUNT(c.id) AS participation_count
-FROM checkins c
-JOIN registrations r ON c.registration_id = r.id
-JOIN users u ON r.user_id = u.id
-WHERE u.house IS NOT NULL
-  AND u.house <> ''
-  AND u.department IS NOT NULL
-  AND u.department <> ''
-GROUP BY
-  u.house,
-  u.department
-ORDER BY
-  u.house,
-  participation_count DESC;
 $$;
 
 create or replace function admin_checkin(

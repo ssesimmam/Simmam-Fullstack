@@ -122,7 +122,10 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
           department: userProfile.department || '',
         }
 
-        saveUser(newUser)
+        // Write to sessionStorage only — do NOT call saveUser() here.
+        // saveUser() fires a backend upsert; if the DB currently has
+        // department=null, this would erase any previously saved department.
+        try { sessionStorage.setItem('simmam_user', JSON.stringify(newUser)) } catch {}
         await syncUserRegistrations(email)
         
         if (mounted) {
@@ -253,6 +256,10 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
       if (error?.message === 'already_registered') {
         setAlreadyReg(true)
         try { await syncUserRegistrations(user.email) } catch { /* ignore */ }
+        return
+      }
+      if (error?.message === 'department_missing') {
+        setFormError('Please complete your profile before registering. Add your department and try again.')
         return
       }
       setFormError(error?.message || 'Unable to complete registration right now.')
