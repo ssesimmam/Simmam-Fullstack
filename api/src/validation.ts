@@ -88,10 +88,10 @@ export const checkinBodySchema = z.object({
 export const userUpsertBodySchema = z.object({
   email: z.string().email(),
   name: nonEmptyString.max(120),
-  mobile_number: optionalMobileNumber.optional(),
-  register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  house: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  mobile_number: mobileNumberString,
+  register_number: nonEmptyString,
+  department: nonEmptyString,
+  house: nonEmptyString,
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
 

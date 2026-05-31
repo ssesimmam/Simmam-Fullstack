@@ -74,9 +74,10 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
     if (!/^\d{10}$/.test(formMobile.trim())) { setError('Mobile number must be 10 digits.'); return }
     if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) { setError('Email must end with @saveetha.com.'); return }
     if (!formHouse) { setError('Please select your house.'); return }
+    if (!formDepartment.trim()) { setError('Please select your department.'); return }
 
     const allowedDepartments = getDepartmentsForHouse(formHouse)
-    if (formDepartment && !allowedDepartments.includes(formDepartment)) {
+    if (!allowedDepartments.includes(formDepartment)) {
       setError('Please select a valid department for your house.')
       return
     }
@@ -175,6 +176,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                     <input
                       id="setup-name"
                       type="text"
+                      required
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
                       placeholder="Enter your full name"
@@ -193,6 +195,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                     <input
                       id="setup-regno"
                       type="text"
+                      required
                       value={formRegNo}
                       onChange={(e) => setFormRegNo(e.target.value)}
                       placeholder="e.g. 192421111"
@@ -212,37 +215,13 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                       id="setup-mobile"
                       type="tel"
                       inputMode="numeric"
+                      required
                       value={formMobile}
                       onChange={(e) => setFormMobile(e.target.value.replace(/\D/g, ''))}
                       placeholder="9876543210"
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-12 text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25"
                     />
                   </div>
-                </div>
-
-                {/* Department (optional add-on) */}
-                <div>
-                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
-                    Department <span className="text-white/20">(optional)</span>
-                  </label>
-                  <Select value={formDepartment} onValueChange={setFormDepartment}>
-                    <SelectTrigger className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-white placeholder:text-white/25 transition focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/25">
-                      <SelectValue placeholder={formHouse ? 'Choose your department' : 'Select a house first'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getDepartmentsForHouse(formHouse).length > 0 ? (
-                        getDepartmentsForHouse(formHouse).map((department) => (
-                          <SelectItem key={department} value={department}>
-                            {department}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="__none" disabled>
-                          Select a house first
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 {/* SIMATS Email */}
@@ -255,6 +234,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                     <input
                       id="setup-email"
                       type="email"
+                      required
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       placeholder="192421111.simats@saveetha.com"
@@ -322,11 +302,17 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                       <SelectValue placeholder={formHouse ? 'Select your department' : 'Select your house first'} />
                     </SelectTrigger>
                     <SelectContent>
-                      {getDepartmentsForHouse(formHouse).map((department) => (
-                        <SelectItem key={department} value={department}>
-                          {department}
+                      {getDepartmentsForHouse(formHouse).length > 0 ? (
+                        getDepartmentsForHouse(formHouse).map((department) => (
+                          <SelectItem key={department} value={department}>
+                            {department}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="__none" disabled>
+                          Select a house first
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
