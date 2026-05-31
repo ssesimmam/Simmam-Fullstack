@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -39,6 +40,11 @@ import { Route as Wch1925LayoutCheckinNewRouteImport } from './routes/wch1925/_l
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/events'
+    | '/profile'
     | '/register'
     | '/auth/callback'
     | '/dashboard/my-schedule'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/profile'
     | '/register'
     | '/auth/callback'
     | '/dashboard/my-schedule'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/events'
+    | '/profile'
     | '/register'
     | '/auth/callback'
     | '/dashboard/my-schedule'
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EventsRoute: typeof EventsRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   Wch1925LayoutRoute: typeof Wch1925LayoutRouteWithChildren
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -617,6 +637,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EventsRoute: EventsRouteWithChildren,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   Wch1925LayoutRoute: Wch1925LayoutRouteWithChildren,
