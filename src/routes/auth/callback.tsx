@@ -50,7 +50,7 @@ function AuthCallbackPage() {
 
         // Read intent
         const intentStr = window.sessionStorage.getItem('simmam_oauth_intent')
-        let intent = { source: 'public', redirectTo: '/profile' }
+        let intent = { source: 'public', redirectTo: '/dashboard/profile' }
         if (intentStr) {
           try {
             intent = JSON.parse(intentStr)
@@ -71,7 +71,7 @@ function AuthCallbackPage() {
 
         // Read intent for failure fallback
         const intentStr = window.sessionStorage.getItem('simmam_oauth_intent')
-        let intent = { source: 'public', redirectTo: '/profile' }
+        let intent = { source: 'public', redirectTo: '/dashboard/profile' }
         if (intentStr) {
           try {
             intent = JSON.parse(intentStr)

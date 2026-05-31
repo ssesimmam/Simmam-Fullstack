@@ -228,7 +228,7 @@ export function ProfilePage() {
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
     try {
-      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/profile' }))
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/dashboard/profile' }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
