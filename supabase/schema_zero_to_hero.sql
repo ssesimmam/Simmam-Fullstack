@@ -44,7 +44,6 @@ create table if not exists users (
   mobile_number text,
   picture_url text,
   house text,
-  department text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint users_email_format_chk check (position('@' in email::text) > 1)
@@ -333,7 +332,6 @@ create or replace function create_registration(
   p_name text,
   p_register_number text,
   p_house text,
-  p_department text,
   p_event_id uuid
 )
 returns table(registration_id uuid, ticket_code text)
@@ -358,19 +356,17 @@ begin
 
   perform pg_advisory_xact_lock(hashtext(p_event_id::text)::bigint);
 
-  insert into users (name, email, register_number, house, department)
+  insert into users (name, email, register_number, house)
   values (
     coalesce(nullif(trim(p_name), ''), split_part(lower(trim(p_email)), '@', 1)),
     lower(trim(p_email)),
     nullif(trim(p_register_number), ''),
-    nullif(trim(p_house), ''),
-    nullif(trim(p_department), '')
+    nullif(trim(p_house), '')
   )
   on conflict (email) do update set
     name = coalesce(excluded.name, users.name),
     register_number = coalesce(excluded.register_number, users.register_number),
-    house = coalesce(excluded.house, users.house),
-    department = coalesce(excluded.department, users.department)
+    house = coalesce(excluded.house, users.house)
   returning id into v_user_id;
 
   select e.registration_open, e.capacity
@@ -652,8 +648,8 @@ on conflict (name) do nothing;
 -- -----------------------------------------------------------------------------
 -- 10) Grant execute on RPCs
 -- -----------------------------------------------------------------------------
-revoke execute on function create_registration(text, text, text, text, text, uuid) from anon;
-grant execute on function create_registration(text, text, text, text, text, uuid) to authenticated, service_role;
+revoke execute on function create_registration(text, text, text, text, uuid) from anon;
+grant execute on function create_registration(text, text, text, text, uuid) to authenticated, service_role;
 grant execute on function admin_checkin(uuid, text) to authenticated, service_role;
 grant execute on function award_house_points(uuid, int, text) to authenticated, service_role;
 

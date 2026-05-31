@@ -45,7 +45,6 @@ create or replace function create_registration(
   p_name text,
   p_register_number text,
   p_house text,
-  p_department text,
   p_event_id uuid
 )
 returns table(registration_id uuid, ticket_code text)
@@ -70,19 +69,17 @@ begin
 
   perform pg_advisory_xact_lock(hashtext(p_event_id::text)::bigint);
 
-  insert into users (name, email, register_number, house, department)
+  insert into users (name, email, register_number, house)
   values (
     coalesce(nullif(trim(p_name), ''), split_part(lower(trim(p_email)), '@', 1)),
     lower(trim(p_email)),
     nullif(trim(p_register_number), ''),
-    nullif(trim(p_house), ''),
-    nullif(trim(p_department), '')
+    nullif(trim(p_house), '')
   )
   on conflict (email) do update set
     name = coalesce(excluded.name, users.name),
     register_number = coalesce(excluded.register_number, users.register_number),
-    house = coalesce(excluded.house, users.house),
-    department = coalesce(excluded.department, users.department)
+    house = coalesce(excluded.house, users.house)
   returning id into v_user_id;
 
   select e.registration_open, e.capacity

@@ -72,57 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const storedUser = getStoredAdminUser()
-
-        if (mounted) {
-          if (!session) {
-            setUser(null)
-            localStorage.removeItem('simmam_admin_user')
-            localStorage.removeItem('simmam_admin_access_token')
-          } else if (storedUser) {
-            setUser(storedUser)
-          }
-          setIsLoading(false)
-        }
-      } catch {
-        if (mounted) setIsLoading(false)
-      }
-    }
-
-    void initializeAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return
-
-      if (event === 'SIGNED_OUT') {
-        setUser(null)
-        localStorage.removeItem('simmam_admin_user')
-        localStorage.removeItem('simmam_admin_access_token')
-
-        if (window.location.pathname.startsWith('/wch1925') && window.location.pathname !== '/wch1925/login') {
-          window.location.href = '/wch1925/login'
-        }
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        if (!session) {
-          setUser(null)
-          localStorage.removeItem('simmam_admin_user')
-          localStorage.removeItem('simmam_admin_access_token')
-        } else {
-          const storedUser = getStoredAdminUser()
-          if (storedUser) setUser(storedUser)
-        }
-      }
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
+    // Safe: localStorage only accessed after mount, never during SSR/render
+    const storedUser = getStoredAdminUser()
+    if (storedUser) setUser(storedUser)
+    setIsLoading(false)
   }, [])
 
   const login = async (email: string, role: AdminRole): Promise<boolean> => {
