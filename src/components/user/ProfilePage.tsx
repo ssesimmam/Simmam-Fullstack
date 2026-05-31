@@ -154,11 +154,6 @@ export function ProfilePage() {
         house: userData?.house || '',
       }
 
-      // Upsert into profiles table (optional)
-      try {
-        await supabase.from('profiles').upsert({ id: u.id, email: profile.email, name: profile.name, avatar_url: profile.picture })
-      } catch {}
-
       void saveUser(profile).catch(() => {})
       setUser(profile)
       setShowSetupModal(!isProfileComplete(profile))
