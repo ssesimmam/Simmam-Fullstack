@@ -50,7 +50,7 @@ function AuthCallbackPage() {
 
         // Read intent
         const intentStr = window.sessionStorage.getItem('simmam_oauth_intent')
-        let intent = { source: 'public', redirectTo: '/events' }
+        let intent = { source: 'public', redirectTo: '/profile' }
         if (intentStr) {
           try {
             intent = JSON.parse(intentStr)
