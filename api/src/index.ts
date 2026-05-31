@@ -2104,29 +2104,23 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
       return res.status(400).json({ error: 'invalid_department_for_house' })
     }
 
-    const conflictChecks: Promise<any>[] = []
-    if (resolvedRegisterNumber) {
-      conflictChecks.push(
-        supabase
+    const registerConflict = resolvedRegisterNumber
+      ? await supabase
           .from('users')
           .select('id')
           .eq('register_number', resolvedRegisterNumber)
           .neq('email', normalizedEmail)
-          .limit(1),
-      )
-    }
-    if (resolvedMobileNumber) {
-      conflictChecks.push(
-        supabase
+          .limit(1)
+      : null
+
+    const mobileConflict = resolvedMobileNumber
+      ? await supabase
           .from('users')
           .select('id')
           .eq('mobile_number', resolvedMobileNumber)
           .neq('email', normalizedEmail)
-          .limit(1),
-      )
-    }
-
-    const [registerConflict, mobileConflict] = await Promise.all(conflictChecks)
+          .limit(1)
+      : null
 
     if (registerConflict?.error) throw registerConflict.error
     if (mobileConflict?.error) throw mobileConflict.error

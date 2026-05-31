@@ -42,6 +42,10 @@ export type CheckedInEntry = {
 
 const USER_KEY = 'simmam_user'
 
+function canUpsertUser(user: UserProfile): boolean {
+  return !!user.email.trim() && !!user.name.trim() && !!user.mobileNumber?.trim() && !!user.registerNumber.trim() && !!user.department.trim() && !!user.house.trim()
+}
+
 // ─── User Profile (session cache) ─────────────────────────────────────────────
 
 export function getUser(): UserProfile | null {
@@ -54,21 +58,26 @@ export function getUser(): UserProfile | null {
 }
 
 export async function saveUser(user: UserProfile): Promise<void> {
-  try {
-    await upsertUserProfile({
-      email: user.email,
-      name: user.name,
-      mobile_number: user.mobileNumber,
-      register_number: user.registerNumber,
-      department: user.department,
-      house: user.house,
-      picture_url: user.picture,
-    })
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.warn('[registrationStore] profile sync skipped:', error)
+  if (canUpsertUser(user)) {
+    try {
+      await upsertUserProfile({
+        email: user.email,
+        name: user.name,
+        mobile_number: user.mobileNumber,
+        register_number: user.registerNumber,
+        department: user.department,
+        house: user.house,
+        picture_url: user.picture,
+      })
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('[registrationStore] profile sync skipped:', error)
+      }
     }
+  } else if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.warn('[registrationStore] profile cached locally until signup is complete')
   }
 
   sessionStorage.setItem(USER_KEY, JSON.stringify(user))
