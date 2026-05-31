@@ -53,9 +53,9 @@ export function getUser(): UserProfile | null {
   }
 }
 
-export async function saveUser(user: UserProfile): Promise<void> {
-  console.log('[DEBUG] saveUser called with user:', user)
-  const payload = {
+export function saveUser(user: UserProfile): void {
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
+  void upsertUserProfile({
     email: user.email,
     name: user.name,
     mobile_number: user.mobileNumber,
@@ -63,10 +63,7 @@ export async function saveUser(user: UserProfile): Promise<void> {
     house: user.house,
     department: user.department,
     picture_url: user.picture,
-  }
-  console.log('[DEBUG] saveUser payload:', payload)
-  await upsertUserProfile(payload)
-  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
+  }).catch(() => {})
 }
 
 export function clearUser(): void {
@@ -128,7 +125,6 @@ export async function registerForEvent(
 
   const user = getUser()
   if (!user) throw new Error('user_session_missing')
-  if (!user.department || !user.department.trim()) throw new Error('department_missing')
 
   const { createRegistration } = await import('@/api/registrations')
   const response = await createRegistration({

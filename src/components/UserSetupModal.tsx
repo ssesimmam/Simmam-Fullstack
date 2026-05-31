@@ -231,15 +231,10 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false, existi
       department: formDepartment.trim(),
     }
 
-    try {
-      await saveUser(user)
-      onSave()
-      onClose()
-    } catch (err: any) {
-      setError(err?.message || 'Unable to save your profile. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
+    saveUser(user)
+    setSubmitting(false)
+    onSave()
+    onClose()
   }
 
   return (

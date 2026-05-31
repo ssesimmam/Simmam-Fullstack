@@ -30,7 +30,6 @@ export const userCreateBodySchema = z.object({
   mobile_number: z.union([z.string(), z.number()]).optional().nullable(),
   register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
   house: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  department: optionalText.optional(),
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
 
@@ -77,7 +76,7 @@ export const userUpsertBodySchema = z.object({
   mobile_number: z.union([z.string(), z.number()]).optional().nullable(),
   register_number: z.union([z.string(), z.null(), z.undefined()]).optional(),
   house: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  department: optionalText.optional(),
+  department: z.union([z.string(), z.null(), z.undefined()]).optional(),
   picture_url: z.union([z.string(), z.null(), z.undefined()]).optional(),
 });
 

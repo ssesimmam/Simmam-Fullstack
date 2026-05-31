@@ -88,7 +88,7 @@ export async function upsertUserProfile(payload: {
   department?: string
   picture_url?: string
 }): Promise<void> {
-  console.log('[UPSERT-1780154728641] department value:', payload.department, 'full payload:', JSON.stringify(payload));
+  console.log('Saving user payload:', payload);
   await publicRequest('/users/upsert', {
     method: 'POST',
     body: JSON.stringify(payload),

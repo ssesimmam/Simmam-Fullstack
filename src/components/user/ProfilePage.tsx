@@ -62,14 +62,10 @@ export function ProfilePage() {
           registerNumber: result.register_number || currentUser.registerNumber,
           mobileNumber: result.mobile_number || currentUser.mobileNumber,
           house: result.house || currentUser.house || '',
-          // Prefer the value already in sessionStorage — only use DB value if it is non-empty
-          department: currentUser.department || result.department || '',
+          department: result.department || currentUser.department || '',
         }
 
-        // Write to sessionStorage only — do NOT call saveUser() here because
-        // saveUser() fires a backend upsert. Re-syncing from DB with a null
-        // department would erase any department the user already saved.
-        try { sessionStorage.setItem('simmam_user', JSON.stringify(syncedUser)) } catch {}
+        saveUser(syncedUser)
         setUser(syncedUser)
       } catch {
         // Keep the session-backed profile if the API is unavailable.
@@ -147,10 +143,6 @@ export function ProfilePage() {
     setSyncingProfile(true)
     try {
       const userData = await fetchUserProfileByEmail(email)
-      // Preserve any department already in sessionStorage — the DB may lag
-      // behind if a previous save was in-flight. Only overwrite with the DB
-      // value when it is actually set (non-null, non-empty).
-      const cachedUser = getUser()
       const profile: UserProfile = {
         email,
         name: userData?.name || (u.user_metadata?.name as string) || '',
@@ -161,14 +153,12 @@ export function ProfilePage() {
         registerNumber: userData?.register_number || '',
         mobileNumber: userData?.mobile_number || undefined,
         house: userData?.house ?? '',
-        // Prefer the DB value when it exists; fall back to session cache.
-        department: userData?.department || cachedUser?.department || '',
+        department: userData?.department ?? '',
       }
 
-      // Write to sessionStorage only — do NOT fire a backend upsert here.
-      // Calling saveUser() with a potentially-null department would overwrite
-      // any department the user already saved via the Update Profile form.
-      try { sessionStorage.setItem('simmam_user', JSON.stringify(profile)) } catch {}
+      // Legacy profile table write removed. The database is now strictly driven by the backend `/users/upsert` endpoint.
+
+      saveUser(profile)
       setUser(profile)
       setShowSetupModal(!isProfileComplete(profile))
 

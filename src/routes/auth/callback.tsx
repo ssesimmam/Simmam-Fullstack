@@ -35,12 +35,7 @@ function AuthCallbackPage() {
               house: userProfile.house || '',
               department: userProfile.department || '',
             }
-            // Write to sessionStorage only — do NOT call saveUser() here.
-            // saveUser() fires a backend upsert; if the DB currently has
-            // department=null (e.g. a fresh login before the user completes
-            // their profile), calling saveUser() would upsert department=null
-            // and erase any previously saved department.
-            try { sessionStorage.setItem('simmam_user', JSON.stringify(newUser)) } catch {}
+            saveUser(newUser)
             try {
               await syncUserRegistrations(newUser.email)
             } catch {
