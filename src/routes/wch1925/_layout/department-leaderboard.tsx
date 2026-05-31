@@ -251,7 +251,7 @@ function DepartmentLeaderboard() {
             </div>
           </div>
         </>
-      </div>
+      )}
     </div>
   )
 }
