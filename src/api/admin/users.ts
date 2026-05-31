@@ -7,6 +7,7 @@ export interface AdminUserDTO {
   name: string
   email: string
   house: string
+  department?: string
   register_number: string
   created_at: string
 }
@@ -32,6 +33,7 @@ export async function createAdminUser(payload: {
   mobile_number?: string
   register_number?: string
   house?: string
+  department?: string
   picture_url?: string
 }): Promise<AdminUserDTO> {
   const result = await adminRequest<{ user: AdminUserDTO }>('/users', {
@@ -46,6 +48,7 @@ export async function updateAdminUser(userId: string, payload: {
   email?: string
   register_number?: string
   house?: string
+  department?: string
   picture_url?: string
 }): Promise<AdminUserDTO> {
   const result = await adminRequest<{ user: AdminUserDTO }>(`/users/${encodeURIComponent(userId)}`, {

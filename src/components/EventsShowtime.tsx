@@ -415,18 +415,16 @@ export function EventsShowtime() {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={handleGlobalLogin}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/15 transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 transition-all shadow-sm cursor-pointer"
             >
-              <User className="w-3.5 h-3.5" />
-              Log In
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-4 w-4" aria-hidden>
+                <path fill="#EA4335" d="M24 9.5c3.9 0 7.2 1.4 9.7 3.6l7.1-7.1C36.5 2.2 30.6 0 24 0 14.7 0 6.8 5.2 2.9 12.7l8.3 6.4C12.9 14.2 18.1 9.5 24 9.5z" />
+                <path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.6H24v9h12.7c-.6 3.2-2.6 5.8-5.5 7.6l8.4 6.5C43.5 39.1 46.5 32.4 46.5 24.5z" />
+                <path fill="#4A90E2" d="M10.3 29.1A14.9 14.9 0 0 1 9 24.5c0-1.6.3-3.1.8-4.6L2.9 13.6A24 24 0 0 0 0 24.5c0 3.8.9 7.3 2.9 10.6l7.4-6z" />
+                <path fill="#FBBC05" d="M24 48c6.6 0 12.5-2.2 17.2-6l-8.4-6.5c-2.6 1.8-5.9 2.8-8.8 2.8-5.9 0-11.1-4.7-12.8-11.1L2.9 35.3C6.8 42.8 14.7 48 24 48z" />
+              </svg>
+              Continue with Google
             </button>
-            <Link
-              to="/dashboard/profile"
-              search={{ signup: '1' }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-white/80 hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition cursor-pointer"
-            >
-              Sign Up
-            </Link>
           </div>
         )}
       </div>

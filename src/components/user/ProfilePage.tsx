@@ -28,7 +28,8 @@ export function ProfilePage() {
     !!profile?.registerNumber?.toString().trim() &&
     !!profile?.mobileNumber?.toString().trim() &&
     !!profile?.email?.toString().trim() &&
-    !!profile?.house?.toString().trim(),
+    !!profile?.house?.toString().trim() &&
+    !!profile?.department?.toString().trim(),
   [])
 
   useEffect(() => {
@@ -53,16 +54,22 @@ export function ProfilePage() {
           return
         }
 
+        const currentUser = getUser() || user
         const syncedUser: UserProfile = {
           email: result.email.toLowerCase(),
-          name: result.name || user.name,
-          picture: result.picture_url || user.picture,
-          registerNumber: result.register_number || user.registerNumber,
-          mobileNumber: result.mobile_number || user.mobileNumber,
-          house: result.house || user.house,
+          name: result.name || currentUser.name,
+          picture: result.picture_url || currentUser.picture,
+          registerNumber: result.register_number || currentUser.registerNumber,
+          mobileNumber: result.mobile_number || currentUser.mobileNumber,
+          house: result.house || currentUser.house || '',
+          // Prefer the value already in sessionStorage — only use DB value if it is non-empty
+          department: currentUser.department || result.department || '',
         }
 
-        saveUser(syncedUser)
+        // Write to sessionStorage only — do NOT call saveUser() here because
+        // saveUser() fires a backend upsert. Re-syncing from DB with a null
+        // department would erase any department the user already saved.
+        try { sessionStorage.setItem('simmam_user', JSON.stringify(syncedUser)) } catch {}
         setUser(syncedUser)
       } catch {
         // Keep the session-backed profile if the API is unavailable.
@@ -78,7 +85,7 @@ export function ProfilePage() {
     return () => {
       cancelled = true
     }
-  }, [user?.email, user, isProfileComplete])
+  }, [user?.email, isProfileComplete])
 
   const refreshUser = () => {
     setUser(getUser())
@@ -140,6 +147,10 @@ export function ProfilePage() {
     setSyncingProfile(true)
     try {
       const userData = await fetchUserProfileByEmail(email)
+      // Preserve any department already in sessionStorage — the DB may lag
+      // behind if a previous save was in-flight. Only overwrite with the DB
+      // value when it is actually set (non-null, non-empty).
+      const cachedUser = getUser()
       const profile: UserProfile = {
         email,
         name: userData?.name || (u.user_metadata?.name as string) || '',
@@ -149,15 +160,15 @@ export function ProfilePage() {
           `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(userData?.name || u.user_metadata?.name || email)}`,
         registerNumber: userData?.register_number || '',
         mobileNumber: userData?.mobile_number || undefined,
-        house: userData?.house || '',
+        house: userData?.house ?? '',
+        // Prefer the DB value when it exists; fall back to session cache.
+        department: userData?.department || cachedUser?.department || '',
       }
 
-      // Upsert into profiles table (optional)
-      try {
-        await supabase.from('profiles').upsert({ id: u.id, email: profile.email, name: profile.name, avatar_url: profile.picture })
-      } catch {}
-
-      saveUser(profile)
+      // Write to sessionStorage only — do NOT fire a backend upsert here.
+      // Calling saveUser() with a potentially-null department would overwrite
+      // any department the user already saved via the Update Profile form.
+      try { sessionStorage.setItem('simmam_user', JSON.stringify(profile)) } catch {}
       setUser(profile)
       setShowSetupModal(!isProfileComplete(profile))
 
@@ -174,6 +185,7 @@ export function ProfilePage() {
         picture: u.user_metadata?.avatar_url as string || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(email)}`,
         registerNumber: '',
         house: '',
+        department: '',
       }
       setUser(fallbackProfile)
       setShowSetupModal(true)
@@ -224,7 +236,7 @@ export function ProfilePage() {
   const handleGoogleSignIn = async () => {
     setAuthLoading(true)
     try {
-      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/profile' }))
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'public', redirectTo: '/dashboard/profile' }))
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -298,9 +310,9 @@ export function ProfilePage() {
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">
                 <User className="h-10 w-10 text-[#D4AF37]" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">Login Required</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">Login / Sign Up</h2>
               <p className="text-white/40 text-sm mb-8">
-                Login with your Saveetha email to access your SIMMAM 2026 dashboard.
+                Sign in with your Saveetha Google account to access your SIMMAM 2026 dashboard.
               </p>
               <div className="space-y-3">
                 <button
@@ -327,6 +339,7 @@ export function ProfilePage() {
 
       {showSetupModal && (
         <UserSetupModal
+          existingProfile={user}
           preventDismiss={!isProfileComplete(user)}
           onSave={() => {
             refreshUser()
@@ -334,7 +347,7 @@ export function ProfilePage() {
           }}
           onClose={() => {
             setShowSetupModal(false)
-            void navigate({ to: '/profile', replace: true })
+            void navigate({ to: '/events', replace: true })
           }}
         />
       )}

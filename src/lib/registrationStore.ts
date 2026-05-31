@@ -17,6 +17,7 @@ export type UserProfile = {
   picture: string
   registerNumber: string
   house: string
+  department?: string
 }
 
 export type Registration = {
@@ -52,16 +53,20 @@ export function getUser(): UserProfile | null {
   }
 }
 
-export function saveUser(user: UserProfile): void {
-  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
-  void upsertUserProfile({
+export async function saveUser(user: UserProfile): Promise<void> {
+  console.log('[DEBUG] saveUser called with user:', user)
+  const payload = {
     email: user.email,
     name: user.name,
     mobile_number: user.mobileNumber,
     register_number: user.registerNumber,
     house: user.house,
+    department: user.department,
     picture_url: user.picture,
-  }).catch(() => {})
+  }
+  console.log('[DEBUG] saveUser payload:', payload)
+  await upsertUserProfile(payload)
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user))
 }
 
 export function clearUser(): void {
@@ -123,6 +128,7 @@ export async function registerForEvent(
 
   const user = getUser()
   if (!user) throw new Error('user_session_missing')
+  if (!user.department || !user.department.trim()) throw new Error('department_missing')
 
   const { createRegistration } = await import('@/api/registrations')
   const response = await createRegistration({
@@ -130,6 +136,7 @@ export async function registerForEvent(
     name: user.name,
     register_number: user.registerNumber,
     house: user.house,
+    department: user.department,
     event_id: event.backendEventId,
     event_name: event.eventName,
     turnstile_token: turnstileToken,

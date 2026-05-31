@@ -6,20 +6,130 @@ import { useHouses } from '@/features/events/useEvents'
 
 const HOUSE_EXTRAS: Record<string, { short: string }> = {
   'Agniyas': { short: 'AG' },
-  'Dronas': { short: 'DR' },
+  'Dhronas': { short: 'DR' },
   'Marutas': { short: 'MA' },
   'Rudras': { short: 'RU' },
   'Suryas': { short: 'SU' },
   'Vajras': { short: 'VA' },
 }
 
+const HOUSE_DEPARTMENTS: Record<string, string[]> = {
+  'Agniyas': [
+    'Biosciences',
+    'Sustainable Engineering',
+    'Research and Innovation',
+    'Center for Applied Research',
+    'VLSI Microelectronics',
+    'Condensed Matter Physics',
+    'Cognitive Computing',
+    'Pure & Applied Mathematics',
+    'Industrial Mathematics',
+    'Smart Materials',
+    'Coding Linguistics',
+    'World Languages',
+    'Wireless Networks',
+    'Softskills',
+    'Management Studies',
+    'Mathematical Studies'
+  ],
+  'Dhronas': [
+    'Mathematical Sciences',
+    'Electronic Instrumentation System',
+    'Predictive Engineering',
+    'Green Computing',
+    'Neural Networks',
+    'Physics',
+    'Autotronics',
+    'Green Electronic',
+    'Computational Biology',
+    'Electrical Power and Energy Conversion',
+    'Nxt-Gen Computing',
+    'Scientific Computing',
+    'Smart Construction Engineering',
+    'Signal and Image Processing',
+    'Surface Chemistry',
+    'Digital Electronics and Computing Systems'
+  ],
+  'Marutas': [
+    'IC-Intelligent Computing',
+    'Bioengineering',
+    'Applied Machine Learning',
+    'Nanobiomaterials',
+    'Medicinal Chemistry',
+    'Environmental Biotechnology',
+    'Mechanical and Innovation',
+    'Thermal Engineering',
+    'Nanotechnology',
+    'Computational Intelligence',
+    'Intelligence Systems',
+    'Quantum Mathematics',
+    'Quantitative Engineering and Employability Skill',
+    'Big Data and Network Security',
+    'Spatial Informatics'
+  ],
+  'Rudras': [
+    'Cloud Computing',
+    'Additive Manufacturing Engineering',
+    'Electrical Power and Drives Engineering',
+    'Information Security',
+    'Medical Biotechnology',
+    'Programming',
+    'Cyber Security',
+    'Embedded Systems',
+    'Integrated Electronics',
+    'Nano Electronics Materials and Sensors',
+    'Data Vista',
+    'Medical Informatics',
+    'Electric Power Technology',
+    'Medical Electronics',
+    'Quantum Communication',
+    'Languages Dynamics'
+  ],
+  'Suryas': [
+    'Manufacturing',
+    'Plasma Physics',
+    'Product Development',
+    'Electrochemistry',
+    'Molecular Analytics',
+    'Computational Mathematics',
+    'Quantum Intelligence',
+    'Reinforcement Learning',
+    'Blockchain Technology',
+    'Materials Chemistry',
+    'RF and Communication System',
+    'Networking',
+    'High Performance Computing',
+    'Genetic Engineering',
+    'Engineering Mathematics',
+    'Edge Computing'
+  ],
+  'Vajras': [
+    'Vedic Mathematics',
+    'Mathematics for Excellence',
+    'Generative AI',
+    'Post Harvest Engineering',
+    'Deep Learning',
+    'Nano Computing',
+    'Mathematics for Innovation',
+    'Molecular Physics',
+    'Computational Data Science',
+    'Machine Learning',
+    'Super Computing',
+    'Green Technology',
+    'Swarm Intelligence',
+    'Knowledge Engineering',
+    'Wireless Communication'
+  ]
+}
+
 interface UserSetupModalProps {
   onSave: () => void
   onClose: () => void
   preventDismiss?: boolean
+  existingProfile?: UserProfile | null
 }
 
-export function UserSetupModal({ onSave, onClose, preventDismiss = false }: UserSetupModalProps) {
+export function UserSetupModal({ onSave, onClose, preventDismiss = false, existingProfile: propProfile }: UserSetupModalProps) {
   const { data: dbHouses = [] } = useHouses()
   const houses = dbHouses.map(h => ({
     ...h,
@@ -32,6 +142,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
   const [formMobile, setFormMobile] = useState('')
   const [formEmail, setFormEmail] = useState('')
   const [formHouse, setFormHouse] = useState('')
+  const [formDepartment, setFormDepartment] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -47,11 +158,35 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
         setFormMobile(existing.mobileNumber ?? '')
         setFormEmail(existing.email ?? '')
         setFormHouse(existing.house ?? '')
+        setFormDepartment(existing.department ?? '')
       }
     } catch {
       // ignore
     }
   }, [])
+
+  // Sync prop changes to local state in case the parent loads the profile asynchronously
+  useEffect(() => {
+    if (propProfile) {
+      setExistingProfile(propProfile)
+      setFormName(prev => prev || propProfile.name || '')
+      setFormRegNo(prev => prev || propProfile.registerNumber || '')
+      setFormMobile(prev => prev || propProfile.mobileNumber || '')
+      setFormEmail(prev => prev || propProfile.email || '')
+      setFormHouse(prev => prev || propProfile.house || '')
+      setFormDepartment(prev => prev || propProfile.department || '')
+    }
+  }, [propProfile])
+
+  // Clear department if it doesn't belong to the newly selected house
+  useEffect(() => {
+    if (formHouse && formDepartment) {
+      const validDepts = HOUSE_DEPARTMENTS[formHouse] || []
+      if (!validDepts.includes(formDepartment)) {
+        setFormDepartment('')
+      }
+    }
+  }, [formHouse, formDepartment])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,6 +198,7 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
     if (!/^\d{10}$/.test(formMobile.trim())) { setError('Mobile number must be 10 digits.'); return }
     if (!formEmail.trim() || !/^[^\s@]+@saveetha\.com$/i.test(formEmail.trim())) { setError('Email must end with @saveetha.com.'); return }
     if (!formHouse) { setError('Please select your house.'); return }
+    if (!formDepartment.trim()) { setError('Department is required.'); return }
 
     setSubmitting(true)
     const normalizedEmail = formEmail.trim().toLowerCase()
@@ -92,12 +228,18 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
       registerNumber: formRegNo.trim().toUpperCase(),
       mobileNumber: formMobile.trim(),
       house: formHouse,
+      department: formDepartment.trim(),
     }
 
-    saveUser(user)
-    setSubmitting(false)
-    onSave()
-    onClose()
+    try {
+      await saveUser(user)
+      onSave()
+      onClose()
+    } catch (err: any) {
+      setError(err?.message || 'Unable to save your profile. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -279,6 +421,34 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
                         </button>
                       )
                     })}
+                  </div>
+                </div>
+
+                {/* Department Selection */}
+                <div className={`transition-all duration-300 ${!formHouse ? 'opacity-50 grayscale' : ''}`}>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-white/35">
+                    Department
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="setup-department"
+                      value={formDepartment}
+                      onChange={(e) => setFormDepartment(e.target.value)}
+                      disabled={!formHouse}
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition focus:border-[#D4AF37]/50 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25 disabled:cursor-not-allowed [&>option]:bg-[#1a1a1a]"
+                    >
+                      <option value="" disabled className="text-white/25">
+                        {!formHouse ? 'Select a house first' : 'Select your department'}
+                      </option>
+                      {(formHouse ? (HOUSE_DEPARTMENTS[formHouse] || []) : []).map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/25">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 

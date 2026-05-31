@@ -9,6 +9,7 @@ import {
   registerForEvent,
   saveUser,
   syncUserRegistrations,
+  clearUser,
   type UserProfile,
 } from '@/lib/registrationStore'
 import { fetchUserProfileByEmail } from '@/lib/apiClient'
@@ -91,7 +92,13 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         const { data: sessionData } = await supabase.auth.getSession()
         const email = sessionData?.session?.user?.email?.toLowerCase()
 
-        if (!mounted || !email) return
+        if (!mounted) return
+        if (!email) {
+          clearUser()
+          setCurrentUser(null)
+          setStep('login')
+          return
+        }
 
         if (!email.endsWith('@saveetha.com')) {
           await supabase.auth.signOut()
@@ -101,7 +108,7 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
 
         const userProfile = await fetchUserProfileByEmail(email)
         if (!userProfile) {
-          if (mounted) setFormError('No profile found for that email. Please sign up first.')
+          window.location.href = '/dashboard/profile?signup=1'
           return
         }
 
@@ -112,9 +119,13 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
           registerNumber: userProfile.register_number || '',
           mobileNumber: userProfile.mobile_number,
           house: userProfile.house || '',
+          department: userProfile.department || '',
         }
 
-        saveUser(newUser)
+        // Write to sessionStorage only — do NOT call saveUser() here.
+        // saveUser() fires a backend upsert; if the DB currently has
+        // department=null, this would erase any previously saved department.
+        try { sessionStorage.setItem('simmam_user', JSON.stringify(newUser)) } catch {}
         await syncUserRegistrations(email)
         
         if (mounted) {
@@ -247,6 +258,10 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
         try { await syncUserRegistrations(user.email) } catch { /* ignore */ }
         return
       }
+      if (error?.message === 'department_missing') {
+        setFormError('Please complete your profile before registering. Add your department and try again.')
+        return
+      }
       setFormError(error?.message || 'Unable to complete registration right now.')
     }
   }
@@ -285,9 +300,9 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="mb-1 flex items-center gap-2">
                     <LogIn className="h-4 w-4 text-[#D4AF37]" />
-                    <h2 className="font-display text-xl font-bold text-white">Login</h2>
+                    <h2 className="font-display text-xl font-bold text-white">Login / Sign Up</h2>
                   </div>
-                  <p className="mb-6 text-sm text-white/45">Sign in with your Saveetha Google account to continue registering for events.</p>
+                  <p className="mb-6 text-sm text-white/45">Sign in with your Saveetha Google account to continue.</p>
 
                   <button
                     type="button"
@@ -301,15 +316,8 @@ export function AuthModal({ event, onClose, onRegistered }: AuthModalProps) {
                       <path fill="#4A90E2" d="M10.3 29.1A14.9 14.9 0 0 1 9 24.5c0-1.6.3-3.1.8-4.6L2.9 13.6A24 24 0 0 0 0 24.5c0 3.8.9 7.3 2.9 10.6l7.4-6z" />
                       <path fill="#FBBC05" d="M24 48c6.6 0 12.5-2.2 17.2-6l-8.4-6.5c-2.6 1.8-5.9 2.8-8.8 2.8-5.9 0-11.1-4.7-12.8-11.1L2.9 35.3C6.8 42.8 14.7 48 24 48z" />
                     </svg>
-                    {authLoading ? 'Signing in...' : 'Continue with Google'}
+                    {authLoading ? 'Authenticating...' : 'Continue with Google'}
                   </button>
-                  <Link
-                    to="/dashboard/profile"
-                    search={{ signup: '1' }}
-                    className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/8 px-4 py-3 text-sm font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/12"
-                  >
-                    Sign Up
-                  </Link>
                   {formError && <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-2.5 text-xs text-red-400">{formError}</p>}
                 </div>
               )}
