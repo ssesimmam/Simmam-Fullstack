@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowRight, Hash, Mail, Shield, User, X } from 'lucide-react'
 import { getUser, saveUser, type UserProfile } from '@/lib/registrationStore'
+import { fetchUserProfileByEmail } from '@/lib/apiClient'
 import { useHouses } from '@/features/events/useEvents'
 import { getDepartmentsForHouse } from '@/lib/houseDepartments'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -80,6 +81,14 @@ export function UserSetupModal({ onSave, onClose, preventDismiss = false }: User
     if (!allowedDepartments.includes(formDepartment)) {
       setError('Please select a valid department for your house.')
       return
+    }
+
+    if (!existingProfile) {
+      const existingUser = await fetchUserProfileByEmail(formEmail.trim().toLowerCase())
+      if (existingUser) {
+        setError('An account already exists for this email. Please log in instead.')
+        return
+      }
     }
 
     setSubmitting(true)
