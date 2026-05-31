@@ -1040,7 +1040,7 @@ app.get('/api/wch1925/users', async (req, res) => {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
 
-    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,house,created_at').order('created_at', { ascending: false })
+    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,house,department,created_at').order('created_at', { ascending: false })
     if (house) query = query.eq('house', house)
 
     const { data, error } = await query.limit(500)
@@ -1062,6 +1062,7 @@ app.get('/api/wch1925/users', async (req, res) => {
       email: row.email,
       mobile_number: row.mobile_number || '',
       house: row.house || '',
+      department: row.department || '',
       register_number: row.register_number || '',
       created_at: row.created_at,
     }))
@@ -1080,7 +1081,7 @@ app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const { name, email, mobile_number, register_number, house, department, picture_url } = parsedBody.data
 
     const { data, error } = await supabase
       .from('users')
@@ -1091,11 +1092,12 @@ app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
           mobile_number: mobile_number === undefined || mobile_number === null ? null : String(mobile_number).trim(),
           register_number: register_number ? String(register_number).trim().toUpperCase() : null,
           house: house ? String(house).trim() : null,
+          department: department ? String(department).trim() : null,
           picture_url: picture_url || null,
         },
         { onConflict: 'email' },
       )
-      .select('id,name,email,mobile_number,register_number,house,created_at')
+      .select('id,name,email,mobile_number,register_number,house,department,created_at')
       .single()
 
     if (error) throw error
@@ -1106,6 +1108,7 @@ app.post('/api/wch1925/users', adminLimiter, async (req, res) => {
         name: data.name || '',
         email: data.email || '',
         house: data.house || '',
+        department: data.department || '',
         register_number: data.register_number || '',
         created_at: data.created_at,
       },
@@ -1336,7 +1339,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
 
     const { data: user, error: userErr } = await supabase
       .from('users')
-      .select('id,name,email,mobile_number,register_number,house,created_at')
+      .select('id,name,email,mobile_number,register_number,house,department,created_at')
       .eq('id', id)
       .single()
 
@@ -1359,6 +1362,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
         email: user.email,
         mobile_number: user.mobile_number || '',
         house: user.house || '',
+        department: user.department || '',
         register_number: user.register_number || '',
         created_at: user.created_at,
       },
@@ -1412,7 +1416,7 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
     }
 
     const { id } = parsedParams.data
-    const { name, email, mobile_number, register_number, house, picture_url } = parsedBody.data
+    const { name, email, mobile_number, register_number, house, department, picture_url } = parsedBody.data
 
     const payload: any = {}
     if (name) payload.name = name
@@ -1420,6 +1424,7 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
     if (mobile_number !== undefined) payload.mobile_number = mobile_number
     if (register_number) payload.register_number = register_number
     if (house) payload.house = house
+    if (department !== undefined) payload.department = department
     if (picture_url) payload.picture_url = picture_url
 
     if (Object.keys(payload).length === 0) {
@@ -1430,7 +1435,7 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
       .from('users')
       .update(payload)
       .eq('id', id)
-      .select('id,name,email,mobile_number,register_number,house,picture_url,created_at,updated_at')
+      .select('id,name,email,mobile_number,register_number,house,department,picture_url,created_at,updated_at')
       .single()
 
     if (error) throw error
@@ -2058,7 +2063,9 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
 // Upsert user profile
 app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res) => {
   try {
+    console.log('[DEBUG-BACKEND] /users/upsert req.body:', req.body)
     const parsedBody = validateRequest(userUpsertBodySchema, req.body)
+    console.log('[DEBUG-BACKEND] /users/upsert parsedBody:', parsedBody)
     if (!parsedBody.ok) {
       return respondValidationError(res, parsedBody.error)
     }
@@ -2066,20 +2073,26 @@ app.post('/api/users/upsert', authLimiter, requireSignedInUser, async (req, res)
     const { email, name, mobile_number, register_number, house, department, picture_url } = parsedBody.data
     const normalizedMobileNumber = mobile_number === undefined || mobile_number === null ? undefined : String(mobile_number).trim()
 
+    // Only include `department` in the upsert payload when it is a non-empty string.
+    // Passing department: null to Supabase upsert actively overwrites the existing
+    // DB value with NULL (ON CONFLICT DO UPDATE SET department = NULL).
+    // By omitting the key entirely, we preserve the existing value on conflict.
+    const upsertPayload: Record<string, unknown> = {
+      email: String(email).toLowerCase(),
+      name,
+      mobile_number: normalizedMobileNumber,
+      register_number,
+      house,
+      picture_url,
+    }
+    if (department && String(department).trim().length > 0) {
+      upsertPayload.department = String(department).trim()
+    }
+    console.log('[DEBUG-BACKEND] upsertPayload:', upsertPayload)
+
     const { data, error } = await supabase
       .from('users')
-      .upsert(
-        {
-          email: String(email).toLowerCase(),
-          name,
-          mobile_number: normalizedMobileNumber,
-          register_number,
-          house,
-          department,
-          picture_url,
-        },
-        { onConflict: 'email' },
-      )
+      .upsert(upsertPayload, { onConflict: 'email' })
       .select('id,name,email,mobile_number,register_number,house,department,picture_url,created_at,updated_at')
       .limit(1)
 
@@ -2153,6 +2166,23 @@ app.post('/api/registrations', registrationLimiter, requireSignedInUser, require
     }
 
     const userId = userRow.id
+
+    const updatePayload: Record<string, unknown> = {}
+    if (typeof name === 'string' && name.trim().length > 0) updatePayload.name = name.trim()
+    if (typeof register_number === 'string' && register_number.trim().length > 0) updatePayload.register_number = register_number.trim()
+    if (typeof house === 'string' && house.trim().length > 0) updatePayload.house = house.trim()
+    if (typeof department === 'string' && department.trim().length > 0) {
+      updatePayload.department = department.trim()
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      console.log('[DEBUG-BACKEND] registration updatePayload:', updatePayload)
+      const { error: userUpdateErr } = await supabase
+        .from('users')
+        .update(updatePayload)
+        .eq('id', userId)
+      if (userUpdateErr) throw userUpdateErr
+    }
 
     const { data: rpcData, error: rpcErr } = await supabase.rpc('create_registration_safe', {
       p_user_id: userId,
