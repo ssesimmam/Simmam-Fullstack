@@ -9,6 +9,8 @@ interface CacheEntry {
 }
 
 const cache: Record<string, CacheEntry> = {}
+const redisMode = String(process.env.REDIS_MODE || '').trim().toLowerCase()
+const upstashRestOnly = process.env.UPSTASH_REDIS_REST_ONLY === 'true' || redisMode === 'upstash-rest'
 const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || ''
 const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || ''
 const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN || ''
@@ -16,7 +18,17 @@ const cachePrefix = process.env.REDIS_CACHE_PREFIX || 'cache:'
 
 let redis: IORedis | null = null
 let upstash: UpstashRedis | null = null
-if (redisUrl) {
+if (upstashUrl && upstashToken) {
+  try {
+    upstash = new UpstashRedis({
+      url: upstashUrl,
+      token: upstashToken,
+    })
+  } catch (err) {
+    console.error('Failed to initialize Upstash cache client, falling back to memory cache', err)
+    upstash = null
+  }
+} else if (!upstashRestOnly && redisUrl) {
   try {
     redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: 2,
@@ -28,16 +40,6 @@ if (redisUrl) {
   } catch (err) {
     console.error('Failed to initialize Redis cache client, falling back to memory cache', err)
     redis = null
-  }
-} else if (upstashUrl && upstashToken) {
-  try {
-    upstash = new UpstashRedis({
-      url: upstashUrl,
-      token: upstashToken,
-    })
-  } catch (err) {
-    console.error('Failed to initialize Upstash cache client, falling back to memory cache', err)
-    upstash = null
   }
 }
 

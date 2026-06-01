@@ -89,6 +89,8 @@ function isServerOverloaded(): { overloaded: boolean; reason: string } {
 // ========================================
 // REDIS CONFIG
 // ========================================
+const redisMode = String(process.env.REDIS_MODE || "").trim().toLowerCase();
+const upstashRestOnly = process.env.UPSTASH_REDIS_REST_ONLY === "true" || redisMode === "upstash-rest";
 const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL || "";
 
 const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || "";
@@ -101,18 +103,7 @@ let upstash: UpstashRedis | null = null;
 // ========================================
 // REDIS INIT
 // ========================================
-if (redisUrl) {
-  try {
-    redis = new IORedis(redisUrl);
-
-    redis.on("error", (e: any) => {
-      console.error("Redis error:", e);
-    });
-  } catch (e) {
-    console.error("Failed to create Redis client", e);
-    redis = null;
-  }
-} else if (upstashUrl && upstashToken) {
+if (upstashUrl && upstashToken) {
   try {
     upstash = new UpstashRedis({
       url: upstashUrl,
@@ -122,6 +113,17 @@ if (redisUrl) {
     console.error("Failed to create Upstash Redis client", e);
 
     upstash = null;
+  }
+} else if (!upstashRestOnly && redisUrl) {
+  try {
+    redis = new IORedis(redisUrl);
+
+    redis.on("error", (e: any) => {
+      console.error("Redis error:", e);
+    });
+  } catch (e) {
+    console.error("Failed to create Redis client", e);
+    redis = null;
   }
 }
 

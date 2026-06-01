@@ -29,6 +29,7 @@ import morgan from 'morgan'
 import * as Sentry from '@sentry/node'
 import { randomUUID } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
+import { Redis as UpstashRedis } from '@upstash/redis'
 import fs from 'fs'
 import { requireTurnstile, verifyTurnstileToken } from './middleware/turnstile'
 import { publicLimiter, authLimiter, registrationLimiter, adminLimiter, resetRateLimitCounts } from './middleware/rateLimiter'
@@ -63,6 +64,25 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const FRONTEND_URL = process.env.FRONTEND_URL
 const FRONTEND_URLS = process.env.FRONTEND_URLS
 const IS_PROD = process.env.NODE_ENV === 'production'
+const REDIS_MODE = String(process.env.REDIS_MODE || '').trim().toLowerCase()
+const UPSTASH_REST_ONLY = process.env.UPSTASH_REDIS_REST_ONLY === 'true' || REDIS_MODE === 'upstash-rest'
+const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || ''
+const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || ''
+
+let upstashHealthClient: UpstashRedis | null = null
+let upstashHealthInitError: string | null = null
+
+if (UPSTASH_REDIS_REST_URL && UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    upstashHealthClient = new UpstashRedis({
+      url: UPSTASH_REDIS_REST_URL,
+      token: UPSTASH_REDIS_REST_TOKEN,
+    })
+  } catch (error: any) {
+    upstashHealthClient = null
+    upstashHealthInitError = error?.message || 'failed_to_initialize_upstash_health_client'
+  }
+}
 
 function normalizeOrigin(value: string | undefined): string | null {
   const trimmed = value?.trim()
@@ -530,6 +550,65 @@ const seedMissingEvents = async () => {
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
+})
+
+app.get('/api/health/upstash', async (_req, res) => {
+  const hasUrl = Boolean(UPSTASH_REDIS_REST_URL)
+  const hasToken = Boolean(UPSTASH_REDIS_REST_TOKEN)
+  const configured = hasUrl && hasToken
+
+  if (!configured) {
+    return res.status(503).json({
+      ok: false,
+      provider: 'upstash-rest',
+      mode: UPSTASH_REST_ONLY ? 'upstash-rest-only' : 'auto',
+      configured: false,
+      reason: 'missing_upstash_env',
+      requiredEnv: ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'],
+      now: new Date().toISOString(),
+    })
+  }
+
+  if (!upstashHealthClient) {
+    return res.status(503).json({
+      ok: false,
+      provider: 'upstash-rest',
+      mode: UPSTASH_REST_ONLY ? 'upstash-rest-only' : 'auto',
+      configured: true,
+      reason: 'client_not_initialized',
+      error: upstashHealthInitError,
+      now: new Date().toISOString(),
+    })
+  }
+
+  const startedAt = Date.now()
+  const key = `health:upstash:${startedAt}`
+
+  try {
+    await upstashHealthClient.set(key, 'ok', { ex: 30 })
+    const readValue = await upstashHealthClient.get<string>(key)
+    await upstashHealthClient.del(key)
+
+    const ok = readValue === 'ok'
+    return res.status(ok ? 200 : 503).json({
+      ok,
+      provider: 'upstash-rest',
+      mode: UPSTASH_REST_ONLY ? 'upstash-rest-only' : 'auto',
+      configured: true,
+      latencyMs: Date.now() - startedAt,
+      now: new Date().toISOString(),
+    })
+  } catch (error: any) {
+    return res.status(503).json({
+      ok: false,
+      provider: 'upstash-rest',
+      mode: UPSTASH_REST_ONLY ? 'upstash-rest-only' : 'auto',
+      configured: true,
+      error: error?.message || 'upstash_request_failed',
+      latencyMs: Date.now() - startedAt,
+      now: new Date().toISOString(),
+    })
+  }
 })
 
 app.get('/api/public-config', publicLimiter, (_req, res) => {
