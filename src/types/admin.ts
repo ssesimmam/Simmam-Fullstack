@@ -34,7 +34,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     { resource: 'users', actions: ['read', 'create', 'delete'] },
     { resource: 'announcements', actions: ['read', 'create', 'delete'] },
     { resource: 'rules', actions: ['read', 'create', 'delete'] },
-    { resource: 'registrations', actions: ['read', 'export'] },
+    { resource: 'registrations', actions: ['read', 'update', 'delete', 'export'] },
   ],
 }
 
