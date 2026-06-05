@@ -1558,7 +1558,7 @@ app.get('/api/wch1925/registrations', async (req, res) => {
     const eventName = String(parsedQuery.data.event || '').trim().toLowerCase()
     const date = String(parsedQuery.data.date || '').trim()
     const page = parsedQuery.data.page || 1
-    const limit = parsedQuery.data.limit || 1000
+    const limit = parsedQuery.data.limit || 5000
     const offset = (page - 1) * limit
 
     const { data, error } = await supabase
@@ -1827,7 +1827,7 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
     // use query params directly (removed internal localhost URL construction)
 
     const page = parsedQuery.data.page || 1
-    const limit = parsedQuery.data.limit || 1000
+    const limit = parsedQuery.data.limit || 5000
     const offset = (page - 1) * limit
 
     const { data, error } = await supabase
