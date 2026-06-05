@@ -1559,15 +1559,26 @@ app.get('/api/wch1925/registrations', async (req, res) => {
     const date = String(parsedQuery.data.date || '').trim()
     const page = parsedQuery.data.page || 1
     const limit = parsedQuery.data.limit || 5000
-    const offset = (page - 1) * limit
+    let currentOffset = (page - 1) * limit
+    const targetLimit = limit
+    let data: any[] = []
 
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
-      .order('registered_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    while (data.length < targetLimit) {
+      const fetchCount = Math.min(1000, targetLimit - data.length)
+      const { data: chunk, error } = await supabase
+        .from('registrations')
+        .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
+        .order('registered_at', { ascending: false })
+        .range(currentOffset, currentOffset + fetchCount - 1)
 
-    if (error) throw error
+      if (error) throw error
+      if (!chunk || chunk.length === 0) break
+
+      data = data.concat(chunk)
+      currentOffset += chunk.length
+
+      if (chunk.length < fetchCount) break
+    }
     const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
     if (checkinsErr) throw checkinsErr
     const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
@@ -1828,15 +1839,26 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
 
     const page = parsedQuery.data.page || 1
     const limit = parsedQuery.data.limit || 5000
-    const offset = (page - 1) * limit
+    let currentOffset = (page - 1) * limit
+    const targetLimit = limit
+    let data: any[] = []
 
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
-      .order('registered_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    while (data.length < targetLimit) {
+      const fetchCount = Math.min(1000, targetLimit - data.length)
+      const { data: chunk, error } = await supabase
+        .from('registrations')
+        .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
+        .order('registered_at', { ascending: false })
+        .range(currentOffset, currentOffset + fetchCount - 1)
 
-    if (error) throw error
+      if (error) throw error
+      if (!chunk || chunk.length === 0) break
+
+      data = data.concat(chunk)
+      currentOffset += chunk.length
+
+      if (chunk.length < fetchCount) break
+    }
 
     const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
     if (checkinsErr) throw checkinsErr
