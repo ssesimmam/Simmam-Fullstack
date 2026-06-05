@@ -392,9 +392,8 @@ const requireSignedInUser = async (req: express.Request, res: express.Response, 
     return res.status(403).json({ error: 'email_mismatch' })
   }
 
-  const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN || '@saveetha.com'
-  if (!authEmail.endsWith(allowedDomain)) {
-    return res.status(403).json({ error: 'unauthorized_domain', message: `Only ${allowedDomain} accounts are allowed.` })
+  if (!authEmail.endsWith('@saveetha.com')) {
+    return res.status(403).json({ error: 'unauthorized_domain', message: 'Only @saveetha.com accounts are allowed.' })
   }
 
   ;(req as any).authenticatedUser = {
