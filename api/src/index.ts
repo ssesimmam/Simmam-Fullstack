@@ -209,7 +209,11 @@ app.use(
   cors(corsOptions),
 )
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
 }))
 app.disable('x-powered-by')
@@ -388,8 +392,9 @@ const requireSignedInUser = async (req: express.Request, res: express.Response, 
     return res.status(403).json({ error: 'email_mismatch' })
   }
 
-  if (!authEmail.endsWith('@saveetha.com')) {
-    return res.status(403).json({ error: 'unauthorized_domain', message: 'Only @saveetha.com accounts are allowed.' })
+  const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN || '@saveetha.com'
+  if (!authEmail.endsWith(allowedDomain)) {
+    return res.status(403).json({ error: 'unauthorized_domain', message: `Only ${allowedDomain} accounts are allowed.` })
   }
 
   ;(req as any).authenticatedUser = {

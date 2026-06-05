@@ -83,9 +83,6 @@ export async function verifyTurnstileToken(
 
     const data = (await response.json()) as TurnstileResponse;
 
-    // TEMP DEBUG LOG
-    console.log('TURNSTILE VERIFY RESPONSE:', data);
-
     return {
       success: data.success === true,
       data,
@@ -106,12 +103,12 @@ export async function requireTurnstile(
   next: NextFunction
 ) {
   try {
-    // TEMP DEBUG LOG
-    console.log('REQUEST BODY:', req.body);
-
-    // Dev bypass for local debugging
+    // Dev bypass for local debugging (blocked in production)
     if (isDevSkip()) {
-      console.warn('DEV_SKIP_TURNSTILE is enabled — skipping Turnstile verification');
+      const IS_PROD = process.env.NODE_ENV === 'production';
+      if (IS_PROD) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
       return next();
     }
 
@@ -138,11 +135,8 @@ export async function requireTurnstile(
     );
 
     if (!result.success) {
-      console.error('TURNSTILE FAILED:', result);
-
       return res.status(403).json({
         error: 'turnstile_failed',
-        details: result,
       });
     }
 

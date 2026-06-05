@@ -113,18 +113,21 @@ function getAccessTokenFromLocalStorage(): string | null {
   return null
 }
 
+// In-memory token storage (cleared on page refresh, more secure than localStorage)
+let cachedAdminToken: string | null = null;
+
+export function setCachedAdminToken(token: string | null): void {
+  cachedAdminToken = token;
+}
+
 export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   try {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     if (token) return { Authorization: `Bearer ${token}` }
 
-    // Fallback: check stored admin token
-    const stored = localStorage.getItem('simmam_admin_access_token')
-    if (stored?.trim()) return { Authorization: `Bearer ${stored.trim()}` }
-
-    const refreshedStored = localStorage.getItem('simmam_admin_access_token')
-    if (refreshedStored?.trim()) return { Authorization: `Bearer ${refreshedStored.trim()}` }
+    // Fallback: check in-memory cached token (more secure than localStorage)
+    if (cachedAdminToken?.trim()) return { Authorization: `Bearer ${cachedAdminToken.trim()}` }
 
     return {}
   } catch {
