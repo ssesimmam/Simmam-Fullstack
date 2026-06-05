@@ -79,17 +79,21 @@ function ParticipantsPage() {
     setExpandedHouses(newExpanded)
   }
 
-  const handleExport = async () => {
+  const handleExport = async (eventName?: string) => {
     try {
-      const csv = await exportAdminRegistrationsCsv()
+      const params = eventName ? { event: eventName } : undefined
+      const csv = await exportAdminRegistrationsCsv(params)
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `participants_${new Date().toISOString().slice(0, 10)}.csv`
+      const filename = eventName 
+        ? `${eventName.replace(/\s+/g, '_').toLowerCase()}_participants.csv` 
+        : `participants_${new Date().toISOString().slice(0, 10)}.csv`
+      link.download = filename
       link.click()
       URL.revokeObjectURL(url)
-      toast.success('Participants exported')
+      toast.success(eventName ? `${eventName} participants exported` : 'Participants exported')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to export participants')
     }
@@ -191,11 +195,25 @@ function ParticipantsPage() {
                     </div>
                   </div>
                 </div>
-                {isEventExpanded ? (
-                  <ChevronDown className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-gray-500" />
-                )}
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#333] bg-black text-white hover:bg-[#222]"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void handleExport(event.name)
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Event Data
+                  </Button>
+                  {isEventExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-gray-500" />
+                  )}
+                </div>
               </button>
 
               {isEventExpanded && (

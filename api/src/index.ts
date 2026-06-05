@@ -1892,6 +1892,21 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       )
     }
 
+    // Sort rows by Event Name, then by House
+    rows.sort((a, b) => {
+      const eventA = (a.event_name || '').toLowerCase()
+      const eventB = (b.event_name || '').toLowerCase()
+      if (eventA < eventB) return -1
+      if (eventA > eventB) return 1
+
+      const houseA = (a.house || '').toLowerCase()
+      const houseB = (b.house || '').toLowerCase()
+      if (houseA < houseB) return -1
+      if (houseA > houseB) return 1
+
+      return 0
+    })
+
     const header = [
       'Registration ID',
       'User ID',
