@@ -1567,7 +1567,7 @@ app.get('/api/wch1925/registrations', async (req, res) => {
       const fetchCount = Math.min(1000, targetLimit - data.length)
       const { data: chunk, error } = await supabase
         .from('registrations')
-        .select('id,status,registered_at,user_id,user_name,user_email,house_name,register_number,event_id,event_name,events(date,time_slot)')
+        .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
         .order('registered_at', { ascending: false })
         .range(currentOffset, currentOffset + fetchCount - 1)
 
@@ -1585,13 +1585,13 @@ app.get('/api/wch1925/registrations', async (req, res) => {
 
     let rows = (data || []).map((row: any) => ({
       registration_id: row.id,
-      user_id: row.user_id || '',
-      participant_name: row.user_name || '',
-      email: row.user_email || '',
-      reg_no: row.register_number || '',
-      house: row.house_name || '',
-      event_id: row.event_id || '',
-      event_name: row.event_name || '',
+      user_id: row.users?.id || row.user_id || '',
+      participant_name: row.users?.name || row.user_name || '',
+      email: row.users?.email || row.user_email || '',
+      reg_no: row.users?.register_number || row.register_number || '',
+      house: row.users?.house || row.house_name || '',
+      event_id: row.events?.id || row.event_id || '',
+      event_name: row.events?.name || row.event_name || '',
       event_date: row.events?.date || '',
       registration_date: row.registered_at,
       registration_status: row.status,
@@ -1664,24 +1664,25 @@ app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
 
     const { data: rowData, error: rowErr } = await supabase
       .from('registrations')
-      .select('id,status,registered_at,user_id,user_name,user_email,house_name,register_number,event_id,event_name,events(date,time_slot)')
+      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
       .eq('id', registration.id)
       .single()
 
     if (rowErr) throw rowErr
 
-    const events = getSingleRelationsRow(rowData.events) as Record<string, any> | undefined
+    const events = getSingleRelationsRow((rowData as any).events) as Record<string, any> | undefined
+    const users = getSingleRelationsRow((rowData as any).users) as Record<string, any> | undefined
 
     return res.status(201).json({
       data: {
         registration_id: rowData.id,
-        user_id: rowData.user_id || '',
-        participant_name: rowData.user_name || '',
-        email: rowData.user_email || '',
-        reg_no: rowData.register_number || '',
-        house: rowData.house_name || '',
-        event_id: rowData.event_id || '',
-        event_name: rowData.event_name || '',
+        user_id: users?.id || '',
+        participant_name: users?.name || '',
+        email: users?.email || '',
+        reg_no: users?.register_number || '',
+        house: users?.house || '',
+        event_id: events?.id || '',
+        event_name: events?.name || '',
         event_date: events?.date || '',
         registration_date: rowData.registered_at,
         registration_status: rowData.status,
@@ -1764,13 +1765,14 @@ app.put('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
 
     const { data: rowData, error: rowErr } = await supabase
       .from('registrations')
-      .select('id,status,registered_at,user_id,user_name,user_email,house_name,register_number,event_id,event_name,events(date,time_slot)')
+      .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
       .eq('id', id)
       .single()
 
     if (rowErr) throw rowErr
 
-    const events = getSingleRelationsRow(rowData.events) as Record<string, any> | undefined
+    const events = getSingleRelationsRow((rowData as any).events) as Record<string, any> | undefined
+    const users = getSingleRelationsRow((rowData as any).users) as Record<string, any> | undefined
 
     const { data: checkinData, error: checkinErr } = await supabase
       .from('checkins')
@@ -1783,13 +1785,13 @@ app.put('/api/wch1925/registrations/:id', adminLimiter, async (req, res) => {
     return res.json({
       data: {
         registration_id: rowData.id,
-        user_id: rowData.user_id || '',
-        participant_name: rowData.user_name || '',
-        email: rowData.user_email || '',
-        reg_no: rowData.register_number || '',
-        house: rowData.house_name || '',
-        event_id: rowData.event_id || '',
-        event_name: rowData.event_name || '',
+        user_id: users?.id || '',
+        participant_name: users?.name || '',
+        email: users?.email || '',
+        reg_no: users?.register_number || '',
+        house: users?.house || '',
+        event_id: events?.id || '',
+        event_name: events?.name || '',
         event_date: events?.date || '',
         registration_date: rowData.registered_at,
         registration_status: rowData.status,
@@ -1845,7 +1847,7 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       const fetchCount = Math.min(1000, targetLimit - data.length)
       const { data: chunk, error } = await supabase
         .from('registrations')
-        .select('id,status,registered_at,user_id,user_name,user_email,house_name,register_number,event_id,event_name,events(date,time_slot)')
+        .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
         .order('registered_at', { ascending: false })
         .range(currentOffset, currentOffset + fetchCount - 1)
 
@@ -1864,13 +1866,13 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
 
     let rows = (data || []).map((row: any) => ({
       registration_id: row.id,
-      user_id: row.user_id || '',
-      participant_name: row.user_name || '',
-      email: row.user_email || '',
-      reg_no: row.register_number || '',
-      house: row.house_name || '',
-      event_id: row.event_id || '',
-      event_name: row.event_name || '',
+      user_id: row.users?.id || row.user_id || '',
+      participant_name: row.users?.name || row.user_name || '',
+      email: row.users?.email || row.user_email || '',
+      reg_no: row.users?.register_number || row.register_number || '',
+      house: row.users?.house || row.house_name || '',
+      event_id: row.events?.id || row.event_id || '',
+      event_name: row.events?.name || row.event_name || '',
       event_date: row.events?.date || '',
       registration_date: row.registered_at,
       registration_status: row.status,
@@ -2157,8 +2159,8 @@ app.delete('/api/wch1925/checkin/:registration_id', adminLimiter, async (req, re
 app.get('/api/wch1925/attendance-report', async (_req, res) => {
   try {
     const { data: eventRegs, error: regErr } = await supabase
-      .from('user_dashboard_registrations')
-      .select('registration_id,event_id,event_name,date')
+      .from('registrations')
+      .select('id,event_id,event_name,events(date)')
 
     if (regErr) throw regErr
 
@@ -2172,12 +2174,12 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
       const key = row.event_id
       const current = eventMap.get(key) || {
         event_name: row.event_name || '',
-        event_date: row.date || '',
+        event_date: (row as any).events?.date || '',
         total: 0,
         checked_in: 0,
       }
       current.total += 1
-      if (checkedInSet.has(row.registration_id)) current.checked_in += 1
+      if (checkedInSet.has(row.id)) current.checked_in += 1
       eventMap.set(key, current)
     }
 
