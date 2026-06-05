@@ -135,7 +135,7 @@ export const registrationsListQuerySchema = z.object({
   event: z.string().trim().max(120).optional().default(""),
   date: z.string().trim().max(32).optional().default(""),
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(1000).optional().default(1000),
+  limit: z.coerce.number().int().min(1).max(50000).optional().default(5000),
 });
 
 export const exportQuerySchema = registrationsListQuerySchema;
