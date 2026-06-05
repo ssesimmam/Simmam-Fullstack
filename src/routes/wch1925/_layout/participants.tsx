@@ -106,7 +106,7 @@ function ParticipantsPage() {
           title="Participants Overview"
           subtitle="Event-wise participant details grouped by house"
         />
-        <Button variant="outline" className="border-[#333] bg-black text-white hover:bg-[#111]" onClick={handleExport}>
+        <Button variant="outline" className="border-[#333] bg-black text-white hover:bg-[#111]" onClick={() => void handleExport()}>
           <Download className="w-4 h-4 mr-2" />
           Export CSV
         </Button>
