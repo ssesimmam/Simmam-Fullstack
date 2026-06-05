@@ -2402,15 +2402,23 @@ app.get('/api/users/:email/registrations', publicLimiter, requireSignedInUser, a
       checkedInSet = new Set((checkins || []).map((c: any) => c.registration_id))
     }
 
-    const registrations = (regs || []).map((row: any) => ({
-      registration_id: row.id,
-      event_id: row.event_id,
-      event_name: row.event_name || '',
-      ticket_code: row.ticket_code,
-      status: row.status,
-      registered_at: row.registered_at,
-      checked_in: checkedInSet.has(row.id),
-    }))
+    const registrations = (regs || []).map((row: any) => {
+      const eventData = getSingleRelationsRow(row.events) || {};
+      return {
+        registration_id: row.id,
+        event_id: row.event_id,
+        event_name: eventData.name || row.event_name || '',
+        category: eventData.category || '',
+        date: eventData.date || '',
+        time_slot: eventData.time_slot || '',
+        end_time: eventData.end_time || '',
+        venue: eventData.venue || '',
+        ticket_code: row.ticket_code,
+        status: row.status,
+        registered_at: row.registered_at,
+        checked_in: checkedInSet.has(row.id),
+      };
+    })
 
     res.json({
       user,
