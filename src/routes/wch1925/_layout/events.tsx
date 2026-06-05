@@ -63,9 +63,9 @@ function EventsPage() {
     if (!query) return events
     return events.filter(
       (event) =>
-        event.name.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query) ||
-        event.mainCategory.toLowerCase().includes(query),
+        (event.name || '').toLowerCase().includes(query) ||
+        (event.category || '').toLowerCase().includes(query) ||
+        (event.mainCategory || '').toLowerCase().includes(query),
     )
   }, [events, searchQuery])
 

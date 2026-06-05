@@ -2,10 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/store'
-import { fetchAdminRegistrations, type AdminRegistrationRow } from '@/lib/adminApi'
+import { fetchAdminRegistrations, exportAdminRegistrationsCsv, type AdminRegistrationRow } from '@/lib/adminApi'
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
-import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight } from 'lucide-react'
+import { Users, CheckCircle, Calendar, ChevronDown, ChevronRight, Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/wch1925/_layout/participants')({
   component: ParticipantsPage,
@@ -77,12 +79,34 @@ function ParticipantsPage() {
     setExpandedHouses(newExpanded)
   }
 
+  const handleExport = async () => {
+    try {
+      const csv = await exportAdminRegistrationsCsv()
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `participants_${new Date().toISOString().slice(0, 10)}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Participants exported')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to export participants')
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Participants Overview"
-        subtitle="Event-wise participant details grouped by house"
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <PageHeader
+          title="Participants Overview"
+          subtitle="Event-wise participant details grouped by house"
+        />
+        <Button variant="outline" className="border-[#333] bg-black text-white hover:bg-[#111]" onClick={handleExport}>
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </Button>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="bg-[#111] border border-[#333] rounded-lg p-6">
