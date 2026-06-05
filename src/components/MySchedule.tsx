@@ -168,7 +168,7 @@ export function MySchedule() {
             </div>
           </div>
 
-          {registrations.length > 0 && (
+          {registrations.some(r => !r.checkedIn) && (
             <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/15 bg-amber-500/6 p-4">
               <Hourglass className="mt-0.5 h-4 w-4 shrink-0 animate-pulse text-amber-400" />
               <p className="text-xs leading-relaxed text-amber-400/80">
@@ -176,6 +176,21 @@ export function MySchedule() {
               </p>
             </div>
           )}
+          {(() => {
+            const checkedInEvents = registrations.filter(r => r.checkedIn);
+            if (checkedInEvents.length === 0) return null;
+            
+            const eventNames = checkedInEvents.map(r => r.eventName).join(', ');
+            
+            return (
+              <div className="mb-6 flex items-start gap-3 rounded-xl border border-green-500/15 bg-green-500/6 p-4">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+                <p className="text-xs leading-relaxed text-green-400/80">
+                  You have successfully <strong>checked in</strong> to <strong>{eventNames}</strong>. Your attendance (OD) is confirmed.
+                </p>
+              </div>
+            );
+          })()}
 
           {registrations.length === 0 ? (
             <div className="py-16 text-center">
