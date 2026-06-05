@@ -14,10 +14,7 @@ dotenv.config({
   path: path.resolve(__dirname, '../../.env')
 })
 
-console.log('ENV LOADED FROM:', path.resolve(__dirname, '../.env'), 'then', path.resolve(__dirname, '../../.env'))
-console.log('CWD:', process.cwd())
-console.log('SERVICE ROLE EXISTS:', !!process.env.SUPABASE_SERVICE_ROLE)
-console.log('SERVICE ROLE PREFIX:', process.env.SUPABASE_SERVICE_ROLE?.slice(0, 10))
+// Environment loaded successfully (no startup logging for security)
 
 import 'express-async-errors'
 import express from 'express'
@@ -311,13 +308,17 @@ const authenticateSession = async (req: express.Request, res: express.Response, 
     }
 
     if (!user) {
-      console.error('authenticateSession auth error:', lastErr)
-      fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession auth error: ${JSON.stringify(lastErr)}\n`)
+      Sentry.captureException(lastErr, {
+        tags: { context: 'authenticateSession', issue: 'user_not_found' },
+        level: 'error',
+      })
       return res.status(401).json({ error: 'invalid_auth_token' })
     }
   } catch (err: any) {
-    console.error('authenticateSession unexpected error:', err)
-    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] authenticateSession unexpected error: ${JSON.stringify(err)}\n`)
+    Sentry.captureException(err, {
+      tags: { context: 'authenticateSession', issue: 'unexpected_error' },
+      level: 'error',
+    })
     return res.status(500).json({ error: 'auth_check_failed' })
   }
 
@@ -372,8 +373,12 @@ const requireSignedInUser = async (req: express.Request, res: express.Response, 
   const { data, error } = await supabase.auth.getUser(token)
   const user = data?.user
   if (error || !user?.email) {
-    console.error('requireSignedInUser auth error:', error)
-    fs.appendFileSync(path.join(__dirname, '../auth_errors.log'), `[${new Date().toISOString()}] requireSignedInUser auth error: ${JSON.stringify(error)}\n`)
+    if (error) {
+      Sentry.captureException(error, {
+        tags: { context: 'requireSignedInUser' },
+        level: 'warning',
+      })
+    }
     return res.status(401).json({ error: 'invalid_auth_token' })
   }
 
