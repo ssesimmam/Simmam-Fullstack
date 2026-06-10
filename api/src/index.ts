@@ -1143,7 +1143,7 @@ app.get('/api/wch1925/users', async (req, res) => {
     let query = supabase.from('users').select('id,name,email,mobile_number,register_number,department,house,created_at,admins(role)').order('created_at', { ascending: false })
     if (house) query = query.eq('house', house)
 
-    const { data, error } = await query.limit(500)
+    const { data, error } = await query.limit(50000)
     if (error) throw error
 
     let rows = data || []
@@ -1225,7 +1225,7 @@ app.get('/api/wch1925/announcements', async (_req, res) => {
       .from('announcements')
       .select('id,title,body,pinned,starts_at,ends_at,created_by,created_at,updated_at')
       .order('created_at', { ascending: false })
-      .limit(100)
+      .limit(50000)
 
     if (error) throw error
     res.json({ data: data || [] })
@@ -1274,7 +1274,7 @@ app.get('/api/wch1925/rules', async (_req, res) => {
       .from('rules_and_regulations')
       .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
       .order('created_at', { ascending: false })
-      .limit(100)
+      .limit(50000)
 
     if (error) throw error
     res.json({ data: data || [] })
