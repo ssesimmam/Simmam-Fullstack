@@ -4,10 +4,12 @@ import supabase from '@/lib/supabase'
 
 export class ApiError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  details?: any
+  constructor(message: string, status: number, details?: any) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.details = details
   }
 }
 
@@ -162,7 +164,8 @@ export async function request<T>(base: string, path: string, init?: RequestInit,
 
   if (!response.ok) {
     const msg = (payload as any)?.error || (payload as any)?.message || `Request failed (${response.status})`
-    throw new ApiError(msg, response.status)
+    const details = (payload as any)?.details
+    throw new ApiError(msg, response.status, details)
   }
 
   return payload as T

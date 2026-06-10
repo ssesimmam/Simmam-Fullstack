@@ -118,13 +118,10 @@ function EventsPage() {
 
   const validateForm = () => {
     if (!form.name.trim()) return 'Event Name is required'
-    if (!form.description.trim()) return 'Event Description is required'
     if (!form.category.trim()) return 'Event Category is required'
     if (!form.date) return 'Event Date is required'
     if (!form.time.trim()) return 'Event Time is required'
     if (!form.venue.trim()) return 'Event Venue is required'
-    if (!form.maxParticipants.trim()) return 'Maximum Participants is required'
-    if (!form.rules.trim()) return 'Event Rules are required'
     return null
   }
 
@@ -174,7 +171,17 @@ function EventsPage() {
       setForm(emptyForm)
       toast.success('Event created')
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to create event')
+      let message = error?.message || 'Failed to create event'
+      if (error?.message === 'validation_failed' && error.details) {
+        const fields = error.details.fieldErrors
+          ? Object.entries(error.details.fieldErrors)
+              .map(([field, errs]) => `${field}: ${(errs as string[]).join(', ')}`)
+          : []
+        const forms = error.details.formErrors || []
+        const combined = [...fields, ...forms].join('; ')
+        if (combined) message = `Validation failed - ${combined}`
+      }
+      toast.error(message)
     }
   }
 
@@ -203,7 +210,17 @@ function EventsPage() {
       setForm(emptyForm)
       toast.success('Event updated')
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to update event')
+      let message = error?.message || 'Failed to update event'
+      if (error?.message === 'validation_failed' && error.details) {
+        const fields = error.details.fieldErrors
+          ? Object.entries(error.details.fieldErrors)
+              .map(([field, errs]) => `${field}: ${(errs as string[]).join(', ')}`)
+          : []
+        const forms = error.details.formErrors || []
+        const combined = [...fields, ...forms].join('; ')
+        if (combined) message = `Validation failed - ${combined}`
+      }
+      toast.error(message)
     }
   }
 
