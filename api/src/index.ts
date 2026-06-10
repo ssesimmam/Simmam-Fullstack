@@ -1140,7 +1140,7 @@ app.get('/api/wch1925/users', async (req, res) => {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
 
-    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,department,house,created_at').order('created_at', { ascending: false })
+    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,department,house,created_at,admins(role)').order('created_at', { ascending: false })
     if (house) query = query.eq('house', house)
 
     const { data, error } = await query.limit(500)
@@ -1165,6 +1165,7 @@ app.get('/api/wch1925/users', async (req, res) => {
       house: row.house || '',
       register_number: row.register_number || '',
       created_at: row.created_at,
+      admin_roles: Array.isArray(row.admins) ? row.admins.map((a: any) => a.role) : (row.admins ? [row.admins.role] : []),
     }))
 
     res.json({ data: users })
@@ -1438,7 +1439,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
 
     const { data: user, error: userErr } = await supabase
       .from('users')
-      .select('id,name,email,mobile_number,register_number,department,house,created_at')
+      .select('id,name,email,mobile_number,register_number,department,house,created_at,admins(role)')
       .eq('id', id)
       .single()
 
@@ -1464,9 +1465,47 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
         house: user.house || '',
         register_number: user.register_number || '',
         created_at: user.created_at,
+        admin_roles: Array.isArray(user.admins) ? user.admins.map((a: any) => a.role) : (user.admins ? [user.admins.role] : []),
       },
       registrations: registrations || [],
     })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.post('/api/wch1925/users/:id/admin-roles', adminLimiter, async (req, res) => {
+  try {
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) return respondValidationError(res, parsedParams.error)
+    const { id } = parsedParams.data
+    const role = req.body?.role
+    if (!role || typeof role !== 'string') return res.status(400).json({ error: 'invalid_role' })
+
+    const { error } = await supabase.from('admins').insert({ user_id: id, role })
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ error: 'role_already_assigned' })
+      throw error
+    }
+    res.json({ ok: true })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+app.delete('/api/wch1925/users/:id/admin-roles/:role', adminLimiter, async (req, res) => {
+  try {
+    const parsedParams = validateRequest(paramsSchemas.id, req.params)
+    if (!parsedParams.ok) return respondValidationError(res, parsedParams.error)
+    const { id } = parsedParams.data
+    const role = req.params.role
+    if (!role) return res.status(400).json({ error: 'invalid_role' })
+
+    const { error } = await supabase.from('admins').delete().eq('user_id', id).eq('role', role)
+    if (error) throw error
+    res.json({ ok: true })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })
@@ -1546,6 +1585,20 @@ app.put('/api/wch1925/users/:id', adminLimiter, async (req, res) => {
 })
 
 
+async function getAllCheckinIds() {
+  const checkinsData: string[] = []
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase.from('checkins').select('registration_id').range(offset, offset + 999)
+    if (error) throw error
+    if (!data || data.length === 0) break
+    checkinsData.push(...data.map((item: any) => item.registration_id))
+    if (data.length < 1000) break
+    offset += 1000
+  }
+  return new Set(checkinsData)
+}
+
 // Registration management list + search/filter
 app.get('/api/wch1925/registrations', async (req, res) => {
   try {
@@ -1579,9 +1632,7 @@ app.get('/api/wch1925/registrations', async (req, res) => {
 
       if (chunk.length < fetchCount) break
     }
-    const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinsErr) throw checkinsErr
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    const checkedInSet = await getAllCheckinIds()
 
     let rows = (data || []).map((row: any) => ({
       registration_id: row.id,
@@ -1860,9 +1911,7 @@ app.get('/api/wch1925/registrations/export.csv', async (req, res) => {
       if (chunk.length < fetchCount) break
     }
 
-    const { data: checkins, error: checkinsErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinsErr) throw checkinsErr
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    const checkedInSet = await getAllCheckinIds()
 
     let rows = (data || []).map((row: any) => ({
       registration_id: row.id,
@@ -2164,10 +2213,7 @@ app.get('/api/wch1925/attendance-report', async (_req, res) => {
 
     if (regErr) throw regErr
 
-    const { data: checkins, error: checkinErr } = await supabase.from('checkins').select('registration_id')
-    if (checkinErr) throw checkinErr
-
-    const checkedInSet = new Set((checkins || []).map((item: any) => item.registration_id))
+    const checkedInSet = await getAllCheckinIds()
     const eventMap = new Map<string, { event_name: string; event_date: string; total: number; checked_in: number }>()
 
     for (const row of eventRegs || []) {

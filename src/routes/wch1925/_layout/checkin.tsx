@@ -78,7 +78,9 @@ function CheckInPage() {
     try {
       await checkInRegistration(registrationId)
       toast.success('Attendance marked successfully')
-      setRows((prev) => prev.filter((row) => row.registration_id !== registrationId))
+      setRows((prev) =>
+        prev.map((row) => (row.registration_id === registrationId ? { ...row, checked_in: true } : row))
+      )
       await loadReport()
     } catch (error: any) {
       if (error?.message?.includes('already_checked_in')) {
@@ -98,7 +100,10 @@ function CheckInPage() {
     try {
       await removeAdminCheckin(registrationId)
       toast.success('Attendance removed successfully')
-      await loadData(searchQuery, selectedEvent)
+      setRows((prev) =>
+        prev.map((row) => (row.registration_id === registrationId ? { ...row, checked_in: false } : row))
+      )
+      await loadReport()
     } catch (error: any) {
       toast.error(error?.message || 'Unable to remove attendance')
     }

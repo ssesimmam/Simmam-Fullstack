@@ -10,6 +10,7 @@ export interface AdminUserDTO {
   register_number: string
   department?: string
   created_at: string
+  admin_roles?: string[]
 }
 
 // ─── API Functions ────────────────────────────────────────────────────────────
@@ -58,4 +59,17 @@ export async function updateAdminUser(userId: string, payload: {
 
 export async function deleteAdminUser(userId: string): Promise<void> {
   await adminRequest(`/users/${encodeURIComponent(userId)}`, { method: 'DELETE' })
+}
+
+export async function assignAdminRole(userId: string, role: string): Promise<void> {
+  await adminRequest(`/users/${encodeURIComponent(userId)}/admin-roles`, {
+    method: 'POST',
+    body: JSON.stringify({ role }),
+  })
+}
+
+export async function revokeAdminRole(userId: string, role: string): Promise<void> {
+  await adminRequest(`/users/${encodeURIComponent(userId)}/admin-roles/${encodeURIComponent(role)}`, {
+    method: 'DELETE',
+  })
 }

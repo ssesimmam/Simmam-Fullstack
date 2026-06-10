@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, Plus, Search, Trash2, Users } from 'lucide-react'
+import { Eye, Plus, Search, Trash2, Users, Shield } from 'lucide-react'
 
 import AccessDenied from '@/components/admin/shared/AccessDenied'
 import PageHeader from '@/components/admin/shared/PageHeader'
 import { useAuth } from '@/lib/auth'
-import { createAdminUser, deleteAdminUser, updateAdminUser, fetchAdminUserDetails, fetchAdminUsers, type AdminUserRow } from '@/lib/adminApi'
+import { createAdminUser, deleteAdminUser, updateAdminUser, fetchAdminUserDetails, fetchAdminUsers, assignAdminRole, revokeAdminRole, type AdminUserRow } from '@/lib/adminApi'
 import { useData } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +49,7 @@ function UserManagementPage() {
     register_number: '',
     house: '',
   })
+  const [assignRoleInput, setAssignRoleInput] = useState<string>('')
 
   if (!hasPermission('users', 'read')) {
     return <AccessDenied />
@@ -116,6 +117,32 @@ function UserManagementPage() {
       await handleViewDetails(selectedUserId)
     } catch (error: any) {
       toast.error(error?.message || 'Failed to update user')
+    }
+  }
+
+  const handleAssignRole = async () => {
+    if (!selectedUserId || !assignRoleInput) return
+    try {
+      await assignAdminRole(selectedUserId, assignRoleInput)
+      toast.success('Admin role assigned successfully')
+      setAssignRoleInput('')
+      await loadUsers()
+      await handleViewDetails(selectedUserId)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to assign role')
+    }
+  }
+
+  const handleRevokeRole = async (role: string) => {
+    if (!selectedUserId) return
+    if (!window.confirm(`Revoke ${role} role from this user?`)) return
+    try {
+      await revokeAdminRole(selectedUserId, role)
+      toast.success('Admin role revoked successfully')
+      await loadUsers()
+      await handleViewDetails(selectedUserId)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to revoke role')
     }
   }
 
@@ -250,7 +277,16 @@ function UserManagementPage() {
                 filteredUsers.map((user) => (
                   <tr key={user.user_id} className="border-t border-[#222] text-white/90">
                     <td className="p-3 font-mono text-xs text-gray-400">{user.register_number || '-'}</td>
-                    <td className="p-3">{user.name}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        {user.name}
+                        {user.admin_roles && user.admin_roles.length > 0 && (
+                          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Shield className="w-3 h-3" /> Admin
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 text-gray-300">{user.email}</td>
                     <td className="p-3">{user.house || '-'}</td>
                     <td className="p-3">
@@ -457,6 +493,48 @@ function UserManagementPage() {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-amber-500" /> Admin Access
+                </h4>
+                <div className="bg-black border border-[#333] rounded-lg p-3 space-y-3">
+                  {selectedUserDetails.user.admin_roles && selectedUserDetails.user.admin_roles.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedUserDetails.user.admin_roles.map((r: string) => (
+                        <div key={r} className="flex items-center gap-2 bg-[#111] border border-[#333] rounded px-2 py-1 text-xs text-amber-400">
+                          <span>{r}</span>
+                          <button onClick={() => handleRevokeRole(r)} className="text-gray-500 hover:text-red-400 ml-1">
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">No admin roles assigned.</p>
+                  )}
+                  
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#333]">
+                    <Select value={assignRoleInput} onValueChange={setAssignRoleInput}>
+                      <SelectTrigger className="bg-black border-[#333] text-white h-8 text-xs w-[180px]">
+                        <SelectValue placeholder="Select role to assign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="reg_team">Registration Admin</SelectItem>
+                        <SelectItem value="core_team">Core Team</SelectItem>
+                        <SelectItem value="developer_admin">Developer Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      size="sm" 
+                      className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black"
+                      onClick={handleAssignRole}
+                      disabled={!assignRoleInput}
+                    >
+                      Assign Role
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
