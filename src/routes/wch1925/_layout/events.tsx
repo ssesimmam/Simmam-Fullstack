@@ -85,7 +85,7 @@ function EventsPage() {
           date: (event as any).date || new Date().toISOString().split('T')[0],
           time_slot: event.time || '10:00 AM to 11:00 AM',
           venue: event.venue || 'Main Campus',
-          capacity: event.participantCount || 0,
+          capacity: event.participantCount && event.participantCount > 0 ? event.participantCount : undefined,
         })
         liveEventId = created.id
       }
@@ -144,7 +144,7 @@ function EventsPage() {
         date: form.date,
         time_slot: form.time.trim(),
         venue: form.venue.trim(),
-        capacity: Number(form.maxParticipants),
+        capacity: Number(form.maxParticipants) && Number(form.maxParticipants) > 0 ? Number(form.maxParticipants) : undefined,
       })
 
       addEvent(mapRemoteEventToAdminEvent(created as any, {
@@ -196,7 +196,7 @@ function EventsPage() {
         date: form.date,
         time_slot: form.time.trim(),
         venue: form.venue.trim(),
-        capacity: Number(form.maxParticipants),
+        capacity: Number(form.maxParticipants) && Number(form.maxParticipants) > 0 ? Number(form.maxParticipants) : undefined,
       })
 
       setEditingEvent(null)

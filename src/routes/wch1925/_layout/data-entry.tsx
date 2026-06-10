@@ -107,7 +107,7 @@ function DataEntryPage() {
       date: (event as any).date || new Date().toISOString().split('T')[0],
       time_slot: event.time || '10:00 AM to 11:00 AM',
       venue: event.venue || 'Main Campus',
-      capacity: event.participantCount || 0,
+      capacity: event.participantCount && event.participantCount > 0 ? event.participantCount : undefined,
     })
     return created.id
   }
@@ -128,7 +128,7 @@ function DataEntryPage() {
       date: editingEvent.date,
       time_slot: editingEvent.time,
       venue: editingEvent.venue,
-      capacity: editingEvent.participantCount,
+      capacity: editingEvent.participantCount && editingEvent.participantCount > 0 ? editingEvent.participantCount : undefined,
       registration_open: editingEvent.registration_open,
       checkin_enabled: editingEvent.checkin_enabled,
       is_floated: editingEvent.is_floated,
@@ -258,7 +258,7 @@ function DataEntryPage() {
         date: newEvent.date || new Date().toISOString().slice(0, 10),
         time_slot: newEvent.time || '00:00',
         venue: newEvent.venue || 'TBD',
-        capacity: 0,
+        capacity: undefined,
       })
 
       addEvent(mapRemoteEventToAdminEvent(created as any, {

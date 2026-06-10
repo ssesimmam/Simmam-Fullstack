@@ -20,6 +20,15 @@ const optionalMobileNumber = z.union([z.string(), z.number(), z.null(), z.undefi
 }).refine((value) => value === null || /^\d{10}$/.test(value), {
   message: 'Mobile number must be 10 digits',
 });
+const optionalCapacity = z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((value) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const num = Number(value);
+  if (isNaN(num)) return null;
+  return num;
+}).refine((value) => value === null || (Number.isInteger(value) && value > 0), {
+  message: 'Capacity must be a positive integer',
+});
 
 export const authBodySchema = z.object({
   email: z.string().email().optional(),
@@ -67,7 +76,7 @@ export const eventCreateBodySchema = z.object({
   time_slot: nonEmptyString.max(64),
   end_time: optionalText,
   venue: nonEmptyString.max(120),
-  capacity: z.coerce.number().int().min(0).optional().nullable(),
+  capacity: optionalCapacity.optional(),
   is_live_tomorrow: z.boolean().optional().default(false),
 });
 
