@@ -41,8 +41,8 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
 export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/wch1925/events': [{ resource: 'events', actions: ['read'] }],
   '/wch1925/participants': [{ resource: 'participants', actions: ['read'] }],
-  '/re1925/checkin': [{ resource: 'checkin', actions: ['read'] }],
-  '/re1925/checkin/new': [{ resource: 'checkin', actions: ['read'] }],
+  '/reg1925/checkin': [{ resource: 'checkin', actions: ['read'] }],
+  '/reg1925/checkin/new': [{ resource: 'checkin', actions: ['read'] }],
   '/wch1925/data-entry': [{ resource: 'data-entry', actions: ['read'] }],
   '/wch1925/leaderboard': [{ resource: 'leaderboard', actions: ['read'] }],
   '/wch1925/houses': [{ resource: 'houses', actions: ['read'] }],

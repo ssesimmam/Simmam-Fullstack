@@ -50,7 +50,7 @@ export function canAccessAdminPath(user: AdminUser | null | undefined, pathname:
   if (pathname === '/wch1925' || pathname === '/wch1925/') {
     return user.role === 'developer_admin' || user.role === 'core_team'
   }
-  if (pathname === '/re1925' || pathname === '/re1925/') {
+  if (pathname === '/reg1925' || pathname === '/reg1925/') {
     return user.role === 'reg_team' || user.role === 'developer_admin' || user.role === 'core_team'
   }
   const normalized = pathname.replace(/\/$/, '')
@@ -64,7 +64,7 @@ export function canAccessAdminPath(user: AdminUser | null | undefined, pathname:
 
 export function getDefaultAdminPath(user: AdminUser | null | undefined): string {
   if (!user) return '/wch1925/login'
-  if (user.role === 'reg_team') return '/re1925/checkin'
+  if (user.role === 'reg_team') return '/reg1925/checkin'
   return '/wch1925'
 }
 

@@ -18,14 +18,14 @@ import { Route as EventsIndexRouteImport } from './routes/events/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as Wch1925LoginRouteImport } from './routes/wch1925/login'
 import { Route as Wch1925LayoutRouteImport } from './routes/wch1925/_layout'
-import { Route as Re1925LoginRouteImport } from './routes/re1925/login'
-import { Route as Re1925LayoutRouteImport } from './routes/re1925/_layout'
+import { Route as Reg1925LoginRouteImport } from './routes/reg1925/login'
+import { Route as Reg1925LayoutRouteImport } from './routes/reg1925/_layout'
 import { Route as EventsRegisterRouteImport } from './routes/events/register'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardMyScheduleRouteImport } from './routes/dashboard/my-schedule'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Wch1925LayoutIndexRouteImport } from './routes/wch1925/_layout/index'
-import { Route as Re1925LayoutIndexRouteImport } from './routes/re1925/_layout/index'
+import { Route as Reg1925LayoutIndexRouteImport } from './routes/reg1925/_layout/index'
 import { Route as Wch1925LayoutUserManagementRouteImport } from './routes/wch1925/_layout/user-management'
 import { Route as Wch1925LayoutSettingsRouteImport } from './routes/wch1925/_layout/settings'
 import { Route as Wch1925LayoutRulesRouteImport } from './routes/wch1925/_layout/rules'
@@ -37,8 +37,8 @@ import { Route as Wch1925LayoutEventsRouteImport } from './routes/wch1925/_layou
 import { Route as Wch1925LayoutDepartmentLeaderboardRouteImport } from './routes/wch1925/_layout/department-leaderboard'
 import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
 import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925/_layout/announcements'
-import { Route as Re1925LayoutCheckinRouteImport } from './routes/re1925/_layout/checkin'
-import { Route as Re1925LayoutCheckinNewRouteImport } from './routes/re1925/_layout/checkin.new'
+import { Route as Reg1925LayoutCheckinRouteImport } from './routes/reg1925/_layout/checkin'
+import { Route as Reg1925LayoutCheckinNewRouteImport } from './routes/reg1925/_layout/checkin.new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -85,14 +85,14 @@ const Wch1925LayoutRoute = Wch1925LayoutRouteImport.update({
   path: '/wch1925',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Re1925LoginRoute = Re1925LoginRouteImport.update({
-  id: '/re1925/login',
-  path: '/re1925/login',
+const Reg1925LoginRoute = Reg1925LoginRouteImport.update({
+  id: '/reg1925/login',
+  path: '/reg1925/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Re1925LayoutRoute = Re1925LayoutRouteImport.update({
-  id: '/re1925/_layout',
-  path: '/re1925',
+const Reg1925LayoutRoute = Reg1925LayoutRouteImport.update({
+  id: '/reg1925/_layout',
+  path: '/reg1925',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRegisterRoute = EventsRegisterRouteImport.update({
@@ -120,10 +120,10 @@ const Wch1925LayoutIndexRoute = Wch1925LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => Wch1925LayoutRoute,
 } as any)
-const Re1925LayoutIndexRoute = Re1925LayoutIndexRouteImport.update({
+const Reg1925LayoutIndexRoute = Reg1925LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => Re1925LayoutRoute,
+  getParentRoute: () => Reg1925LayoutRoute,
 } as any)
 const Wch1925LayoutUserManagementRoute =
   Wch1925LayoutUserManagementRouteImport.update({
@@ -186,15 +186,15 @@ const Wch1925LayoutAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => Wch1925LayoutRoute,
   } as any)
-const Re1925LayoutCheckinRoute = Re1925LayoutCheckinRouteImport.update({
+const Reg1925LayoutCheckinRoute = Reg1925LayoutCheckinRouteImport.update({
   id: '/checkin',
   path: '/checkin',
-  getParentRoute: () => Re1925LayoutRoute,
+  getParentRoute: () => Reg1925LayoutRoute,
 } as any)
-const Re1925LayoutCheckinNewRoute = Re1925LayoutCheckinNewRouteImport.update({
+const Reg1925LayoutCheckinNewRoute = Reg1925LayoutCheckinNewRouteImport.update({
   id: '/new',
   path: '/new',
-  getParentRoute: () => Re1925LayoutCheckinRoute,
+  getParentRoute: () => Reg1925LayoutCheckinRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -207,13 +207,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/events/register': typeof EventsRegisterRoute
-  '/re1925': typeof Re1925LayoutRouteWithChildren
-  '/re1925/login': typeof Re1925LoginRoute
+  '/reg1925': typeof Reg1925LayoutRouteWithChildren
+  '/reg1925/login': typeof Reg1925LoginRoute
   '/wch1925': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/re1925/checkin': typeof Re1925LayoutCheckinRouteWithChildren
+  '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -225,9 +225,9 @@ export interface FileRoutesByFullPath {
   '/wch1925/rules': typeof Wch1925LayoutRulesRoute
   '/wch1925/settings': typeof Wch1925LayoutSettingsRoute
   '/wch1925/user-management': typeof Wch1925LayoutUserManagementRoute
-  '/re1925/': typeof Re1925LayoutIndexRoute
+  '/reg1925/': typeof Reg1925LayoutIndexRoute
   '/wch1925/': typeof Wch1925LayoutIndexRoute
-  '/re1925/checkin/new': typeof Re1925LayoutCheckinNewRoute
+  '/reg1925/checkin/new': typeof Reg1925LayoutCheckinNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -237,11 +237,11 @@ export interface FileRoutesByTo {
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/events/register': typeof EventsRegisterRoute
-  '/re1925/login': typeof Re1925LoginRoute
+  '/reg1925/login': typeof Reg1925LoginRoute
   '/wch1925/login': typeof Wch1925LoginRoute
   '/dashboard': typeof DashboardIndexRoute
   '/events': typeof EventsIndexRoute
-  '/re1925/checkin': typeof Re1925LayoutCheckinRouteWithChildren
+  '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -253,9 +253,9 @@ export interface FileRoutesByTo {
   '/wch1925/rules': typeof Wch1925LayoutRulesRoute
   '/wch1925/settings': typeof Wch1925LayoutSettingsRoute
   '/wch1925/user-management': typeof Wch1925LayoutUserManagementRoute
-  '/re1925': typeof Re1925LayoutIndexRoute
+  '/reg1925': typeof Reg1925LayoutIndexRoute
   '/wch1925': typeof Wch1925LayoutIndexRoute
-  '/re1925/checkin/new': typeof Re1925LayoutCheckinNewRoute
+  '/reg1925/checkin/new': typeof Reg1925LayoutCheckinNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,13 +268,13 @@ export interface FileRoutesById {
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/events/register': typeof EventsRegisterRoute
-  '/re1925/_layout': typeof Re1925LayoutRouteWithChildren
-  '/re1925/login': typeof Re1925LoginRoute
+  '/reg1925/_layout': typeof Reg1925LayoutRouteWithChildren
+  '/reg1925/login': typeof Reg1925LoginRoute
   '/wch1925/_layout': typeof Wch1925LayoutRouteWithChildren
   '/wch1925/login': typeof Wch1925LoginRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/re1925/_layout/checkin': typeof Re1925LayoutCheckinRouteWithChildren
+  '/reg1925/_layout/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/_layout/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -286,9 +286,9 @@ export interface FileRoutesById {
   '/wch1925/_layout/rules': typeof Wch1925LayoutRulesRoute
   '/wch1925/_layout/settings': typeof Wch1925LayoutSettingsRoute
   '/wch1925/_layout/user-management': typeof Wch1925LayoutUserManagementRoute
-  '/re1925/_layout/': typeof Re1925LayoutIndexRoute
+  '/reg1925/_layout/': typeof Reg1925LayoutIndexRoute
   '/wch1925/_layout/': typeof Wch1925LayoutIndexRoute
-  '/re1925/_layout/checkin/new': typeof Re1925LayoutCheckinNewRoute
+  '/reg1925/_layout/checkin/new': typeof Reg1925LayoutCheckinNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -302,13 +302,13 @@ export interface FileRouteTypes {
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
     | '/events/register'
-    | '/re1925'
-    | '/re1925/login'
+    | '/reg1925'
+    | '/reg1925/login'
     | '/wch1925'
     | '/wch1925/login'
     | '/dashboard/'
     | '/events/'
-    | '/re1925/checkin'
+    | '/reg1925/checkin'
     | '/wch1925/announcements'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
@@ -320,9 +320,9 @@ export interface FileRouteTypes {
     | '/wch1925/rules'
     | '/wch1925/settings'
     | '/wch1925/user-management'
-    | '/re1925/'
+    | '/reg1925/'
     | '/wch1925/'
-    | '/re1925/checkin/new'
+    | '/reg1925/checkin/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -332,11 +332,11 @@ export interface FileRouteTypes {
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
     | '/events/register'
-    | '/re1925/login'
+    | '/reg1925/login'
     | '/wch1925/login'
     | '/dashboard'
     | '/events'
-    | '/re1925/checkin'
+    | '/reg1925/checkin'
     | '/wch1925/announcements'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
@@ -348,9 +348,9 @@ export interface FileRouteTypes {
     | '/wch1925/rules'
     | '/wch1925/settings'
     | '/wch1925/user-management'
-    | '/re1925'
+    | '/reg1925'
     | '/wch1925'
-    | '/re1925/checkin/new'
+    | '/reg1925/checkin/new'
   id:
     | '__root__'
     | '/'
@@ -362,13 +362,13 @@ export interface FileRouteTypes {
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
     | '/events/register'
-    | '/re1925/_layout'
-    | '/re1925/login'
+    | '/reg1925/_layout'
+    | '/reg1925/login'
     | '/wch1925/_layout'
     | '/wch1925/login'
     | '/dashboard/'
     | '/events/'
-    | '/re1925/_layout/checkin'
+    | '/reg1925/_layout/checkin'
     | '/wch1925/_layout/announcements'
     | '/wch1925/_layout/data-entry'
     | '/wch1925/_layout/department-leaderboard'
@@ -380,9 +380,9 @@ export interface FileRouteTypes {
     | '/wch1925/_layout/rules'
     | '/wch1925/_layout/settings'
     | '/wch1925/_layout/user-management'
-    | '/re1925/_layout/'
+    | '/reg1925/_layout/'
     | '/wch1925/_layout/'
-    | '/re1925/_layout/checkin/new'
+    | '/reg1925/_layout/checkin/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -392,8 +392,8 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
-  Re1925LayoutRoute: typeof Re1925LayoutRouteWithChildren
-  Re1925LoginRoute: typeof Re1925LoginRoute
+  Reg1925LayoutRoute: typeof Reg1925LayoutRouteWithChildren
+  Reg1925LoginRoute: typeof Reg1925LoginRoute
   Wch1925LayoutRoute: typeof Wch1925LayoutRouteWithChildren
   Wch1925LoginRoute: typeof Wch1925LoginRoute
 }
@@ -463,18 +463,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/re1925/login': {
-      id: '/re1925/login'
-      path: '/re1925/login'
-      fullPath: '/re1925/login'
-      preLoaderRoute: typeof Re1925LoginRouteImport
+    '/reg1925/login': {
+      id: '/reg1925/login'
+      path: '/reg1925/login'
+      fullPath: '/reg1925/login'
+      preLoaderRoute: typeof Reg1925LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/re1925/_layout': {
-      id: '/re1925/_layout'
-      path: '/re1925'
-      fullPath: '/re1925'
-      preLoaderRoute: typeof Re1925LayoutRouteImport
+    '/reg1925/_layout': {
+      id: '/reg1925/_layout'
+      path: '/reg1925'
+      fullPath: '/reg1925'
+      preLoaderRoute: typeof Reg1925LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events/register': {
@@ -512,12 +512,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutIndexRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
-    '/re1925/_layout/': {
-      id: '/re1925/_layout/'
+    '/reg1925/_layout/': {
+      id: '/reg1925/_layout/'
       path: '/'
-      fullPath: '/re1925/'
-      preLoaderRoute: typeof Re1925LayoutIndexRouteImport
-      parentRoute: typeof Re1925LayoutRoute
+      fullPath: '/reg1925/'
+      preLoaderRoute: typeof Reg1925LayoutIndexRouteImport
+      parentRoute: typeof Reg1925LayoutRoute
     }
     '/wch1925/_layout/user-management': {
       id: '/wch1925/_layout/user-management'
@@ -596,19 +596,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutAnnouncementsRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
-    '/re1925/_layout/checkin': {
-      id: '/re1925/_layout/checkin'
+    '/reg1925/_layout/checkin': {
+      id: '/reg1925/_layout/checkin'
       path: '/checkin'
-      fullPath: '/re1925/checkin'
-      preLoaderRoute: typeof Re1925LayoutCheckinRouteImport
-      parentRoute: typeof Re1925LayoutRoute
+      fullPath: '/reg1925/checkin'
+      preLoaderRoute: typeof Reg1925LayoutCheckinRouteImport
+      parentRoute: typeof Reg1925LayoutRoute
     }
-    '/re1925/_layout/checkin/new': {
-      id: '/re1925/_layout/checkin/new'
+    '/reg1925/_layout/checkin/new': {
+      id: '/reg1925/_layout/checkin/new'
       path: '/new'
-      fullPath: '/re1925/checkin/new'
-      preLoaderRoute: typeof Re1925LayoutCheckinNewRouteImport
-      parentRoute: typeof Re1925LayoutCheckinRoute
+      fullPath: '/reg1925/checkin/new'
+      preLoaderRoute: typeof Reg1925LayoutCheckinNewRouteImport
+      parentRoute: typeof Reg1925LayoutCheckinRoute
     }
   }
 }
@@ -642,29 +642,29 @@ const EventsRouteChildren: EventsRouteChildren = {
 const EventsRouteWithChildren =
   EventsRoute._addFileChildren(EventsRouteChildren)
 
-interface Re1925LayoutCheckinRouteChildren {
-  Re1925LayoutCheckinNewRoute: typeof Re1925LayoutCheckinNewRoute
+interface Reg1925LayoutCheckinRouteChildren {
+  Reg1925LayoutCheckinNewRoute: typeof Reg1925LayoutCheckinNewRoute
 }
 
-const Re1925LayoutCheckinRouteChildren: Re1925LayoutCheckinRouteChildren = {
-  Re1925LayoutCheckinNewRoute: Re1925LayoutCheckinNewRoute,
+const Reg1925LayoutCheckinRouteChildren: Reg1925LayoutCheckinRouteChildren = {
+  Reg1925LayoutCheckinNewRoute: Reg1925LayoutCheckinNewRoute,
 }
 
-const Re1925LayoutCheckinRouteWithChildren =
-  Re1925LayoutCheckinRoute._addFileChildren(Re1925LayoutCheckinRouteChildren)
+const Reg1925LayoutCheckinRouteWithChildren =
+  Reg1925LayoutCheckinRoute._addFileChildren(Reg1925LayoutCheckinRouteChildren)
 
-interface Re1925LayoutRouteChildren {
-  Re1925LayoutCheckinRoute: typeof Re1925LayoutCheckinRouteWithChildren
-  Re1925LayoutIndexRoute: typeof Re1925LayoutIndexRoute
+interface Reg1925LayoutRouteChildren {
+  Reg1925LayoutCheckinRoute: typeof Reg1925LayoutCheckinRouteWithChildren
+  Reg1925LayoutIndexRoute: typeof Reg1925LayoutIndexRoute
 }
 
-const Re1925LayoutRouteChildren: Re1925LayoutRouteChildren = {
-  Re1925LayoutCheckinRoute: Re1925LayoutCheckinRouteWithChildren,
-  Re1925LayoutIndexRoute: Re1925LayoutIndexRoute,
+const Reg1925LayoutRouteChildren: Reg1925LayoutRouteChildren = {
+  Reg1925LayoutCheckinRoute: Reg1925LayoutCheckinRouteWithChildren,
+  Reg1925LayoutIndexRoute: Reg1925LayoutIndexRoute,
 }
 
-const Re1925LayoutRouteWithChildren = Re1925LayoutRoute._addFileChildren(
-  Re1925LayoutRouteChildren,
+const Reg1925LayoutRouteWithChildren = Reg1925LayoutRoute._addFileChildren(
+  Reg1925LayoutRouteChildren,
 )
 
 interface Wch1925LayoutRouteChildren {
@@ -709,8 +709,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   AuthCallbackRoute: AuthCallbackRoute,
-  Re1925LayoutRoute: Re1925LayoutRouteWithChildren,
-  Re1925LoginRoute: Re1925LoginRoute,
+  Reg1925LayoutRoute: Reg1925LayoutRouteWithChildren,
+  Reg1925LoginRoute: Reg1925LoginRoute,
   Wch1925LayoutRoute: Wch1925LayoutRouteWithChildren,
   Wch1925LoginRoute: Wch1925LoginRoute,
 }

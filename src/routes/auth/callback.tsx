@@ -81,7 +81,7 @@ function AuthCallbackPage() {
 
         let fallback = '/dashboard/profile'
         if (intent.source === 'admin') {
-          fallback = intent.redirectTo.startsWith('/re1925') ? '/re1925/login' : '/wch1925/login'
+          fallback = intent.redirectTo.startsWith('/reg1925') ? '/reg1925/login' : '/wch1925/login'
         }
 
         setTimeout(() => {

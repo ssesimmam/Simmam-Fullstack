@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import supabase from '@/lib/supabase'
 
-export const Route = createFileRoute('/re1925/login')({
+export const Route = createFileRoute('/reg1925/login')({
   beforeLoad: ({ location }) => {
     const storedUser = getStoredAdminUser()
     if (storedUser) {
@@ -109,7 +109,7 @@ function LoginPage() {
     window.localStorage.setItem('simmam_admin_google_signin', '1')
 
     try {
-      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'admin', redirectTo: search.redirectTo || '/re1925/checkin' }))
+      window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'admin', redirectTo: search.redirectTo || '/reg1925/checkin' }))
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
