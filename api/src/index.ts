@@ -1716,7 +1716,7 @@ app.post('/api/wch1925/registrations', adminLimiter, async (req, res) => {
     const { data: rowData, error: rowErr } = await supabase
       .from('registrations')
       .select('id,status,registered_at,users(id,name,email,house,register_number),events(id,name,date,time_slot)')
-      .eq('id', registration.id)
+      .eq('id', registration.registration_id)
       .single()
 
     if (rowErr) throw rowErr
