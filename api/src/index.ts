@@ -1465,7 +1465,7 @@ app.get('/api/wch1925/users/:id', async (req, res) => {
         house: user.house || '',
         register_number: user.register_number || '',
         created_at: user.created_at,
-        admin_roles: Array.isArray(user.admins) ? user.admins.map((a: any) => a.role) : (user.admins ? [user.admins.role] : []),
+        admin_roles: Array.isArray(user.admins) ? (user.admins as any[]).map((a: any) => a.role) : (user.admins ? [(user.admins as any).role] : []),
       },
       registrations: registrations || [],
     })
