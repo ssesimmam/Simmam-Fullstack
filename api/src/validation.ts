@@ -69,12 +69,12 @@ export const ruleBodySchema = announcementBodySchema;
 
 export const eventCreateBodySchema = z.object({
   name: nonEmptyString.max(160),
-  description: optionalText,
+  description: optionalText.optional(),
   category: nonEmptyString.max(120),
   main_category: z.union([z.string(), z.null(), z.undefined()]).optional(),
   date: nonEmptyString.max(32),
   time_slot: nonEmptyString.max(64),
-  end_time: optionalText,
+  end_time: optionalText.optional(),
   venue: nonEmptyString.max(120),
   capacity: optionalCapacity.optional(),
   is_live_tomorrow: z.boolean().optional().default(false),
