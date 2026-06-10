@@ -37,8 +37,9 @@ export default function AdminHeader() {
               </div>
               <button
                 onClick={() => {
+                  const isRegTeam = user?.role === 'reg_team'
                   logout()
-                  navigate({ to: '/wch1925/login', replace: true })
+                  navigate({ to: isRegTeam ? '/re1925/login' : '/wch1925/login', replace: true })
                 }}
                 className="bg-[#111] border border-[#333] flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black transition-colors"
               >

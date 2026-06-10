@@ -46,7 +46,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     if (user?.role === 'reg_team') {
-      navigate({ to: '/wch1925/checkin', replace: true })
+      navigate({ to: '/re1925/checkin', replace: true })
     }
   }, [navigate, user?.role])
 

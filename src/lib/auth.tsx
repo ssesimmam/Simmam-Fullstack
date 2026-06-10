@@ -41,9 +41,17 @@ export function getStoredAdminAccessToken(): string | null {
 
 export function canAccessAdminPath(user: AdminUser | null | undefined, pathname: string): boolean {
   if (!user) return false
+  
+  if (user.role === 'reg_team' && pathname.startsWith('/wch1925')) {
+    return false
+  }
+
   const permissions = ROLE_PERMISSIONS[user.role] || []
   if (pathname === '/wch1925' || pathname === '/wch1925/') {
-    return user.role === 'developer_admin' || user.role === 'core_team' || user.role === 'reg_team'
+    return user.role === 'developer_admin' || user.role === 'core_team'
+  }
+  if (pathname === '/re1925' || pathname === '/re1925/') {
+    return user.role === 'reg_team' || user.role === 'developer_admin' || user.role === 'core_team'
   }
   const normalized = pathname.replace(/\/$/, '')
   return Object.entries(ROUTE_PERMISSIONS || {}).some(([routePath, requiredPermissions]) => {
@@ -56,7 +64,7 @@ export function canAccessAdminPath(user: AdminUser | null | undefined, pathname:
 
 export function getDefaultAdminPath(user: AdminUser | null | undefined): string {
   if (!user) return '/wch1925/login'
-  if (user.role === 'reg_team') return '/wch1925/checkin'
+  if (user.role === 'reg_team') return '/re1925/checkin'
   return '/wch1925'
 }
 

@@ -53,7 +53,7 @@ const MENU_ITEMS = {
   reg_team: [
     {
       title: 'Check-In',
-      href: '/wch1925/checkin',
+      href: '/re1925/checkin',
       icon: CheckCircle,
     },
   ],
@@ -95,7 +95,7 @@ const MENU_ITEMS = {
     },
     {
       title: 'Check-In',
-      href: '/wch1925/checkin',
+      href: '/re1925/checkin',
       icon: CheckCircle,
     },
     {

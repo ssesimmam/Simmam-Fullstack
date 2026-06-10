@@ -79,8 +79,10 @@ function AuthCallbackPage() {
           window.sessionStorage.removeItem('simmam_oauth_intent')
         }
 
-        // Determine correct fallback based on architecture roles
-        const fallback = intent.source === 'admin' ? '/wch1925/login' : '/dashboard/profile'
+        let fallback = '/dashboard/profile'
+        if (intent.source === 'admin') {
+          fallback = intent.redirectTo.startsWith('/re1925') ? '/re1925/login' : '/wch1925/login'
+        }
 
         setTimeout(() => {
           if (mounted) navigate({ to: fallback, replace: true })
