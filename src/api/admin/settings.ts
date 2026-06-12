@@ -6,6 +6,7 @@ export interface AdminSettings {
   festivalStatus: 'pre' | 'live' | 'post'
   registrationsOpen: boolean
   coordinatorAssignments: Record<string, string>
+  houseOfTheDay?: string
 }
 
 // ─── API Functions ────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Minus, Save, Trophy, TrendingUp, TrendingDown, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { formatIstDateTime } from '@/lib/dateTime'
 
@@ -17,7 +18,7 @@ export const Route = createFileRoute('/wch1925/_layout/leaderboard')({
 
 function LeaderboardManagement() {
   const { hasPermission, user } = useAuth()
-  const { houses, updateHousePoints, pointsHistory, refreshData } = useData()
+  const { houses, updateHousePoints, pointsHistory, refreshData, settings, updateSettings } = useData()
   const [leaderboardRows, setLeaderboardRows] = useState<AdminLeaderboardRow[]>([])
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true)
   const [pointAdjustments, setPointAdjustments] = useState<Record<string, number>>({})
@@ -47,6 +48,16 @@ function LeaderboardManagement() {
   }
 
   const canEdit = hasPermission('leaderboard', 'update')
+
+  const handleHouseOfTheDayChange = async (value: string) => {
+    try {
+      await updateSettings({ ...settings, houseOfTheDay: value === 'none' ? '' : value })
+      toast.success('House of the Day updated')
+      await refreshData()
+    } catch (e: any) {
+      toast.error('Failed to update House of the Day')
+    }
+  }
 
   const handleAdjustPoints = (houseName: string, amount: number) => {
     setPointAdjustments(prev => ({
@@ -104,6 +115,27 @@ function LeaderboardManagement() {
       {loadingLeaderboard && (
         <div className="rounded-lg border border-[#333] bg-[#111] p-3 text-sm text-gray-400">
           Syncing leaderboard data from the backend...
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="bg-[#111] border border-[#333] rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">House of the Day</h3>
+          <div className="max-w-xs">
+            <Select value={settings?.houseOfTheDay || 'none'} onValueChange={handleHouseOfTheDayChange}>
+              <SelectTrigger className="w-full bg-black border-[#333] text-white">
+                <SelectValue placeholder="Select a House" />
+              </SelectTrigger>
+              <SelectContent className="bg-black border-[#333] text-white">
+                <SelectItem value="none">None</SelectItem>
+                {sortedHouses.map((house) => (
+                  <SelectItem key={house.name} value={house.name}>
+                    {house.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 

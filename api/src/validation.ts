@@ -39,6 +39,7 @@ export const adminSettingsBodySchema = z.object({
   festivalStatus: z.enum(["pre", "live", "post"]),
   registrationsOpen: z.boolean(),
   coordinatorAssignments: z.record(z.string(), z.unknown()).optional().default({}),
+  houseOfTheDay: z.string().optional(),
 });
 
 export const leaderboardAdjustBodySchema = z.object({

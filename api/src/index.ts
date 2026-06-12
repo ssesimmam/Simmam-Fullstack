@@ -442,6 +442,7 @@ const DEFAULT_ADMIN_SETTINGS = {
   festival_status: 'pre',
   registrations_open: true,
   coordinator_assignments: {},
+  house_of_the_day: '',
 }
 
 let adminSettingsTableMissing = false
@@ -696,13 +697,14 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
           festivalStatus: inMemoryAdminSettings.festival_status,
           registrationsOpen: inMemoryAdminSettings.registrations_open,
           coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
         },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
       .limit(1)
       .single()
 
@@ -717,6 +719,7 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
             festivalStatus: inMemoryAdminSettings.festival_status,
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
           },
         })
       }
@@ -728,6 +731,7 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
         festivalStatus: data?.festival_status ?? DEFAULT_ADMIN_SETTINGS.festival_status,
         registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
+        houseOfTheDay: data?.house_of_the_day || DEFAULT_ADMIN_SETTINGS.house_of_the_day,
       },
     })
   } catch (err: any) {
@@ -927,6 +931,7 @@ let inMemoryAdminSettings = {
   festival_status: 'pre',
   registrations_open: true,
   coordinator_assignments: {} as any,
+  house_of_the_day: '',
 }
 
 app.get('/api/wch1925/settings', async (_req, res) => {
@@ -937,13 +942,14 @@ app.get('/api/wch1925/settings', async (_req, res) => {
           festivalStatus: inMemoryAdminSettings.festival_status,
           registrationsOpen: inMemoryAdminSettings.registrations_open,
           coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
         },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
       .limit(1)
       .single()
 
@@ -958,6 +964,7 @@ app.get('/api/wch1925/settings', async (_req, res) => {
             festivalStatus: inMemoryAdminSettings.festival_status,
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
           },
         })
       }
@@ -969,6 +976,7 @@ app.get('/api/wch1925/settings', async (_req, res) => {
         festivalStatus: data?.festival_status ?? DEFAULT_ADMIN_SETTINGS.festival_status,
         registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
+        houseOfTheDay: data?.house_of_the_day || DEFAULT_ADMIN_SETTINGS.house_of_the_day,
       },
     })
   } catch (err: any) {
@@ -984,13 +992,14 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { festivalStatus, registrationsOpen, coordinatorAssignments } = parsedBody.data
+    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay } = parsedBody.data
 
     const payload = {
       id: 'singleton',
       festival_status: festivalStatus,
       registrations_open: registrationsOpen,
       coordinator_assignments: coordinatorAssignments || {},
+      house_of_the_day: houseOfTheDay || '',
     }
 
     if (adminSettingsTableMissing) {
@@ -998,12 +1007,14 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
         festival_status: festivalStatus,
         registrations_open: registrationsOpen,
         coordinator_assignments: coordinatorAssignments || {},
+        house_of_the_day: houseOfTheDay || '',
       }
       return res.json({
         settings: {
           festivalStatus: inMemoryAdminSettings.festival_status,
           registrationsOpen: inMemoryAdminSettings.registrations_open,
           coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
         },
       })
     }
@@ -1011,7 +1022,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
     const { data, error } = await supabase
       .from('admin_settings')
       .upsert(payload, { onConflict: 'id' })
-      .select('festival_status,registrations_open,coordinator_assignments')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
       .single()
 
     if (error) {
@@ -1021,12 +1032,14 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           festival_status: festivalStatus,
           registrations_open: registrationsOpen,
           coordinator_assignments: coordinatorAssignments || {},
+          house_of_the_day: houseOfTheDay || '',
         }
         return res.json({
           settings: {
             festivalStatus: inMemoryAdminSettings.festival_status,
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
           },
         })
       }
@@ -1038,6 +1051,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
         festivalStatus: data?.festival_status,
         registrationsOpen: data?.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || {},
+        houseOfTheDay: data?.house_of_the_day || '',
       },
     })
   } catch (err: any) {
