@@ -45,19 +45,24 @@ function LoginPage() {
         const emailFromSession = session?.user?.email?.toLowerCase()
         if (!emailFromSession) {
           window.localStorage.removeItem('simmam_admin_google_signin')
+          window.localStorage.removeItem('simmam_admin_role_intent')
           setError('Unable to detect Google account email.')
           return
         }
 
-        const success = await login(emailFromSession, selectedRole)
+        const intendedRole = (window.localStorage.getItem('simmam_admin_role_intent') || selectedRole) as AdminRole
+
+        const success = await login(emailFromSession, intendedRole)
         if (!success) {
           window.localStorage.removeItem('simmam_admin_google_signin')
+          window.localStorage.removeItem('simmam_admin_role_intent')
           await supabase.auth.signOut()
           setError('This Google account is not authorized for the selected admin role.')
           return
         }
 
         window.localStorage.removeItem('simmam_admin_google_signin')
+        window.localStorage.removeItem('simmam_admin_role_intent')
         const storedUser = getStoredAdminUser()
         navigate({
           to: getAuthorizedAdminRedirect(storedUser, search.redirectTo),
@@ -65,6 +70,7 @@ function LoginPage() {
         })
       } catch (err: any) {
         window.localStorage.removeItem('simmam_admin_google_signin')
+        window.localStorage.removeItem('simmam_admin_role_intent')
         setError(err?.message || 'Google sign-in failed. Please try again.')
       } finally {
         if (mounted) setAuthLoading(false)
@@ -107,6 +113,7 @@ function LoginPage() {
     setError('')
     setAuthLoading(true)
     window.localStorage.setItem('simmam_admin_google_signin', '1')
+    window.localStorage.setItem('simmam_admin_role_intent', selectedRole)
 
     try {
       window.sessionStorage.setItem('simmam_oauth_intent', JSON.stringify({ source: 'admin', redirectTo: search.redirectTo || '/wch1925' }))
@@ -118,10 +125,12 @@ function LoginPage() {
       })
       if (authError) {
         window.localStorage.removeItem('simmam_admin_google_signin')
+        window.localStorage.removeItem('simmam_admin_role_intent')
         setError(authError.message || 'Unable to start Google authentication.')
       }
     } catch (err: any) {
       window.localStorage.removeItem('simmam_admin_google_signin')
+      window.localStorage.removeItem('simmam_admin_role_intent')
       setError(err?.message || 'Unable to start Google authentication.')
     } finally {
       setAuthLoading(false)

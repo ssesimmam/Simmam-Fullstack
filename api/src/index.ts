@@ -1140,11 +1140,29 @@ app.get('/api/wch1925/users', async (req, res) => {
     const search = String(req.query.search || '').trim().toLowerCase()
     const house = String(req.query.house || '').trim()
 
-    let query = supabase.from('users').select('id,name,email,mobile_number,register_number,department,house,created_at,admins(role)').order('created_at', { ascending: false })
-    if (house) query = query.eq('house', house)
+    let data: any[] = []
+    const targetLimit = 50000
+    let currentOffset = 0
 
-    const { data, error } = await query.limit(50000)
-    if (error) throw error
+    while (data.length < targetLimit) {
+      const fetchCount = Math.min(1000, targetLimit - data.length)
+      let query = supabase
+        .from('users')
+        .select('id,name,email,mobile_number,register_number,department,house,created_at,admins(role)')
+        .order('created_at', { ascending: false })
+        .range(currentOffset, currentOffset + fetchCount - 1)
+
+      if (house) query = query.eq('house', house)
+
+      const { data: chunk, error } = await query
+      if (error) throw error
+      if (!chunk || chunk.length === 0) break
+
+      data = data.concat(chunk)
+      currentOffset += chunk.length
+
+      if (chunk.length < fetchCount) break
+    }
 
     let rows = data || []
     if (search) {
