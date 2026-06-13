@@ -14,14 +14,14 @@ if (start < 0 || end < 0 || end <= start) {
 }
 
 const arrayText = source.slice(start, end)
-const objectPattern = /\{\s*name:\s*"([^"]+)"[\s\S]*?category:\s*"([^"]+)"[\s\S]*?mainCategory:\s*"([^"]+)"[\s\S]*?rules:\s*\[([\s\S]*?)\]\s*\}/g
+const objectPattern = /\{\s*name:\s*"([^"]+)"[\s\S]*?category:\s*"([^"]+)"[\s\S]*?main_category:\s*"([^"]+)"[\s\S]*?rules:\s*\[([\s\S]*?)\]\s*\}/g
 const rulePattern = /"((?:[^"\\]|\\.)*)"/g
 
 const catalog = []
 for (const match of arrayText.matchAll(objectPattern)) {
-  const [, name, category, mainCategory, rulesRaw] = match
+  const [, name, category, main_category, rulesRaw] = match
   const rules = Array.from(rulesRaw.matchAll(rulePattern), (ruleMatch) => ruleMatch[1].replace(/\\"/g, '"'))
-  catalog.push({ name, category, mainCategory, rules })
+  catalog.push({ name, category, main_category, rules })
 }
 
 if (!catalog.length) {

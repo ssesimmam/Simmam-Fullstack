@@ -453,7 +453,7 @@ const isMissingAdminSettingsTableError = (error: any) =>
 type EventCatalogItem = {
   name: string
   category: string
-  mainCategory: string
+  main_category: string
   rules: string[]
 }
 
@@ -493,14 +493,14 @@ const extractEventCatalog = (): EventCatalogItem[] => {
   }
 
   const arrayText = source.slice(arrayStart, arrayEnd)
-  const objectPattern = /\{\s*name:\s*"([^"]+)"[\s\S]*?category:\s*"([^"]+)"[\s\S]*?mainCategory:\s*"([^"]+)"[\s\S]*?rules:\s*\[([\s\S]*?)\]\s*\}/g
+  const objectPattern = /\{\s*name:\s*"([^"]+)"[\s\S]*?category:\s*"([^"]+)"[\s\S]*?main_category:\s*"([^"]+)"[\s\S]*?rules:\s*\[([\s\S]*?)\]\s*\}/g
   const rulePattern = /"((?:[^"\\]|\\.)*)"/g
 
   const catalog: EventCatalogItem[] = []
   for (const match of arrayText.matchAll(objectPattern)) {
-    const [, name, category, mainCategory, rulesRaw] = match
+    const [, name, category, main_category, rulesRaw] = match
     const rules = Array.from(rulesRaw.matchAll(rulePattern), (ruleMatch) => ruleMatch[1].replace(/\\"/g, '"'))
-    catalog.push({ name, category, mainCategory, rules })
+    catalog.push({ name, category, main_category, rules })
   }
 
   if (catalog.length === 0) {
@@ -534,7 +534,7 @@ const seedMissingEvents = async () => {
       slug,
       description: '',
       category: event.category,
-      main_category: event.mainCategory,
+      main_category: event.main_category,
       registration_open: false,
       checkin_enabled: false,
       is_floated: false,

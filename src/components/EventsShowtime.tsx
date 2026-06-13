@@ -22,7 +22,7 @@ import { getAuthCallbackUrl } from "@/lib/frontendOrigin";
 type DisplayEvent = {
   id: string;
   name: string;
-  mainCategory: string;
+  main_category: string;
   date: string;
   timeSlot: string;
   endTime: string;
@@ -52,7 +52,7 @@ interface EventCardProps {
 }
 
 function EventCard({ event, user, onRegister, registered, registrationOpen }: EventCardProps) {
-  const catStyle = getCategoryStyle(event.mainCategory);
+  const catStyle = getCategoryStyle(event.main_category);
 
   return (
     <div
@@ -91,7 +91,7 @@ function EventCard({ event, user, onRegister, registered, registrationOpen }: Ev
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${catStyle.dot}`} />
-            {event.mainCategory}
+            {event.main_category}
           </span>
         </div>
       </div>
@@ -293,7 +293,7 @@ export function EventsShowtime() {
       .map((event) => ({
         id: event.id,
         name: event.name,
-        mainCategory: (event as any).main_category || (event as any).category || 'Other',
+        main_category: (event as any).main_category || (event as any).category || 'Other',
         date: (event as any).date || '',
         timeSlot: (event as any).time_slot || 'TBD',
         endTime: (event as any).end_time || '',
@@ -341,7 +341,7 @@ export function EventsShowtime() {
       id: pendingEvent.id,
       backendEventId: pendingEvent.id,
       name: pendingEvent.name,
-      category: pendingEvent.mainCategory,
+      category: pendingEvent.main_category,
       date: pendingEvent.date,
       timeSlot: pendingEvent.timeSlot,
       endTime: pendingEvent.endTime,
@@ -354,8 +354,8 @@ export function EventsShowtime() {
 
   const grouped = filteredEvents.reduce<Record<string, DisplayEvent[]>>(
     (acc, ev) => {
-      if (!acc[ev.mainCategory]) acc[ev.mainCategory] = [];
-      acc[ev.mainCategory].push(ev);
+      if (!acc[ev.main_category]) acc[ev.main_category] = [];
+      acc[ev.main_category].push(ev);
       return acc;
     },
     {}
@@ -367,7 +367,7 @@ export function EventsShowtime() {
     id: e.id,
     backendEventId: e.id,
     name: e.name,
-    category: e.mainCategory,
+    category: e.main_category,
     date: e.date,
     timeSlot: e.timeSlot,
     endTime: e.endTime,

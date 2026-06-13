@@ -74,7 +74,7 @@ for line in lines:
         if current_event:
             current_event["rules"].append(line.replace('●', '').strip())
     else:
-        current_event = {"name": line, "category": current_category, "mainCategory": current_main_category, "rules": []}
+        current_event = {"name": line, "category": current_category, "main_category": current_main_category, "rules": []}
         events.append(current_event)
 
 ts_content = '''import {
@@ -96,7 +96,7 @@ import type { LucideIcon } from "lucide-react";
 export type Event = {
   name: string;
   category: string;
-  mainCategory: "Tech" | "Non-Tech" | "Sports";
+  main_category: "Tech" | "Non-Tech" | "Sports" | "Cultural Fest";
   icon: LucideIcon;
   rules: string[];
 };
@@ -111,7 +111,7 @@ for e in events:
     ts_content += f'''  {{
     name: {json.dumps(e['name'])},
     category: {json.dumps(e['category'])},
-    mainCategory: "{e['mainCategory']}",
+    main_category: "{e['main_category']}",
     icon: {icon},
     rules: {rules_str}
   }},
