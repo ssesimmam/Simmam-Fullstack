@@ -68,6 +68,7 @@ function DataEntryPage() {
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [newEventName, setNewEventName] = useState('')
   const [newEventCategory, setNewEventCategory] = useState('')
+  const [newEventMainCategory, setNewEventMainCategory] = useState('Tech')
   const [newEventDate, setNewEventDate] = useState(new Date().toISOString().slice(0, 10))
 
   const [showAddParticipant, setShowAddParticipant] = useState(false)
@@ -103,7 +104,7 @@ function DataEntryPage() {
       name: event.name,
       description: event.description || 'No description provided.',
       category: event.category || 'Technical',
-      main_category: event.mainCategory || 'Tech',
+      main_category: event.main_category || 'Tech',
       date: (event as any).date || new Date().toISOString().split('T')[0],
       time_slot: event.time || '10:00 AM to 11:00 AM',
       venue: event.venue || 'Main Campus',
@@ -124,6 +125,7 @@ function DataEntryPage() {
     const payload = {
       name: editingEvent.name,
       category: editingEvent.category,
+      main_category: editingEvent.main_category || 'Tech',
       description: editingEvent.description,
       date: editingEvent.date,
       time_slot: editingEvent.time,
@@ -237,7 +239,7 @@ function DataEntryPage() {
       category: newEventCategory.trim(),
       date: newEventDate,
       icon: events[0]?.icon || (() => null),
-      mainCategory: 'Non-Tech',
+      main_category: newEventMainCategory,
       rules: [],
       is_floated: true,
       is_live_tomorrow: false,
@@ -254,7 +256,7 @@ function DataEntryPage() {
         name: newEvent.name,
         description: newEvent.description || '',
         category: newEvent.category,
-        main_category: newEvent.mainCategory,
+        main_category: newEvent.main_category,
         date: newEvent.date || new Date().toISOString().slice(0, 10),
         time_slot: newEvent.time || '00:00',
         venue: newEvent.venue || 'TBD',
@@ -504,6 +506,19 @@ function DataEntryPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs">Main Category</Label>
+                  <select
+                    className="w-full h-10 px-3 py-2 rounded-md bg-black border border-[#333] text-sm text-white"
+                    value={newEventMainCategory}
+                    onChange={(e) => setNewEventMainCategory(e.target.value)}
+                  >
+                    <option value="Tech">Tech</option>
+                    <option value="Non-Tech">Non-Tech</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Cultural Fest">Cultural Fest</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-gray-400 text-xs">Category</Label>
                   <Input
                     placeholder="e.g. Sports"
@@ -619,6 +634,19 @@ function DataEntryPage() {
                                   onChange={(e) => setEditingEvent({...editingEvent, name: e.target.value})}
                                   className="bg-gray-800 border-gray-600 text-white"
                                 />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-gray-300">Main Category</Label>
+                                <select
+                                  className="w-full h-10 px-3 py-2 rounded-md bg-gray-800 border-gray-600 text-white text-sm"
+                                  value={editingEvent.main_category || 'Tech'}
+                                  onChange={(e) => setEditingEvent({...editingEvent, main_category: e.target.value})}
+                                >
+                                  <option value="Tech">Tech</option>
+                                  <option value="Non-Tech">Non-Tech</option>
+                                  <option value="Sports">Sports</option>
+                                  <option value="Cultural Fest">Cultural Fest</option>
+                                </select>
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-gray-300">Category</Label>

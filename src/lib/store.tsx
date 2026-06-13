@@ -12,7 +12,13 @@ export interface EventResult {
   resultDay: string
 }
 
-export const mapRemoteEventToAdminEvent = (remote: any, local: any) => remote
+export const mapRemoteEventToAdminEvent = (remote: any, local: any) => {
+  const mapped = { ...remote }
+  if (mapped.mainCategory && !mapped.main_category) {
+    mapped.main_category = mapped.mainCategory
+  }
+  return mapped
+}
 export const resolvePersistedEventId = async (event: any) => event.id || 'event-1'
 
 export function useData() {

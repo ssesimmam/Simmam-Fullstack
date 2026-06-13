@@ -23,6 +23,7 @@ type EventForm = {
   name: string
   description: string
   category: string
+  main_category: string
   date: string
   time: string
   venue: string
@@ -35,6 +36,7 @@ const emptyForm: EventForm = {
   name: '',
   description: '',
   category: '',
+  main_category: 'Tech',
   date: '',
   time: '',
   venue: '',
@@ -65,7 +67,7 @@ function EventsPage() {
       (event) =>
         (event.name || '').toLowerCase().includes(query) ||
         (event.category || '').toLowerCase().includes(query) ||
-        (event.mainCategory || '').toLowerCase().includes(query),
+        (event.main_category || '').toLowerCase().includes(query),
     )
   }, [events, searchQuery])
 
@@ -81,7 +83,7 @@ function EventsPage() {
           name: event.name,
           description: event.description || 'No description provided.',
           category: event.category || 'Technical',
-          main_category: event.mainCategory || 'Tech',
+          main_category: event.main_category || 'Tech',
           date: (event as any).date || new Date().toISOString().split('T')[0],
           time_slot: event.time || '10:00 AM to 11:00 AM',
           venue: event.venue || 'Main Campus',
@@ -107,6 +109,7 @@ function EventsPage() {
       name: event.name,
       description: event.description || '',
       category: event.category || '',
+      main_category: event.main_category || 'Tech',
       date: (event as any).date || '',
       time: event.time || '',
       venue: event.venue || '',
@@ -137,7 +140,7 @@ function EventsPage() {
         name: form.name.trim(),
         description: form.description.trim(),
         category: form.category.trim(),
-        main_category: form.category.trim(),
+        main_category: form.main_category,
         date: form.date,
         time_slot: form.time.trim(),
         venue: form.venue.trim(),
@@ -150,7 +153,7 @@ function EventsPage() {
         name: created.name,
         description: created.description || '',
         category: created.category || form.category.trim(),
-        mainCategory: created.main_category || form.category.trim(),
+        main_category: created.main_category || form.main_category,
         venue: created.venue || form.venue.trim(),
         time: created.time_slot || form.time.trim(),
         date: created.date || form.date,
@@ -199,7 +202,7 @@ function EventsPage() {
         name: form.name.trim(),
         description: form.description.trim(),
         category: form.category.trim(),
-        main_category: form.category.trim(),
+        main_category: form.main_category,
         date: form.date,
         time_slot: form.time.trim(),
         venue: form.venue.trim(),
@@ -379,6 +382,19 @@ function EventsPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+                            onClick={() => {
+                              setEditingEvent(event)
+                              syncFormFromEvent(event)
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="border-red-500/40 text-red-400 hover:bg-red-500/10"
                             onClick={() => handleDelete(event)}
                           >
@@ -471,6 +487,20 @@ function EventFormFields({
       <div className="space-y-2">
         <Label>Event Category</Label>
         <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="bg-black border-[#333]" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Main Category</Label>
+        <select
+          value={form.main_category}
+          onChange={(e) => setForm({ ...form, main_category: e.target.value })}
+          className="w-full h-10 px-3 py-2 rounded-md bg-black border border-[#333] text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold focus:border-gold"
+        >
+          <option value="Tech">Tech</option>
+          <option value="Non-Tech">Non-Tech</option>
+          <option value="Sports">Sports</option>
+          <option value="Cultural Fest">Cultural Fest</option>
+        </select>
       </div>
 
       <div className="space-y-2">
