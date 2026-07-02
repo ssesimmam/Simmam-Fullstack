@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { type House } from "@/lib/houses";
 import { useData } from "@/lib/store";
+import { HousePointsBreakdown } from "./HousePointsBreakdown";
 
 /* ─── Color Palette ────────────────────────────────────────── */
 
@@ -358,6 +359,8 @@ function PodiumCard({
 /* ─── Ranking Table ────────────────────────────────────────── */
 
 function RankingTable({ ranked }: { ranked: House[] }) {
+  const [expandedHouse, setExpandedHouse] = useState<string | null>(null);
+
   return (
     <div
       className="relative rounded-xl overflow-hidden max-w-3xl mx-auto"
@@ -390,72 +393,97 @@ function RankingTable({ ranked }: { ranked: House[] }) {
       {/* Table rows */}
       {ranked.map((house, i) => {
         const isTop3 = i < 3;
+        const isExpanded = expandedHouse === house.id;
 
         return (
-          <div
-            key={house.short}
-            className="group grid items-center px-5 md:px-8 py-3 transition-colors duration-300 cursor-default"
-            style={{
-              gridTemplateColumns: "48px 1fr 100px",
-              borderBottom:
-                i < ranked.length - 1
-                  ? `1px solid ${C.borderSoft}50`
-                  : "none",
-              ...(i % 2 === 0 ? {} : { background: `${C.borderSoft}08` }),
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background = C.bgCardHover;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background =
-                i % 2 === 0 ? "transparent" : `${C.borderSoft}08`;
-            }}
-          >
-            {/* Rank */}
-            <div className="flex items-center">
-              <span
-                className="font-display text-lg font-bold tabular-nums"
-                style={{ color: isTop3 ? C.headingGold : C.dimText }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-            </div>
+          <div key={house.short}>
+            <div
+              className="group grid items-center px-5 md:px-8 py-3 transition-colors duration-300 cursor-pointer select-none"
+              style={{
+                gridTemplateColumns: "48px 1fr 100px",
+                borderBottom:
+                  !isExpanded && i < ranked.length - 1
+                    ? `1px solid ${C.borderSoft}50`
+                    : "none",
+                ...(i % 2 === 0 ? {} : { background: `${C.borderSoft}08` }),
+              }}
+              onClick={() => setExpandedHouse(isExpanded ? null : (house.id || house.short))}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background = C.bgCardHover;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background =
+                  i % 2 === 0 ? "transparent" : `${C.borderSoft}08`;
+              }}
+            >
+              {/* Rank */}
+              <div className="flex items-center">
+                <span
+                  className="font-display text-lg font-bold tabular-nums"
+                  style={{ color: isTop3 ? C.headingGold : C.dimText }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
 
-            {/* House */}
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
-                style={{
-                  background: `${house.accent}20`,
-                  border: `1px solid ${house.accent}45`,
-                }}
-              >
-                <img 
-                  src={getHouseLogo(house.name)} 
-                  alt={house.name} 
-                  className={`w-full h-full object-cover ${getHouseImageStyle(house.name)}`} 
+              {/* House */}
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
+                  style={{
+                    background: `${house.accent}20`,
+                    border: `1px solid ${house.accent}45`,
+                  }}
+                >
+                  <img 
+                    src={getHouseLogo(house.name)} 
+                    alt={house.name} 
+                    className={`w-full h-full object-cover ${getHouseImageStyle(house.name)}`} 
+                  />
+                </div>
+                <span
+                  className="font-semibold text-sm"
+                  style={{ color: C.mainText }}
+                >
+                  {house.name}
+                </span>
+                {i === 0 && (
+                  <Crown className="w-3.5 h-3.5 ml-0.5" style={{ color: C.headingGold }} />
+                )}
+                <ChevronDown
+                  className={`w-3.5 h-3.5 ml-auto transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                  style={{ color: C.dimText }}
                 />
               </div>
-              <span
-                className="font-semibold text-sm"
-                style={{ color: C.mainText }}
-              >
-                {house.name}
-              </span>
-              {i === 0 && (
-                <Crown className="w-3.5 h-3.5 ml-0.5" style={{ color: C.headingGold }} />
-              )}
+
+              {/* Points */}
+              <div className="text-right">
+                <span
+                  className="font-display text-base font-bold tabular-nums"
+                  style={{ color: isTop3 ? C.headingGold : C.mainText }}
+                >
+                  {getHousePoints(house).toLocaleString()}
+                </span>
+              </div>
             </div>
 
-            {/* Points */}
-            <div className="text-right">
-              <span
-                className="font-display text-base font-bold tabular-nums"
-                style={{ color: isTop3 ? C.headingGold : C.mainText }}
+            {/* Expandable Breakdown */}
+            {house.id && (
+              <div
+                className="px-5 md:px-8"
+                style={{
+                  borderBottom: i < ranked.length - 1 ? `1px solid ${C.borderSoft}50` : 'none',
+                }}
               >
-                {getHousePoints(house).toLocaleString()}
-              </span>
-            </div>
+                <HousePointsBreakdown
+                  houseId={house.id}
+                  houseName={house.name}
+                  houseAccent={house.accent}
+                  isOpen={isExpanded}
+                  onToggle={() => setExpandedHouse(isExpanded ? null : (house.id || house.short))}
+                />
+              </div>
+            )}
           </div>
         );
       })}

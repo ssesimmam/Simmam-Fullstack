@@ -23,6 +23,7 @@ function LeaderboardManagement() {
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true)
   const [pointAdjustments, setPointAdjustments] = useState<Record<string, number>>({})
   const [pointReasons, setPointReasons] = useState<Record<string, string>>({})
+  const [pointCategories, setPointCategories] = useState<Record<string, string>>({})
 
   const loadLeaderboard = async () => {
     setLoadingLeaderboard(true)
@@ -69,6 +70,7 @@ function LeaderboardManagement() {
   const handleSavePoints = async (houseName: string) => {
     const adjustment = pointAdjustments[houseName] || 0
     const reason = pointReasons[houseName] || ''
+    const category = pointCategories[houseName] || 'general'
 
     if (adjustment === 0) return
     if (adjustment < 0 && !reason.trim()) {
@@ -83,7 +85,7 @@ function LeaderboardManagement() {
     }
 
     try {
-      await adjustAdminLeaderboardPoints(remoteHouse.house_id, adjustment, reason)
+      await adjustAdminLeaderboardPoints(remoteHouse.house_id, adjustment, reason, category)
       // Optimistically update local store so UI reflects change immediately
       try {
         updateHousePoints(remoteHouse.house_name, adjustment, reason, user?.name || 'Admin')
@@ -93,7 +95,8 @@ function LeaderboardManagement() {
       await refreshData()
       setPointAdjustments((prev) => ({ ...prev, [houseName]: 0 }))
       setPointReasons((prev) => ({ ...prev, [houseName]: '' }))
-      toast.success(`Points updated for ${houseName}`)
+      setPointCategories((prev) => ({ ...prev, [houseName]: 'general' }))
+      toast.success(`Points updated for ${houseName} (${category})`)
       await loadLeaderboard()
     } catch (error: any) {
       toast.error(error?.message || 'Failed to update leaderboard')
@@ -184,6 +187,26 @@ function LeaderboardManagement() {
 
               {canEdit && (
                   <div className="flex flex-col w-full md:w-auto gap-2">
+                    {/* Category Selector */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">Category:</span>
+                      <Select
+                        value={pointCategories[house.name] || 'general'}
+                        onValueChange={(val) => setPointCategories(prev => ({ ...prev, [house.name]: val }))}
+                      >
+                        <SelectTrigger className="w-36 bg-black border-[#333] text-white text-xs h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black border-[#333] text-white">
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="tech">Tech</SelectItem>
+                          <SelectItem value="non_tech">Non-Tech</SelectItem>
+                          <SelectItem value="cultural">Cultural</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="flex items-center gap-3 bg-black border border-[#333] p-3 rounded-lg">
                       <Button 
                         variant="ghost" 

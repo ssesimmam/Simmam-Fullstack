@@ -54,15 +54,30 @@ export async function getAdminLeaderboard(): Promise<AdminLeaderboardDTO[]> {
   return result.data ?? []
 }
 
-export async function adjustLeaderboardPoints(houseId: string, points: number, reason?: string): Promise<void> {
+export async function adjustLeaderboardPoints(houseId: string, points: number, reason?: string, category?: string): Promise<void> {
   await adminRequest('/leaderboard/adjust', {
     method: 'POST',
-    body: JSON.stringify({ house_id: houseId, points, reason }),
+    body: JSON.stringify({ house_id: houseId, points, reason, category: category || 'general' }),
   })
 }
 
 export async function getAdminHouses(): Promise<AdminHouseDTO[]> {
   const result = await adminRequest<{ data: AdminHouseDTO[] }>('/houses')
+  return result.data ?? []
+}
+
+export interface AdminPointsHistoryDTO {
+  id: string
+  house_id: string
+  points: number
+  reason: string | null
+  category: string
+  issued_by: string | null
+  created_at: string
+}
+
+export async function getHousePointsHistory(houseId: string): Promise<AdminPointsHistoryDTO[]> {
+  const result = await adminRequest<{ data: AdminPointsHistoryDTO[] }>(`/houses/${houseId}/points-history`)
   return result.data ?? []
 }
 

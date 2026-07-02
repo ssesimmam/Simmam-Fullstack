@@ -1,9 +1,10 @@
-import { useMemo } from "react";
-import { Crown, Activity, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Crown, Activity, TrendingUp, ChevronDown } from "lucide-react";
 import { Counter } from "./Counter";
 import { Tilt3D } from "./Tilt3D";
 import { SectionHeader } from "./Dashboard";
 import { useData } from "@/lib/store";
+import { HousePointsBreakdown } from "./HousePointsBreakdown";
 
 type Stat = {
   label: string;
@@ -31,6 +32,7 @@ type HouseScore = {
 export function DashboardLiveScores() {
   const { houses, events, participants, settings } = useData();
   const houseOfTheDay = houses.find((h) => h.name === settings?.houseOfTheDay);
+  const [expandedHouse, setExpandedHouse] = useState<string | null>(null);
 
   const participationScores = useMemo(() => {
     return participants.reduce<Record<string, number>>((acc, participant) => {
@@ -199,12 +201,19 @@ export function DashboardLiveScores() {
 
             <div className="relative space-y-4">
               {houseScores.map((house, i) => {
+                const houseData = houses.find((h: any) => h.name === house.name);
+                const houseId = houseData?.id || '';
+                const isExpanded = expandedHouse === houseId;
 
                 return (
                   <div 
                     key={house.name} 
-                    className="relative p-2 -mx-2 rounded-xl transition-colors hover:bg-white/5"
+                    className="relative rounded-xl transition-colors"
                   >
+                    <div
+                      className="p-2 -mx-2 rounded-xl transition-colors hover:bg-white/5 cursor-pointer select-none"
+                      onClick={() => setExpandedHouse(isExpanded ? null : houseId)}
+                    >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-4">
                         <span className="font-display text-2xl font-black text-white/20 w-8 tabular-nums italic">
@@ -221,11 +230,18 @@ export function DashboardLiveScores() {
                         </div>
                       </div>
                       
-                      <div className="flex flex-col items-end">
-                        <span className="font-display text-3xl font-bold tabular-nums text-gradient-gold leading-none">
-                          {house.points}
-                        </span>
-                        <span className="text-[10px] tracking-[0.2em] text-foreground/30 font-bold uppercase mt-1">Total Score</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                          <span className="font-display text-3xl font-bold tabular-nums text-gradient-gold leading-none">
+                            {house.points}
+                          </span>
+                          <span className="text-[10px] tracking-[0.2em] text-foreground/30 font-bold uppercase mt-1">Total Score</span>
+                        </div>
+                        {houseId && (
+                          <ChevronDown
+                            className={`w-4 h-4 text-foreground/30 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        )}
                       </div>
                     </div>
 
@@ -244,7 +260,20 @@ export function DashboardLiveScores() {
                         </div>
                       </div>
                     </div>
+                    </div>
 
+                    {/* Expandable Breakdown */}
+                    {houseId && (
+                      <div className="px-2">
+                        <HousePointsBreakdown
+                          houseId={houseId}
+                          houseName={house.name}
+                          houseAccent={house.accent}
+                          isOpen={isExpanded}
+                          onToggle={() => setExpandedHouse(isExpanded ? null : houseId)}
+                        />
+                      </div>
+                    )}
 
                   </div>
                 );

@@ -86,3 +86,35 @@ export async function getPublicSettings(): Promise<{ festivalStatus: string; reg
   const payload = await publicRequest<{ settings: { festivalStatus: string; registrationsOpen: boolean } }>('/settings')
   return payload.settings
 }
+
+// ─── House Points Breakdown ───────────────────────────────────────────────────
+
+export interface HousePointsBreakdownDTO {
+  house: {
+    id: string
+    name: string
+    accent: string
+    base_points: number
+  }
+  categories: {
+    tech: number
+    non_tech: number
+    cultural: number
+    sports: number
+    general: number
+  }
+  total: number
+  dailyHistory: Array<{
+    date: string
+    tech: number
+    non_tech: number
+    cultural: number
+    sports: number
+    general: number
+    total: number
+  }>
+}
+
+export async function getHousePointsBreakdown(houseId: string): Promise<HousePointsBreakdownDTO> {
+  return publicRequest<HousePointsBreakdownDTO>(`/houses/${houseId}/points-breakdown`)
+}

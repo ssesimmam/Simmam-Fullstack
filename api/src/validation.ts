@@ -42,10 +42,13 @@ export const adminSettingsBodySchema = z.object({
   houseOfTheDay: z.string().optional(),
 });
 
+export const POINT_CATEGORIES = ['tech', 'non_tech', 'cultural', 'sports', 'general'] as const;
+
 export const leaderboardAdjustBodySchema = z.object({
   house_id: z.string().uuid(),
   points: z.coerce.number().int().min(-100000).max(100000),
   reason: optionalText,
+  category: z.enum(POINT_CATEGORIES).optional().default('general'),
 });
 
 export const userCreateBodySchema = z.object({

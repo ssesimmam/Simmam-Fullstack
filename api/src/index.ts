@@ -1067,7 +1067,7 @@ app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { house_id, points, reason } = parsedBody.data
+    const { house_id, points, reason, category } = parsedBody.data
 
     const { data: house, error: houseErr } = await supabase.from('houses').select('id').eq('id', house_id).single()
     if (houseErr) throw houseErr
@@ -1077,8 +1077,8 @@ app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
 
     const { data, error } = await supabase
       .from('points_history')
-      .insert({ house_id, points, reason })
-      .select('id,house_id,points,reason,issued_by,created_at')
+      .insert({ house_id, points, reason, category: category || 'general' })
+      .select('id,house_id,points,reason,category,issued_by,created_at')
       .single()
 
     if (error) throw error
@@ -1092,6 +1092,110 @@ app.post('/api/wch1925/leaderboard/adjust', adminLimiter, async (req, res) => {
     if (leaderboardErr && leaderboardErr.code !== 'PGRST116') throw leaderboardErr
 
     res.status(201).json({ data, leaderboard: leaderboardRow || null })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+// Public: House points breakdown by category + daily history for line graph
+app.get('/api/houses/:houseId/points-breakdown', publicLimiter, cacheMiddleware(60), async (req, res) => {
+  try {
+    const houseId = req.params.houseId
+
+    // 1) Verify house exists
+    const { data: house, error: houseErr } = await supabase
+      .from('houses')
+      .select('id,name,accent,points')
+      .eq('id', houseId)
+      .single()
+
+    if (houseErr) {
+      if (houseErr.code === 'PGRST116') return res.status(404).json({ error: 'house_not_found' })
+      throw houseErr
+    }
+
+    // 2) Category breakdown (aggregate points per category)
+    const { data: historyRows, error: histErr } = await supabase
+      .from('points_history')
+      .select('points,category,created_at')
+      .eq('house_id', houseId)
+      .order('created_at', { ascending: true })
+
+    if (histErr) throw histErr
+
+    const categories: Record<string, number> = {
+      tech: 0,
+      non_tech: 0,
+      cultural: 0,
+      sports: 0,
+      general: 0,
+    }
+
+    // Daily cumulative data for the line graph
+    const dailyMap: Record<string, Record<string, number>> = {}
+
+    for (const row of (historyRows || [])) {
+      const cat = row.category || 'general'
+      categories[cat] = (categories[cat] || 0) + row.points
+
+      // Group by date (YYYY-MM-DD)
+      const day = new Date(row.created_at).toISOString().split('T')[0]
+      if (!dailyMap[day]) {
+        dailyMap[day] = { tech: 0, non_tech: 0, cultural: 0, sports: 0, general: 0 }
+      }
+      dailyMap[day][cat] = (dailyMap[day][cat] || 0) + row.points
+    }
+
+    // Convert daily map to cumulative array
+    const sortedDays = Object.keys(dailyMap).sort()
+    const cumulative = { tech: 0, non_tech: 0, cultural: 0, sports: 0, general: 0 }
+    const dailyHistory = sortedDays.map((day) => {
+      for (const cat of Object.keys(cumulative) as Array<keyof typeof cumulative>) {
+        cumulative[cat] += dailyMap[day][cat] || 0
+      }
+      return {
+        date: day,
+        tech: cumulative.tech,
+        non_tech: cumulative.non_tech,
+        cultural: cumulative.cultural,
+        sports: cumulative.sports,
+        general: cumulative.general,
+        total: cumulative.tech + cumulative.non_tech + cumulative.cultural + cumulative.sports + cumulative.general,
+      }
+    })
+
+    res.json({
+      house: {
+        id: house.id,
+        name: house.name,
+        accent: house.accent,
+        base_points: house.points,
+      },
+      categories,
+      total: Object.values(categories).reduce((s, v) => s + v, 0) + (house.points || 0),
+      dailyHistory,
+    })
+  } catch (err: any) {
+    console.error(err)
+    res.status(500).json({ error: err.message || 'unknown' })
+  }
+})
+
+// Admin: Full points history for a specific house (with category)
+app.get('/api/wch1925/houses/:houseId/points-history', adminLimiter, async (req, res) => {
+  try {
+    const houseId = req.params.houseId
+
+    const { data, error } = await supabase
+      .from('points_history')
+      .select('id,house_id,points,reason,category,issued_by,created_at')
+      .eq('house_id', houseId)
+      .order('created_at', { ascending: false })
+      .limit(200)
+
+    if (error) throw error
+    res.json({ data: data || [] })
   } catch (err: any) {
     console.error(err)
     res.status(500).json({ error: err.message || 'unknown' })

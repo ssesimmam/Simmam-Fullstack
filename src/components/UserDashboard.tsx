@@ -6,7 +6,9 @@ import {
   MapPin,
   Sparkles,
   User,
+  Download,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { getUserRegistrations, clearAllUserData, syncUserRegistrations, type Registration, type UserProfile } from '@/lib/registrationStore'
 import { useHouses } from '@/features/events/useEvents'
 import { formatIstDayLabel } from '@/lib/dateTime'
@@ -128,13 +130,32 @@ function DashboardEventCard({
         </div>
       </div>
 
-      {/* Badge */}
-      <div className="shrink-0">
+      {/* Badge & Actions */}
+      <div className="shrink-0 flex flex-col items-end gap-3">
         <div
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border ${status.bg} ${status.border} ${status.text}`}
         >
           {status.label}
         </div>
+        <button
+          disabled={variant !== 'checkedin' && variant !== 'od'}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (variant === 'checkedin' || variant === 'od') {
+              toast.success('Certificate download starting...')
+              // TODO: Implement actual download
+            }
+          }}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+            variant === 'checkedin' || variant === 'od'
+              ? 'bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30' 
+              : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed opacity-60'
+          }`}
+        >
+          <Download className="h-3 w-3" />
+          Certificate
+        </button>
       </div>
     </article>
   )
@@ -178,10 +199,24 @@ function DetailedODCard({
             </p>
           </div>
           
-          <div className="shrink-0 flex items-center justify-center h-20 w-20 rounded-xl border-2 border-dashed border-[#D4AF37]/20 bg-[#D4AF37]/5 relative overflow-hidden">
-            <span className="absolute inset-0 flex items-center justify-center rotate-[-12deg] text-xs font-black uppercase tracking-widest text-[#D4AF37]/40">
-              Verified
-            </span>
+          <div className="shrink-0 flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center h-20 w-20 rounded-xl border-2 border-dashed border-[#D4AF37]/20 bg-[#D4AF37]/5 relative overflow-hidden">
+              <span className="absolute inset-0 flex items-center justify-center rotate-[-12deg] text-xs font-black uppercase tracking-widest text-[#D4AF37]/40">
+                Verified
+              </span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                toast.success('Certificate download starting...')
+                // TODO: Implement actual download
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 border border-[#D4AF37]/30 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-all hover:scale-105"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Certificate
+            </button>
           </div>
         </div>
 

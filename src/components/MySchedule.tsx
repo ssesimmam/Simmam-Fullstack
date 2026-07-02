@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkles } from 'lucide-react'
+import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkles, Download } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type Registration } from '@/lib/registrationStore'
 import { formatIstDateTime, formatIstDayLabel } from '@/lib/dateTime'
@@ -64,6 +65,13 @@ function RegistrationCard({ reg }: { reg: Registration }) {
                 <span className="max-w-[64px] text-center text-[9px] font-bold uppercase tracking-[0.15em] text-amber-400/80 leading-tight">
                   Waiting<br />Check-In
                 </span>
+                <button
+                  disabled
+                  className="mt-1 flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white/20 border border-white/10 cursor-not-allowed opacity-60"
+                >
+                  <Download className="h-3 w-3" />
+                  Certificate
+                </button>
               </>
             ) : (
               <>
@@ -73,6 +81,18 @@ function RegistrationCard({ reg }: { reg: Registration }) {
                 <span className="max-w-[64px] text-center text-[9px] font-bold uppercase tracking-[0.15em] text-green-400/80 leading-tight">
                   Checked In<br />(OD Eligible)
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    toast.success('Certificate download starting...')
+                    // TODO: Implement actual certificate download logic
+                  }}
+                  className="mt-1 flex items-center gap-1.5 rounded-lg bg-[#D4AF37]/10 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 transition-all"
+                >
+                  <Download className="h-3 w-3" />
+                  Certificate
+                </button>
               </>
             )}
           </div>
