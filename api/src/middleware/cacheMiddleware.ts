@@ -81,6 +81,7 @@ export function cacheMiddleware(ttlSeconds: number) {
         const cached = await redis.get(cacheKey)
         if (cached) {
           res.setHeader('X-Cache', 'HIT')
+          res.setHeader('Cache-Control', `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}`)
           return res.json(parseCachedValue(cached))
         }
       } catch (err) {
@@ -93,6 +94,7 @@ export function cacheMiddleware(ttlSeconds: number) {
         const cached = await upstash.get<string>(cacheKey)
         if (cached) {
           res.setHeader('X-Cache', 'HIT')
+          res.setHeader('Cache-Control', `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}`)
           return res.json(parseCachedValue(cached))
         }
       } catch (err) {
@@ -103,6 +105,7 @@ export function cacheMiddleware(ttlSeconds: number) {
     // Check if cached entry exists and is not expired
     if (cache[cacheKey] && cache[cacheKey].expiry > now) {
       res.setHeader('X-Cache', 'HIT')
+      res.setHeader('Cache-Control', `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}`)
       return res.json(cache[cacheKey].data)
     }
 
@@ -129,6 +132,7 @@ export function cacheMiddleware(ttlSeconds: number) {
       }
 
       res.setHeader('X-Cache', 'MISS')
+      res.setHeader('Cache-Control', `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}`)
       return originalJson(data)
     }
 

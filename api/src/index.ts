@@ -1259,7 +1259,7 @@ app.get('/api/wch1925/users', async (req, res) => {
     const house = String(req.query.house || '').trim()
 
     let data: any[] = []
-    const targetLimit = 50000
+    const targetLimit = 2000
     let currentOffset = 0
 
     while (data.length < targetLimit) {
@@ -1361,7 +1361,7 @@ app.get('/api/wch1925/announcements', async (_req, res) => {
       .from('announcements')
       .select('id,title,body,pinned,starts_at,ends_at,created_by,created_at,updated_at')
       .order('created_at', { ascending: false })
-      .limit(50000)
+      .limit(2000)
 
     if (error) throw error
     res.json({ data: data || [] })
@@ -1410,7 +1410,7 @@ app.get('/api/wch1925/rules', async (_req, res) => {
       .from('rules_and_regulations')
       .select('id,title,body,pinned,starts_at,ends_at,created_at,updated_at')
       .order('created_at', { ascending: false })
-      .limit(50000)
+      .limit(2000)
 
     if (error) throw error
     res.json({ data: data || [] })
@@ -1747,7 +1747,7 @@ app.get('/api/wch1925/registrations', async (req, res) => {
     const eventName = String(parsedQuery.data.event || '').trim().toLowerCase()
     const date = String(parsedQuery.data.date || '').trim()
     const page = parsedQuery.data.page || 1
-    const limit = parsedQuery.data.limit || 50000
+    const limit = parsedQuery.data.limit || 2000
     let currentOffset = (page - 1) * limit
     const targetLimit = limit
     let data: any[] = []

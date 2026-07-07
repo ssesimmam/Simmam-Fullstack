@@ -15,24 +15,21 @@ export const eventKeys = {
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
-/** Fetches the public event list. Refetches every 30s and on window focus. */
+/** Fetches the public event list. Caches for 5 minutes. */
 export function useEvents() {
   return useQuery({
     queryKey: eventKeys.list(),
     queryFn: getEvents,
-    staleTime: 30_000,
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false,
+    staleTime: 300_000,
   })
 }
 
-/** Fetches public announcements. Refetches every 60s. */
+/** Fetches public announcements. Caches for 5 minutes. */
 export function useAnnouncements() {
   return useQuery({
     queryKey: eventKeys.announcements(),
     queryFn: getAnnouncements,
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 300_000,
   })
 }
 
@@ -45,13 +42,12 @@ export function useRules() {
   })
 }
 
-/** Fetches the leaderboard. */
+/** Fetches the leaderboard. Caches for 5 minutes. */
 export function useLeaderboard() {
   return useQuery({
     queryKey: eventKeys.leaderboard(),
     queryFn: getLeaderboard,
-    staleTime: 30_000,
-    refetchInterval: 30_000,
+    staleTime: 300_000,
   })
 }
 
