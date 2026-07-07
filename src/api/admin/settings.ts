@@ -62,6 +62,21 @@ export async function uploadCulturalsImage(file: File): Promise<string> {
   return data.publicUrl
 }
 
+export async function deleteCulturalsImage(url: string): Promise<void> {
+  try {
+    const match = url.match(/culturals\/(artists\/.*)$/)
+    if (!match || !match[1]) return
+
+    const path = match[1]
+    const { error } = await supabase.storage.from('culturals').remove([path])
+    if (error) throw new Error(error.message)
+  } catch (err) {
+    console.error('Failed to delete image:', err)
+    throw err
+  }
+}
+
+
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function getAdminSettings(): Promise<AdminSettings> {

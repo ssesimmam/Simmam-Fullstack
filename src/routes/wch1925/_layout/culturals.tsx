@@ -12,6 +12,7 @@ import {
   getAdminSettings,
   saveAdminSettings,
   uploadCulturalsImage,
+  deleteCulturalsImage,
   type AdminSettings,
   type CulturalsArtist,
 } from '@/api/admin/settings'
@@ -47,8 +48,24 @@ function ArtistCard({
   onMoveDown: () => void
 }) {
   const [uploading, setUploading] = useState(false)
+  const [deletingImg, setDeletingImg] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleDeleteImage = async () => {
+    if (!artist.imageUrl) return
+    setDeletingImg(true)
+    try {
+      await deleteCulturalsImage(artist.imageUrl)
+      onChange({ ...artist, imageUrl: '' })
+      setShowPreview(false)
+      toast.success('Image deleted from storage')
+    } catch (err: any) {
+      toast.error(`Delete failed: ${err.message}`)
+    } finally {
+      setDeletingImg(false)
+    }
+  }
 
   const handleFileUpload = async (file: File) => {
     setUploading(true)
@@ -161,15 +178,28 @@ function ArtistCard({
             />
           </div>
 
-          {/* Preview toggle */}
+          {/* Preview toggle and Delete Image */}
           {artist.imageUrl && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between">
               <button
                 onClick={() => setShowPreview((v) => !v)}
                 className="flex items-center gap-1 text-[10px] text-[#D4AF37] hover:underline"
               >
                 {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 {showPreview ? 'Hide preview' : 'Preview image'}
+              </button>
+              
+              <button
+                onClick={handleDeleteImage}
+                disabled={deletingImg}
+                className="flex items-center gap-1 text-[10px] text-red-500 hover:text-red-400 hover:underline disabled:opacity-50"
+              >
+                {deletingImg ? (
+                  <span className="w-3 h-3 border border-red-500/40 border-t-red-500 rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-3 h-3" />
+                )}
+                {deletingImg ? 'Deleting...' : 'Delete image'}
               </button>
             </div>
           )}
