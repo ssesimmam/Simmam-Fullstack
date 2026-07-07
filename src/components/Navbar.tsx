@@ -13,6 +13,7 @@ const leftLinks = [
 
 const rightLinks = [
   { href: "/events", label: "Events" },
+  { href: "/culturals", label: "Culturals" },
 ];
 
 const allLinks = [...leftLinks, ...rightLinks];

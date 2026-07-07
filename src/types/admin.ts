@@ -52,4 +52,5 @@ export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/wch1925/registrations': [{ resource: 'registrations', actions: ['read'] }],
   '/wch1925/announcements': [{ resource: 'announcements', actions: ['read'] }],
   '/wch1925/rules': [{ resource: 'rules', actions: ['read'] }],
+  '/wch1925/culturals': [{ resource: 'settings', actions: ['read'] }],
 }

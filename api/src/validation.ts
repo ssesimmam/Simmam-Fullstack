@@ -40,7 +40,18 @@ export const adminSettingsBodySchema = z.object({
   registrationsOpen: z.boolean(),
   coordinatorAssignments: z.record(z.string(), z.unknown()).optional().default({}),
   houseOfTheDay: z.string().optional(),
-});
+  // Culturals fields
+  culturalsTitle: z.string().optional(),
+  culturalsArtistRevealed: z.boolean().optional(),
+  culturalsArtists: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    imageUrl: z.string().optional(),
+    revealed: z.boolean().optional(),
+    order: z.number().optional(),
+  })).optional(),
+}).passthrough();
 
 export const POINT_CATEGORIES = ['tech', 'non_tech', 'cultural', 'sports', 'general'] as const;
 

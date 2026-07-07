@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CulturalsRouteImport } from './routes/culturals'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -36,6 +37,7 @@ import { Route as Wch1925LayoutHousesRouteImport } from './routes/wch1925/_layou
 import { Route as Wch1925LayoutEventsRouteImport } from './routes/wch1925/_layout/events'
 import { Route as Wch1925LayoutDepartmentLeaderboardRouteImport } from './routes/wch1925/_layout/department-leaderboard'
 import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
+import { Route as Wch1925LayoutCulturalsRouteImport } from './routes/wch1925/_layout/culturals'
 import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925/_layout/announcements'
 import { Route as Reg1925LayoutCheckinRouteImport } from './routes/reg1925/_layout/checkin'
 import { Route as Reg1925LayoutCheckinNewRouteImport } from './routes/reg1925/_layout/checkin.new'
@@ -58,6 +60,11 @@ const EventsRoute = EventsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CulturalsRoute = CulturalsRouteImport.update({
+  id: '/culturals',
+  path: '/culturals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -180,6 +187,11 @@ const Wch1925LayoutDataEntryRoute = Wch1925LayoutDataEntryRouteImport.update({
   path: '/data-entry',
   getParentRoute: () => Wch1925LayoutRoute,
 } as any)
+const Wch1925LayoutCulturalsRoute = Wch1925LayoutCulturalsRouteImport.update({
+  id: '/culturals',
+  path: '/culturals',
+  getParentRoute: () => Wch1925LayoutRoute,
+} as any)
 const Wch1925LayoutAnnouncementsRoute =
   Wch1925LayoutAnnouncementsRouteImport.update({
     id: '/announcements',
@@ -199,6 +211,7 @@ const Reg1925LayoutCheckinNewRoute = Reg1925LayoutCheckinNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -215,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
@@ -231,6 +245,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/culturals': typeof CulturalsRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -243,6 +258,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsIndexRoute
   '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
@@ -260,6 +276,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -276,6 +293,7 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/reg1925/_layout/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/_layout/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/_layout/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
   '/wch1925/_layout/events': typeof Wch1925LayoutEventsRoute
@@ -294,6 +312,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/culturals'
     | '/dashboard'
     | '/events'
     | '/profile'
@@ -310,6 +329,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/reg1925/checkin'
     | '/wch1925/announcements'
+    | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
     | '/wch1925/events'
@@ -326,6 +346,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/culturals'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -338,6 +359,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/reg1925/checkin'
     | '/wch1925/announcements'
+    | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
     | '/wch1925/events'
@@ -354,6 +376,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/culturals'
     | '/dashboard'
     | '/events'
     | '/profile'
@@ -370,6 +393,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/reg1925/_layout/checkin'
     | '/wch1925/_layout/announcements'
+    | '/wch1925/_layout/culturals'
     | '/wch1925/_layout/data-entry'
     | '/wch1925/_layout/department-leaderboard'
     | '/wch1925/_layout/events'
@@ -387,6 +411,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CulturalsRoute: typeof CulturalsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EventsRoute: typeof EventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
@@ -426,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/culturals': {
+      id: '/culturals'
+      path: '/culturals'
+      fullPath: '/culturals'
+      preLoaderRoute: typeof CulturalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -589,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutDataEntryRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
+    '/wch1925/_layout/culturals': {
+      id: '/wch1925/_layout/culturals'
+      path: '/culturals'
+      fullPath: '/wch1925/culturals'
+      preLoaderRoute: typeof Wch1925LayoutCulturalsRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
+    }
     '/wch1925/_layout/announcements': {
       id: '/wch1925/_layout/announcements'
       path: '/announcements'
@@ -669,6 +708,7 @@ const Reg1925LayoutRouteWithChildren = Reg1925LayoutRoute._addFileChildren(
 
 interface Wch1925LayoutRouteChildren {
   Wch1925LayoutAnnouncementsRoute: typeof Wch1925LayoutAnnouncementsRoute
+  Wch1925LayoutCulturalsRoute: typeof Wch1925LayoutCulturalsRoute
   Wch1925LayoutDataEntryRoute: typeof Wch1925LayoutDataEntryRoute
   Wch1925LayoutDepartmentLeaderboardRoute: typeof Wch1925LayoutDepartmentLeaderboardRoute
   Wch1925LayoutEventsRoute: typeof Wch1925LayoutEventsRoute
@@ -684,6 +724,7 @@ interface Wch1925LayoutRouteChildren {
 
 const Wch1925LayoutRouteChildren: Wch1925LayoutRouteChildren = {
   Wch1925LayoutAnnouncementsRoute: Wch1925LayoutAnnouncementsRoute,
+  Wch1925LayoutCulturalsRoute: Wch1925LayoutCulturalsRoute,
   Wch1925LayoutDataEntryRoute: Wch1925LayoutDataEntryRoute,
   Wch1925LayoutDepartmentLeaderboardRoute:
     Wch1925LayoutDepartmentLeaderboardRoute,
@@ -704,6 +745,7 @@ const Wch1925LayoutRouteWithChildren = Wch1925LayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CulturalsRoute: CulturalsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EventsRoute: EventsRouteWithChildren,
   ProfileRoute: ProfileRoute,

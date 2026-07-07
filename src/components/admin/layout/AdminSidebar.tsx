@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Database,
   UsersRound,
+  Music2,
 } from 'lucide-react'
 
 import { Link } from '@tanstack/react-router'
@@ -62,6 +63,11 @@ const MENU_ITEMS = {
       title: 'Events',
       href: '/wch1925/events',
       icon: CalendarDays,
+    },
+    {
+      title: 'Culturals',
+      href: '/wch1925/culturals',
+      icon: Music2,
     },
     {
       title: 'Notifications',
