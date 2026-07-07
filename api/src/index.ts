@@ -443,6 +443,9 @@ const DEFAULT_ADMIN_SETTINGS = {
   registrations_open: true,
   coordinator_assignments: {},
   house_of_the_day: '',
+  culturals_title: '',
+  culturals_artist_revealed: false,
+  culturals_artists: [],
 }
 
 let adminSettingsTableMissing = false
@@ -694,17 +697,20 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
     if (adminSettingsTableMissing) {
       return res.json({
         settings: {
-          festivalStatus: inMemoryAdminSettings.festival_status,
-          registrationsOpen: inMemoryAdminSettings.registrations_open,
-          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
-          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
-        },
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
+          },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
       .limit(1)
       .single()
 
@@ -720,6 +726,9 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
             houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
           },
         })
       }
@@ -732,6 +741,9 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
         registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
         houseOfTheDay: data?.house_of_the_day || DEFAULT_ADMIN_SETTINGS.house_of_the_day,
+        culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
+        culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
+        culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
       },
     })
   } catch (err: any) {
@@ -932,6 +944,9 @@ let inMemoryAdminSettings = {
   registrations_open: true,
   coordinator_assignments: {} as any,
   house_of_the_day: '',
+  culturals_title: '',
+  culturals_artist_revealed: false,
+  culturals_artists: [] as any[],
 }
 
 app.get('/api/wch1925/settings', async (_req, res) => {
@@ -939,17 +954,20 @@ app.get('/api/wch1925/settings', async (_req, res) => {
     if (adminSettingsTableMissing) {
       return res.json({
         settings: {
-          festivalStatus: inMemoryAdminSettings.festival_status,
-          registrationsOpen: inMemoryAdminSettings.registrations_open,
-          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
-          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
-        },
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
+          },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
       .limit(1)
       .single()
 
@@ -965,6 +983,9 @@ app.get('/api/wch1925/settings', async (_req, res) => {
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
             houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
           },
         })
       }
@@ -977,6 +998,9 @@ app.get('/api/wch1925/settings', async (_req, res) => {
         registrationsOpen: data?.registrations_open ?? DEFAULT_ADMIN_SETTINGS.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || DEFAULT_ADMIN_SETTINGS.coordinator_assignments,
         houseOfTheDay: data?.house_of_the_day || DEFAULT_ADMIN_SETTINGS.house_of_the_day,
+        culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
+        culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
+        culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
       },
     })
   } catch (err: any) {
@@ -992,7 +1016,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay } = parsedBody.data
+    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay, culturalsTitle, culturalsArtistRevealed, culturalsArtists } = parsedBody.data
 
     const payload = {
       id: 'singleton',
@@ -1000,29 +1024,38 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       registrations_open: registrationsOpen,
       coordinator_assignments: coordinatorAssignments || {},
       house_of_the_day: houseOfTheDay || '',
+      culturals_title: culturalsTitle || '',
+      culturals_artist_revealed: culturalsArtistRevealed ?? false,
+      culturals_artists: culturalsArtists || [],
     }
 
     if (adminSettingsTableMissing) {
       inMemoryAdminSettings = {
-        festival_status: festivalStatus,
-        registrations_open: registrationsOpen,
-        coordinator_assignments: coordinatorAssignments || {},
-        house_of_the_day: houseOfTheDay || '',
-      }
+          festival_status: festivalStatus,
+          registrations_open: registrationsOpen,
+          coordinator_assignments: coordinatorAssignments || {},
+          house_of_the_day: houseOfTheDay || '',
+          culturals_title: culturalsTitle || '',
+          culturals_artist_revealed: culturalsArtistRevealed ?? false,
+          culturals_artists: culturalsArtists || [],
+        }
       return res.json({
         settings: {
-          festivalStatus: inMemoryAdminSettings.festival_status,
-          registrationsOpen: inMemoryAdminSettings.registrations_open,
-          coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
-          houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
-        },
+            festivalStatus: inMemoryAdminSettings.festival_status,
+            registrationsOpen: inMemoryAdminSettings.registrations_open,
+            coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
+            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
+          },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
       .upsert(payload, { onConflict: 'id' })
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
       .single()
 
     if (error) {
@@ -1033,6 +1066,9 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           registrations_open: registrationsOpen,
           coordinator_assignments: coordinatorAssignments || {},
           house_of_the_day: houseOfTheDay || '',
+          culturals_title: culturalsTitle || '',
+          culturals_artist_revealed: culturalsArtistRevealed ?? false,
+          culturals_artists: culturalsArtists || [],
         }
         return res.json({
           settings: {
@@ -1040,6 +1076,9 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
             houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
+            culturalsTitle: inMemoryAdminSettings.culturals_title,
+            culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
+            culturalsArtists: inMemoryAdminSettings.culturals_artists,
           },
         })
       }
@@ -1052,6 +1091,9 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
         registrationsOpen: data?.registrations_open,
         coordinatorAssignments: data?.coordinator_assignments || {},
         houseOfTheDay: data?.house_of_the_day || '',
+        culturalsTitle: data?.culturals_title || '',
+        culturalsArtistRevealed: data?.culturals_artist_revealed ?? false,
+        culturalsArtists: data?.culturals_artists || [],
       },
     })
   } catch (err: any) {
