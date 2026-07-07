@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Sparkles, Gamepad2, Clock, ChevronLeft, ChevronRight, Lock, Eye, X, Music2 } from 'lucide-react'
+import { Sparkles, ChevronLeft, ChevronRight, Lock, Eye, X, Music2 } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { getPublicCulturalsSettings, type PublicCulturalsSettings, type CulturalsArtist } from '@/api/admin/settings'
@@ -395,43 +395,7 @@ function CulturalsPage() {
           </div>
         </section>
 
-        {/* ══════════════════════════════════
-            GAMES — COMING SOON
-        ══════════════════════════════════ */}
-        <section className="c-section c-section--games">
-          <div className="c-container">
-            <FadeIn>
-              <div className="c-games-card">
-                <div className="c-games-glow" />
-                <div className="c-games-noise" />
 
-                <div className="c-games-inner">
-                  <div className="c-games-icon-wrap">
-                    <Gamepad2 className="c-games-icon" />
-                    <div className="c-games-icon-ring" />
-                  </div>
-
-                  <div className="c-games-text">
-                    <div className="c-games-badge">
-                      <Clock size={10} />
-                      COMING SOON
-                    </div>
-                    <h2 className="c-games-title">Cultural Games</h2>
-                    <p className="c-games-desc">
-                      Exciting interactive competitions and cultural games on the night of the event.
-                      Registration and details will be announced soon — stay tuned.
-                    </p>
-                  </div>
-
-                  <div className="c-games-pill">
-                    <span className="c-pulse-dot" />
-                    Launching soon
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
 
       </main>
 
@@ -822,7 +786,7 @@ function CulturalsPage() {
           padding: 80px 0;
         }
         .c-section--artists { padding: 60px 0 80px; }
-        .c-section--games { padding: 40px 0 100px; }
+
         .c-container {
           max-width: 1200px;
           margin: 0 auto;
@@ -1309,123 +1273,7 @@ function CulturalsPage() {
         .c-lb-thumb--active { border-color: #FFD54A; }
         .c-lb-thumb--locked { opacity: 0.3; cursor: not-allowed; }
 
-        /* ── Games Card ────────────────────────────────────────── */
-        .c-games-card {
-          position: relative;
-          border-radius: 26px;
-          overflow: hidden;
-          background: linear-gradient(135deg, #0e0c07 0%, #0b0a07 50%, #0f0d08 100%);
-          border: 1px solid rgba(255,213,74,0.14);
-          box-shadow: 0 0 60px rgba(255,213,74,0.05), 0 40px 80px rgba(0,0,0,0.4);
-          transition: box-shadow 0.4s ease, border-color 0.4s ease;
-        }
-        .c-games-card:hover {
-          border-color: rgba(255,213,74,0.25);
-          box-shadow: 0 0 80px rgba(255,213,74,0.10), 0 40px 80px rgba(0,0,0,0.5);
-        }
-        .c-games-glow {
-          position: absolute;
-          top: -60px;
-          right: -60px;
-          width: 300px;
-          height: 300px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,213,74,0.08) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .c-games-noise {
-          position: absolute;
-          inset: 0;
-          opacity: 0.03;
-          mix-blend-mode: overlay;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          pointer-events: none;
-        }
-        .c-games-inner {
-          position: relative;
-          padding: 36px 40px;
-          display: flex;
-          align-items: center;
-          gap: 28px;
-          flex-wrap: wrap;
-          justify-content: space-between;
-        }
-        @media (max-width: 640px) {
-          .c-games-inner { padding: 28px 24px; flex-direction: column; align-items: flex-start; }
-        }
-        .c-games-icon-wrap {
-          position: relative;
-          flex-shrink: 0;
-          width: 64px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 18px;
-          background: rgba(255,213,74,0.08);
-          border: 1px solid rgba(255,213,74,0.2);
-        }
-        .c-games-icon { width: 28px; height: 28px; color: #FFD54A; }
-        .c-games-icon-ring {
-          position: absolute;
-          inset: -8px;
-          border-radius: 24px;
-          border: 1px solid rgba(255,213,74,0.1);
-          animation: games-ring 3s ease-in-out infinite;
-        }
-        @keyframes games-ring { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
-        .c-games-text { flex: 1; min-width: 200px; }
-        .c-games-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          font-size: 0.58rem;
-          letter-spacing: 0.3em;
-          color: #FFD54A;
-          font-weight: 700;
-          text-transform: uppercase;
-          margin-bottom: 10px;
-          font-family: 'Cinzel', serif;
-        }
-        .c-games-title {
-          font-family: 'Cinzel', 'Playfair Display', serif;
-          font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-          font-weight: 800;
-          color: #fffaed;
-          letter-spacing: 0.05em;
-          margin-bottom: 9px;
-        }
-        .c-games-desc {
-          font-size: 0.84rem;
-          line-height: 1.7;
-          color: rgba(245,240,232,0.4);
-          max-width: 420px;
-        }
-        .c-games-pill {
-          flex-shrink: 0;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 9px 20px;
-          border-radius: 100px;
-          background: rgba(255,213,74,0.07);
-          border: 1px solid rgba(255,213,74,0.2);
-          font-size: 0.62rem;
-          letter-spacing: 0.15em;
-          color: rgba(255,213,74,0.75);
-          font-weight: 600;
-          text-transform: uppercase;
-          font-family: 'Cinzel', serif;
-        }
-        .c-pulse-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #FFD54A;
-          flex-shrink: 0;
-          animation: dot-pulse 1.8s ease-in-out infinite;
-        }
-        @keyframes dot-pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,213,74,0.4); } 50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(255,213,74,0); } }
+
 
         /* ── Responsive ─────────────────────────────────────────── */
         @media (max-width: 768px) {

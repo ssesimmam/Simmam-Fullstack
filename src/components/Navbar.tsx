@@ -7,13 +7,16 @@ import { LionEmblem } from "./LionEmblem";
 /* ─────────────────────────────────────────────
    Link definitions
 ───────────────────────────────────────────── */
-const leftLinks = [
+type NavLink = { href: string; label: string; disabled?: boolean };
+
+const leftLinks: NavLink[] = [
   { href: "/", label: "Dashboard" },
 ];
 
-const rightLinks = [
+const rightLinks: NavLink[] = [
   { href: "/events", label: "Events" },
-  { href: "/culturals", label: "Culturals" },
+  { href: "/culturals", label: "Guests" },
+  { href: "/games", label: "Games", disabled: true },
 ];
 
 const allLinks = [...leftLinks, ...rightLinks];
@@ -160,10 +163,16 @@ export function Navbar() {
                 aria-label="Primary right navigation"
               >
                 {rightLinks.map((l) => (
-                  <Link key={l.href} to={l.href} className={desktopLink}>
-                    <span>{l.label}</span>
-                    <span className={desktopUnderline} />
-                  </Link>
+                  l.disabled ? (
+                    <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
+                      <span>{l.label}</span>
+                    </span>
+                  ) : (
+                    <Link key={l.href} to={l.href} className={desktopLink}>
+                      <span>{l.label}</span>
+                      <span className={desktopUnderline} />
+                    </Link>
+                  )
                 ))}
               </nav>
               {/* Invisible spacer mirrors SIMATS logo width to guarantee perfect symmetry */}
@@ -332,41 +341,75 @@ export function Navbar() {
         {/* Link list */}
         <nav aria-label="Mobile navigation" style={{ padding: "0 0.75rem 1rem" }}>
           {allLinks.map((l, i) => (
-            <Link
-              key={l.href}
-              to={l.href}
-              onClick={closeMenu}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.875rem",
-                padding: "0.9375rem 0.875rem", /* ≥15px top/bottom touch target */
-                borderRadius: "0.75rem",
-                color: "oklch(0.88 0.04 90)",
-                fontSize: "1rem",
-                fontWeight: 500,
-                letterSpacing: "0.02em",
-                textDecoration: "none",
-                transition: "background 0.2s ease, color 0.2s ease, transform 0.2s ease",
-                /* Staggered entrance handled via CSS animation-delay */
-                animationDelay: open ? `${i * 40}ms` : "0ms",
-              }}
-              className="mobile-drawer-link"
-            >
-              {/* Index number */}
+            l.disabled ? (
               <span
+                key={l.href}
                 style={{
-                  fontFamily: "monospace",
-                  fontSize: "0.65rem",
-                  color: "oklch(0.60 0.12 80)",
-                  minWidth: "1.5rem",
-                  letterSpacing: "0.05em",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.875rem",
+                  padding: "0.9375rem 0.875rem",
+                  borderRadius: "0.75rem",
+                  color: "oklch(0.88 0.04 90)",
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  textDecoration: "none",
+                  animationDelay: open ? `${i * 40}ms` : "0ms",
+                  opacity: 0.4,
+                  cursor: "not-allowed",
                 }}
               >
-                {String(i + 1).padStart(2, "0")}
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.65rem",
+                    color: "oklch(0.60 0.12 80)",
+                    minWidth: "1.5rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {l.label}
               </span>
-              {l.label}
-            </Link>
+            ) : (
+              <Link
+                key={l.href}
+                to={l.href}
+                onClick={closeMenu}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.875rem",
+                  padding: "0.9375rem 0.875rem", /* ≥15px top/bottom touch target */
+                  borderRadius: "0.75rem",
+                  color: "oklch(0.88 0.04 90)",
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  textDecoration: "none",
+                  transition: "background 0.2s ease, color 0.2s ease, transform 0.2s ease",
+                  /* Staggered entrance handled via CSS animation-delay */
+                  animationDelay: open ? `${i * 40}ms` : "0ms",
+                }}
+                className="mobile-drawer-link"
+              >
+                {/* Index number */}
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.65rem",
+                    color: "oklch(0.60 0.12 80)",
+                    minWidth: "1.5rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {l.label}
+              </Link>
+            )
           ))}
         </nav>
 
