@@ -24,8 +24,7 @@ export function useRegistrations(email: string | undefined | null) {
     queryKey: registrationKeys.byEmail(email ?? ''),
     queryFn: () => getRegistrations(email!),
     enabled: !!email,
-    staleTime: 30_000,
-    refetchInterval: 30_000,
+    staleTime: 300_000,
     refetchOnWindowFocus: true,
   })
 }

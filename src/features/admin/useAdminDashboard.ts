@@ -21,8 +21,7 @@ export function useAdminDashboardSummary() {
   return useQuery({
     queryKey: adminDashboardKeys.summary,
     queryFn: getAdminDashboardSummary,
-    staleTime: 30_000,
-    refetchInterval: 30_000,
+    staleTime: 300_000,
   })
 }
 
@@ -30,8 +29,7 @@ export function useAdminLeaderboard() {
   return useQuery({
     queryKey: adminDashboardKeys.leaderboard,
     queryFn: getAdminLeaderboard,
-    staleTime: 15_000,
-    refetchInterval: 15_000,
+    staleTime: 300_000,
   })
 }
 

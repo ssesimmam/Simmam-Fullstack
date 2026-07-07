@@ -22,8 +22,7 @@ export function useAdminRegistrations(params?: { search?: string; event?: string
   return useQuery({
     queryKey: adminRegistrationKeys.list(params),
     queryFn: () => getAdminRegistrations(params),
-    staleTime: 15_000,
-    refetchInterval: 15_000,
+    staleTime: 300_000,
   })
 }
 

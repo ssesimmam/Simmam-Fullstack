@@ -20,9 +20,7 @@ export function useAdminEvents() {
   return useQuery({
     queryKey: adminEventKeys.list(),
     queryFn: getAdminEvents,
-    staleTime: 15_000,
-    refetchInterval: 15_000,
-    refetchIntervalInBackground: false,
+    staleTime: 300_000,
   })
 }
 
