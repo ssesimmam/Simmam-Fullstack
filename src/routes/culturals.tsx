@@ -292,10 +292,7 @@ function CulturalsPage() {
           <div className="c-container">
             <FadeIn>
               <div className="c-section-header">
-                <span className="c-section-eyebrow">
-                  <Music2 size={12} />
-                  HEADLINE ARTISTS
-                </span>
+
                 <h2 className="c-section-h2">Meet the Artists</h2>
                 <p className="c-section-p">
                   Each card hides a star. Click to reveal — but remember,<br />
