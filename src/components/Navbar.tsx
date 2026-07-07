@@ -11,12 +11,12 @@ type NavLink = { href: string; label: string; disabled?: boolean };
 
 const leftLinks: NavLink[] = [
   { href: "/", label: "Dashboard" },
+  { href: "/games", label: "Games", disabled: true },
 ];
 
 const rightLinks: NavLink[] = [
   { href: "/events", label: "Events" },
   { href: "/culturals", label: "Guests" },
-  { href: "/games", label: "Games", disabled: true },
 ];
 
 const allLinks = [...leftLinks, ...rightLinks];
@@ -121,10 +121,16 @@ export function Navbar() {
                 aria-label="Primary left navigation"
               >
                 {leftLinks.map((l) => (
-                  <Link key={l.href} to={l.href} className={desktopLink}>
-                    <span>{l.label}</span>
-                    <span className={desktopUnderline} />
-                  </Link>
+                  l.disabled ? (
+                    <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
+                      <span>{l.label}</span>
+                    </span>
+                  ) : (
+                    <Link key={l.href} to={l.href} className={desktopLink}>
+                      <span>{l.label}</span>
+                      <span className={desktopUnderline} />
+                    </Link>
+                  )
                 ))}
               </nav>
             </div>
