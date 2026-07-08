@@ -7,11 +7,11 @@ import { LionEmblem } from "./LionEmblem";
 /* ─────────────────────────────────────────────
    Link definitions
 ───────────────────────────────────────────── */
-type NavLink = { href: string; label: string; disabled?: boolean };
+type NavLink = { href: string; label: string; disabled?: boolean; external?: boolean };
 
 const leftLinks: NavLink[] = [
   { href: '/', label: 'Dashboard' },
-  { href: '/games', label: 'Games', disabled: true },
+  { href: 'https://game.ssesimmam.com/', label: 'Games', external: true },
 ];
 
 const rightLinks: NavLink[] = [
@@ -125,6 +125,11 @@ export function Navbar() {
                     <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
                       <span>{l.label}</span>
                     </span>
+                  ) : l.external ? (
+                    <a key={l.href} href={l.href} className={desktopLink} target="_blank" rel="noopener noreferrer">
+                      <span>{l.label}</span>
+                      <span className={desktopUnderline} />
+                    </a>
                   ) : (
                     <Link key={l.href} to={l.href} className={desktopLink}>
                       <span>{l.label}</span>
@@ -173,6 +178,11 @@ export function Navbar() {
                     <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
                       <span>{l.label}</span>
                     </span>
+                  ) : l.external ? (
+                    <a key={l.href} href={l.href} className={desktopLink} target="_blank" rel="noopener noreferrer">
+                      <span>{l.label}</span>
+                      <span className={desktopUnderline} />
+                    </a>
                   ) : (
                     <Link key={l.href} to={l.href} className={desktopLink}>
                       <span>{l.label}</span>
@@ -379,6 +389,44 @@ export function Navbar() {
                 </span>
                 {l.label}
               </span>
+            ) : l.external ? (
+              <a
+                key={l.href}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closeMenu}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.875rem",
+                  padding: "0.9375rem 0.875rem", /* ≥15px top/bottom touch target */
+                  borderRadius: "0.75rem",
+                  color: "oklch(0.88 0.04 90)",
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  textDecoration: "none",
+                  transition: "background 0.2s ease, color 0.2s ease, transform 0.2s ease",
+                  /* Staggered entrance handled via CSS animation-delay */
+                  animationDelay: open ? `${i * 40}ms` : "0ms",
+                }}
+                className="mobile-drawer-link"
+              >
+                {/* Index number */}
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.65rem",
+                    color: "oklch(0.60 0.12 80)",
+                    minWidth: "1.5rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {l.label}
+              </a>
             ) : (
               <Link
                 key={l.href}
