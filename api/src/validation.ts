@@ -165,6 +165,13 @@ export const registrationsListQuerySchema = z.object({
 
 export const exportQuerySchema = registrationsListQuerySchema;
 
+export const gameScoreBodySchema = z.object({
+  playerName: z.string().trim().min(1).max(120),
+  house: z.string().trim().min(1).max(60),
+  registerNumber: z.string().trim().min(1).max(30),
+  timeSec: z.coerce.number().int().min(1).max(86400),
+});
+
 export const validateRequest = <T extends z.ZodTypeAny>(schema: T, input: unknown) => {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {

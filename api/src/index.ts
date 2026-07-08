@@ -41,6 +41,7 @@ import {
   eventCreateBodySchema,
   eventUpdateBodySchema,
   exportQuerySchema,
+  gameScoreBodySchema,
   leaderboardAdjustBodySchema,
   paramsSchemas,
   publicRegistrationBodySchema,
@@ -2670,6 +2671,61 @@ const bootstrap = async () => {
 if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true' || require.main === module) {
   bootstrap()
 }
+
+// ── GAME SCORE ENDPOINTS — SIMMAM Laser Hack ──────────────────────
+app.post('/api/game/score', publicLimiter, async (req, res) => {
+  try {
+    const parsed = validateRequest(gameScoreBodySchema, req.body)
+    if (!parsed.ok) return respondValidationError(res, parsed.error)
+    const { playerName, house, registerNumber, timeSec } = parsed.data
+    const { data, error } = await supabase
+      .from('game_scores')
+      .insert({ player_name: playerName.trim(), house: house.trim(), register_number: registerNumber.trim().toUpperCase(), time_seconds: timeSec })
+      .select('id, player_name, house, register_number, time_seconds, completed_at')
+      .single()
+    if (error) {
+      if (error.code === '23505') {
+        const { data: ex } = await supabase.from('game_scores').select('player_name, time_seconds, completed_at').eq('register_number', registerNumber.trim().toUpperCase()).maybeSingle()
+        return res.status(409).json({ error: 'already_played', existing: ex || null })
+      }
+      throw error
+    }
+    return res.status(201).json({ ok: true, score: data })
+  } catch (err: any) { res.status(500).json({ error: err.message || 'unknown' }) }
+})
+
+app.get('/api/game/check/:registerNumber', publicLimiter, async (req, res) => {
+  try {
+    const reg = String(req.params.registerNumber || '').trim().toUpperCase()
+    if (!reg) return res.status(400).json({ error: 'register_number_required' })
+    const { data } = await supabase.from('game_scores').select('player_name, time_seconds, completed_at').eq('register_number', reg).maybeSingle()
+    res.json({ played: !!data, existing: data || null })
+  } catch (err: any) { res.status(500).json({ error: err.message || 'unknown' }) }
+})
+
+app.get('/api/wch1925/game/scores', async (req, res) => {
+  try {
+    const house = String(req.query.house || '').trim()
+    let query = supabase.from('game_scores').select('id, player_name, house, register_number, time_seconds, completed_at').order('time_seconds', { ascending: true }).limit(1000)
+    if (house) query = query.eq('house', house)
+    const { data, error } = await query
+    if (error) throw error
+    const scores = (data || []).map((row: any, idx: number) => ({ rank: idx + 1, id: row.id, playerName: row.player_name, house: row.house, registerNumber: row.register_number, timeSec: row.time_seconds, completedAt: row.completed_at }))
+    res.json({ data: scores, total: scores.length })
+  } catch (err: any) { res.status(500).json({ error: err.message || 'unknown' }) }
+})
+
+app.get('/api/wch1925/game/scores/export', async (_req, res) => {
+  try {
+    const { data, error } = await supabase.from('game_scores').select('player_name, house, register_number, time_seconds, completed_at').order('time_seconds', { ascending: true })
+    if (error) throw error
+    const rows = data || []
+    const csvLines = ['Rank,Name,House,Register Number,Time (seconds),Time (mm:ss),Completed At', ...rows.map((row: any, idx: number) => { const m = String(Math.floor(row.time_seconds / 60)).padStart(2, '0'); const s = String(row.time_seconds % 60).padStart(2, '0'); return [idx + 1, csvEscape(row.player_name), csvEscape(row.house), csvEscape(row.register_number), row.time_seconds, `${m}:${s}`, csvEscape(row.completed_at)].join(',') })]
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="laser-hack-scores-${Date.now()}.csv"`)
+    res.send(csvLines.join('\r\n'))
+  } catch (err: any) { res.status(500).json({ error: err.message || 'unknown' }) }
+})
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not_found' })

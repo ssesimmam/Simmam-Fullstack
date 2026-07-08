@@ -10,8 +10,8 @@ import { LionEmblem } from "./LionEmblem";
 type NavLink = { href: string; label: string; disabled?: boolean };
 
 const leftLinks: NavLink[] = [
-  { href: "/", label: "Dashboard" },
-  { href: "/games", label: "Games", disabled: true },
+  { href: '/', label: 'Dashboard' },
+  { href: '/games', label: 'Games' },
 ];
 
 const rightLinks: NavLink[] = [
