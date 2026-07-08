@@ -222,8 +222,7 @@ function CinematicCarousel({ artists, title }: { artists: CulturalsArtist[]; tit
                   onKeyDown={e => e.key === 'Enter' && handleCardClick(artist, i)}
                   aria-label={rev ? `View ${artist.name}` : `Reveal artist ${i + 1}`}
                 >
-                  {/* Gold frame border */}
-                  <div className={`gc-card-frame ${rev ? 'frame--gold' : 'frame--mystery'}`}/>
+                  {/* Gold frame border removed */}
 
                   {/* Card inner */}
                   <div className="gc-card-inner">
@@ -455,15 +454,7 @@ function CulturalsPage() {
         <section className="cp-hero">
           <div className="cp-hero-bg-strip"/>
           <div className="cp-hero-content">
-            <FadeIn>
-              <div className="cp-eyebrow">
-                <div className="cp-eyebrow-dot"/>
-                <span>SIMMAM 2026</span>
-                <div className="cp-eyebrow-divider"/>
-                <span>CULTURAL NIGHT</span>
-                <div className="cp-eyebrow-dot"/>
-              </div>
-            </FadeIn>
+              {/* Eyebrow removed */}
             <FadeIn delay={100}>
               <h1 className="cp-h1">
                 <span className="cp-h1-line">Meet</span>
@@ -476,10 +467,7 @@ function CulturalsPage() {
                 <br/>the magic is forever real.
               </p>
             </FadeIn>
-            {/* Decorative film strip */}
-            <div className="cp-hero-filmstrip" aria-hidden="true">
-              {Array.from({ length: 20 }).map((_, i) => <div key={i} className="cp-film-frame"/>)}
-            </div>
+            {/* Decorative film strip removed */}
           </div>
           {/* Hero bottom gradient fade */}
           <div className="cp-hero-fade"/>
@@ -654,7 +642,7 @@ function CulturalsPage() {
         .cp-h1 {
           display: flex; flex-direction: column;
           font-family: 'Cinzel', serif;
-          font-size: clamp(3.2rem, 8vw, 7.5rem);
+          font-size: 24px;
           font-weight: 900; line-height: 0.95;
           letter-spacing: 0.02em;
           margin-bottom: 20px;
