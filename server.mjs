@@ -93,3 +93,20 @@ const server = createServer((req, res) => {
 server.listen(port, host, () => {
   console.log(`Frontend server listening on http://${host}:${port}`)
 })
+
+// Graceful shutdown to handle SIGTERM (e.g. from Railway/Render)
+const shutdown = () => {
+  console.log('Received kill signal, shutting down gracefully...')
+  server.close(() => {
+    console.log('Closed out remaining connections')
+    process.exit(0)
+  })
+  
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down')
+    process.exit(1)
+  }, 10000)
+}
+
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
