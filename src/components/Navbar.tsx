@@ -11,7 +11,7 @@ type NavLink = { href: string; label: string; disabled?: boolean };
 
 const leftLinks: NavLink[] = [
   { href: '/', label: 'Dashboard' },
-  { href: '/games', label: 'Games' },
+  { href: '/games', label: 'Games', disabled: true },
 ];
 
 const rightLinks: NavLink[] = [
