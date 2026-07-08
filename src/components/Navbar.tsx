@@ -142,11 +142,11 @@ export function Navbar() {
               style={{ padding: "0 1.5rem", justifySelf: "center" }}
               aria-label="SIMMAM 2026 — go to home"
             >
-              <LionEmblem size={scrolled ? 65 : 85} />
+              <LionEmblem size={scrolled ? 80 : 110} />
               <span
                 className="font-display text-gradient-gold"
                 style={{
-                  fontSize: "0.55rem",
+                  fontSize: "0.65rem",
                   letterSpacing: "0.4em",
                   marginTop: "2px",
                   opacity: scrolled ? 0 : 1,
@@ -206,10 +206,10 @@ export function Navbar() {
               aria-label="SIMMAM 2026 — go to home"
               onClick={closeMenu}
             >
-              <LionEmblem size={scrolled ? 48 : 55} />
+              <LionEmblem size={scrolled ? 60 : 75} />
               <span
                 className="font-display text-gradient-gold hidden sm:block"
-                style={{ fontSize: "0.55rem", letterSpacing: "0.35em" }}
+                style={{ fontSize: "0.65rem", letterSpacing: "0.35em" }}
               >
                 SIMMAM
               </span>
