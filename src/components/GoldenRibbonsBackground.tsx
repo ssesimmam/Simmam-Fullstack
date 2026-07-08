@@ -110,7 +110,7 @@ export function GoldenRibbonsBackground() {
         
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = \`rgba(255, \${200 + Math.random() * 55}, \${100 + Math.random() * 50}, \${opacity * 0.8})\`
+        ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, ${100 + Math.random() * 50}, ${opacity * 0.8})`
         
         ctx.shadowColor = 'rgba(255, 215, 0, 0.8)'
         ctx.shadowBlur = 10
