@@ -4,6 +4,7 @@ import { Sparkles, ChevronLeft, ChevronRight, Lock, Eye, X, Music2 } from 'lucid
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { getPublicCulturalsSettings, type PublicCulturalsSettings, type CulturalsArtist } from '@/api/admin/settings'
+import { GoldenRibbonsBackground } from '@/components/GoldenRibbonsBackground'
 
 export const Route = createFileRoute('/culturals')({
   head: () => ({
@@ -56,7 +57,10 @@ function CinematicCarousel({ artists, title }: { artists: CulturalsArtist[]; tit
   const trackRef = useRef<HTMLDivElement>(null)
 
   const sorted = [...artists].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-  const isRevealed = (a: CulturalsArtist) => a.revealed || revealedIds.has(a.id)
+  
+  const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+  const isPermanentlyRevealed = (a: CulturalsArtist) => !!a.uploadedAt && (Date.now() - a.uploadedAt > TWO_HOURS_MS)
+  const isRevealed = (a: CulturalsArtist) => isPermanentlyRevealed(a) || a.revealed || revealedIds.has(a.id)
 
   const scrollTo = (idx: number) => {
     const clamped = Math.max(0, Math.min(idx, sorted.length - 1))
@@ -110,9 +114,6 @@ function CinematicCarousel({ artists, title }: { artists: CulturalsArtist[]; tit
                 tabIndex={0}
                 onKeyDown={e => e.key === 'Enter' && handleCardClick(artist, i)}
               >
-                {/* Spinning gold border */}
-                <div className={`c-acard-ring ${rev ? 'ring--gold' : 'ring--mystery'}`} />
-
                 <div className="c-acard-inner">
                   {artist.imageUrl && (
                     <div
@@ -126,7 +127,9 @@ function CinematicCarousel({ artists, title }: { artists: CulturalsArtist[]; tit
 
                   {rev ? (
                     <div className="c-acard-revealed">
-                      <div className="c-revealed-badge"><Sparkles size={10} /> REVEALED</div>
+                      {!isPermanentlyRevealed(artist) && (
+                        <div className="c-revealed-badge"><Sparkles size={10} /> REVEALED</div>
+                      )}
                       <div className="c-acard-info">
                         {artist.name && <h3 className="c-acard-name">{artist.name}</h3>}
                         {artist.description && <p className="c-acard-desc">{artist.description}</p>}
@@ -268,6 +271,7 @@ function CulturalsPage() {
 
   return (
     <div className="c-root">
+      <GoldenRibbonsBackground />
       {/* ── Mouse glow ── */}
       <div ref={mouseGlowRef} className="c-mouse-glow" aria-hidden="true" />
 
@@ -703,7 +707,7 @@ function CulturalsPage() {
           position: relative;
           padding: 80px 0;
         }
-        .c-section--artists { padding: 60px 0 80px; }
+        .c-section--artists { padding: 140px 0 80px; }
 
         .c-container {
           max-width: 1200px;
@@ -776,8 +780,9 @@ function CulturalsPage() {
           overflow-x: auto;
           scroll-snap-type: x mandatory;
           scroll-behavior: smooth;
-          padding: 16px 4px 32px;
+          padding: 32px 4px 48px;
           scrollbar-width: none;
+          perspective: 1500px;
         }
         .c-track::-webkit-scrollbar { display: none; }
 
@@ -820,32 +825,14 @@ function CulturalsPage() {
           cursor: pointer;
           scroll-snap-align: center;
           outline: none;
-          transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+          transform: rotateX(35deg) scale(0.85);
+          transform-origin: center center;
+          transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1), opacity 0.6s;
           opacity: 0.55;
         }
-        .c-acard:hover, .c-acard--active { transform: translateY(-8px) scale(1.05); opacity: 1; }
+        .c-acard:hover { transform: rotateX(20deg) scale(0.95); opacity: 0.8; }
+        .c-acard--active { transform: rotateX(0deg) scale(1.05) translateZ(30px); opacity: 1; z-index: 10; }
         .c-acard:active { transform: scale(0.97); }
-
-        /* Spinning ring */
-        .c-acard-ring {
-          position: absolute;
-          inset: -3px;
-          border-radius: 25px;
-          z-index: 0;
-        }
-        .ring--mystery {
-          background: conic-gradient(from 0deg, #FFD54A 0%, #a855f7 40%, #8b1a1a 70%, #FFD54A 100%);
-          animation: ring-spin 5s linear infinite;
-          opacity: 0.5;
-        }
-        .c-acard:hover .ring--mystery, .c-acard--active .ring--mystery { opacity: 1; }
-        .ring--gold {
-          background: conic-gradient(from 0deg, #FFD54A, #fff8d0, #e0a810, #FFD54A);
-          animation: ring-spin 7s linear infinite;
-          opacity: 0.85;
-          box-shadow: 0 0 20px rgba(255,213,74,0.4);
-        }
-        @keyframes ring-spin { to { transform: rotate(360deg); } }
 
         .c-acard-inner {
           position: absolute;
