@@ -71,7 +71,7 @@ function ArtistCard({
     setUploading(true)
     try {
       const url = await uploadCulturalsImage(file)
-      onChange({ ...artist, imageUrl: url })
+      onChange({ ...artist, imageUrl: url, uploadedAt: Date.now() })
       toast.success('Image uploaded to Supabase Storage ✓')
     } catch (err: any) {
       toast.error(`Upload failed: ${err.message}`)
@@ -104,9 +104,11 @@ function ArtistCard({
           </button>
           <button
             onClick={onRemove}
-            className="p-1.5 rounded-md text-red-500/60 hover:text-red-400 hover:bg-red-500/10 transition"
+            title="Delete Artist"
+            className="px-2 py-1.5 rounded-md text-red-500/80 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-1"
           >
             <Trash2 className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">Delete</span>
           </button>
         </div>
       </div>
@@ -148,7 +150,7 @@ function ArtistCard({
           <div className="flex gap-2">
             <Input
               value={artist.imageUrl || ''}
-              onChange={(e) => onChange({ ...artist, imageUrl: e.target.value })}
+              onChange={(e) => onChange({ ...artist, imageUrl: e.target.value, uploadedAt: Date.now() })}
               placeholder="Paste image URL or upload below"
               className="bg-black border-[#2a2a2a] text-white text-xs font-mono flex-1 placeholder:text-gray-700"
             />

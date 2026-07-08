@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { X, Sparkles, Eye, Music2, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import type { CulturalsArtist } from '@/api/admin/settings'
+import { GoldenRibbonsBackground } from './GoldenRibbonsBackground'
 
 interface ArtistCarouselProps {
   artists: CulturalsArtist[]
@@ -28,8 +29,12 @@ export function ArtistCarousel({ artists, title }: ArtistCarouselProps) {
     }
   }
 
+  const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+  const isPermanentlyRevealed = (artist: CulturalsArtist) =>
+    !!artist.uploadedAt && (Date.now() - artist.uploadedAt > TWO_HOURS_MS)
+
   const isRevealed = (artist: CulturalsArtist) =>
-    artist.revealed || revealedIds.has(artist.id)
+    isPermanentlyRevealed(artist) || artist.revealed || revealedIds.has(artist.id)
 
   const scrollTo = (index: number) => {
     const clamped = Math.max(0, Math.min(index, sortedArtists.length - 1))
@@ -54,6 +59,7 @@ export function ArtistCarousel({ artists, title }: ArtistCarouselProps) {
 
   return (
     <>
+      <GoldenRibbonsBackground />
       {/* ── Carousel Track ── */}
       <div className="carousel-root">
 
@@ -113,10 +119,12 @@ export function ArtistCarousel({ artists, title }: ArtistCarouselProps) {
                   {/* Content */}
                   {revealed ? (
                     <div className="artist-revealed-content">
-                      <div className="revealed-badge">
-                        <Sparkles className="w-3 h-3" />
-                        REVEALED
-                      </div>
+                      {!isPermanentlyRevealed(artist) && (
+                        <div className="revealed-badge">
+                          <Sparkles className="w-3 h-3" />
+                          REVEALED
+                        </div>
+                      )}
                       {artist.name && (
                         <div className="artist-name-strip">
                           <h3 className="artist-card-name">{artist.name}</h3>

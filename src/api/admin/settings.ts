@@ -8,6 +8,7 @@ export interface CulturalsArtist {
   name: string
   description?: string
   imageUrl?: string
+  uploadedAt?: number
   revealed?: boolean
   order?: number
 }

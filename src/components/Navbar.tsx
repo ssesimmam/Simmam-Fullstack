@@ -25,7 +25,7 @@ const allLinks = [...leftLinks, ...rightLinks];
    Shared link style helpers
 ───────────────────────────────────────────── */
 const desktopLink =
-  "relative px-3 py-2 text-foreground/80 hover:text-gold transition-colors duration-200 group whitespace-nowrap text-[17.5px] font-medium";
+  "relative px-3 py-2 text-foreground/80 hover:text-gold transition-colors duration-200 group whitespace-nowrap text-sm";
 
 const desktopUnderline =
   "absolute left-3 right-3 bottom-0.5 h-px bg-gradient-to-r from-transparent via-[var(--gold)] to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300";
@@ -142,11 +142,11 @@ export function Navbar() {
               style={{ padding: "0 1.5rem", justifySelf: "center" }}
               aria-label="SIMMAM 2026 — go to home"
             >
-              <LionEmblem size={scrolled ? 80 : 110} />
+              <LionEmblem size={scrolled ? 52 : 68} />
               <span
                 className="font-display text-gradient-gold"
                 style={{
-                  fontSize: "0.65rem",
+                  fontSize: "0.55rem",
                   letterSpacing: "0.4em",
                   marginTop: "2px",
                   opacity: scrolled ? 0 : 1,
@@ -206,10 +206,10 @@ export function Navbar() {
               aria-label="SIMMAM 2026 — go to home"
               onClick={closeMenu}
             >
-              <LionEmblem size={scrolled ? 60 : 75} />
+              <LionEmblem size={scrolled ? 38 : 44} />
               <span
                 className="font-display text-gradient-gold hidden sm:block"
-                style={{ fontSize: "0.65rem", letterSpacing: "0.35em" }}
+                style={{ fontSize: "0.55rem", letterSpacing: "0.35em" }}
               >
                 SIMMAM
               </span>

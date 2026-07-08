@@ -48,6 +48,7 @@ export const adminSettingsBodySchema = z.object({
     name: z.string(),
     description: z.string().optional(),
     imageUrl: z.string().optional(),
+    uploadedAt: z.number().optional(),
     revealed: z.boolean().optional(),
     order: z.number().optional(),
   })).optional(),

@@ -110,7 +110,8 @@ function CinematicCarousel({ artists, title }: { artists: CulturalsArtist[]; tit
                 tabIndex={0}
                 onKeyDown={e => e.key === 'Enter' && handleCardClick(artist, i)}
               >
-                {/* Background removed as requested */}
+                {/* Spinning gold border */}
+                <div className={`c-acard-ring ${rev ? 'ring--gold' : 'ring--mystery'}`} />
 
                 <div className="c-acard-inner">
                   {artist.imageUrl && (
@@ -702,7 +703,7 @@ function CulturalsPage() {
           position: relative;
           padding: 80px 0;
         }
-        .c-section--artists { padding: 100px 0 80px; }
+        .c-section--artists { padding: 60px 0 80px; }
 
         .c-container {
           max-width: 1200px;
