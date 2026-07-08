@@ -7,11 +7,11 @@ import { LionEmblem } from "./LionEmblem";
 /* ─────────────────────────────────────────────
    Link definitions
 ───────────────────────────────────────────── */
-type NavLink = { href: string; label: string; disabled?: boolean; external?: boolean };
+type NavLink = { href: string; label: string; disabled?: boolean };
 
 const leftLinks: NavLink[] = [
   { href: '/', label: 'Dashboard' },
-  { href: 'https://game.ssesimmam.com/', label: 'Games', external: true },
+  { href: 'https://game.ssesimmam.com', label: 'Games' },
 ];
 
 const rightLinks: NavLink[] = [
@@ -125,8 +125,8 @@ export function Navbar() {
                     <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
                       <span>{l.label}</span>
                     </span>
-                  ) : l.external ? (
-                    <a key={l.href} href={l.href} className={desktopLink} target="_blank" rel="noopener noreferrer">
+                  ) : l.href.startsWith("http") ? (
+                    <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={desktopLink}>
                       <span>{l.label}</span>
                       <span className={desktopUnderline} />
                     </a>
@@ -178,11 +178,6 @@ export function Navbar() {
                     <span key={l.href} className={`${desktopLink} opacity-50 cursor-not-allowed`} title="Coming Soon">
                       <span>{l.label}</span>
                     </span>
-                  ) : l.external ? (
-                    <a key={l.href} href={l.href} className={desktopLink} target="_blank" rel="noopener noreferrer">
-                      <span>{l.label}</span>
-                      <span className={desktopUnderline} />
-                    </a>
                   ) : (
                     <Link key={l.href} to={l.href} className={desktopLink}>
                       <span>{l.label}</span>
@@ -389,7 +384,7 @@ export function Navbar() {
                 </span>
                 {l.label}
               </span>
-            ) : l.external ? (
+            ) : l.href.startsWith("http") ? (
               <a
                 key={l.href}
                 href={l.href}
