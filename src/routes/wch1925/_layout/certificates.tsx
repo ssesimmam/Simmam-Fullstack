@@ -215,11 +215,17 @@ function CertificatePage() {
       // Use the hidden canvas for download (full resolution)
       const canvas = canvasRef.current!
       drawCertificate(canvas, certImage, row.participant_name, row.event_name)
-      const dataUrl = canvas.toDataURL('image/png')
+      
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+      if (!blob) throw new Error('Failed to create image blob')
+      
+      const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.download = `${row.participant_name.trim().replace(/\s+/g, '_')}_Certificate.png`
-      link.href = dataUrl
+      link.href = url
       link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      
       toast.success(`Certificate downloaded for ${row.participant_name}`)
     } catch (err) {
       toast.error('Failed to generate certificate')

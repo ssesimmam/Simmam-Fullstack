@@ -71,14 +71,22 @@ export async function downloadCertificate(participantName: string, eventName: st
         ctx.fillText(eventName, W * eventCfg.xPct, H * eventCfg.yPct)
         ctx.restore()
 
-        // Download
-        const dataUrl = canvas.toDataURL('image/png')
-        const link = document.createElement('a')
-        link.download = `${participantName.trim().replace(/\\s+/g, '_')}_Certificate.png`
-        link.href = dataUrl
-        link.click()
-        
-        resolve()
+        // Download using Blob to prevent mobile browser crashes with huge Data URIs
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create image blob'))
+            return
+          }
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.download = `${participantName.trim().replace(/\\s+/g, '_')}_Certificate.png`
+          link.href = url
+          link.click()
+          
+          // Cleanup
+          setTimeout(() => URL.revokeObjectURL(url), 1000)
+          resolve()
+        }, 'image/png')
       } catch (err) {
         reject(err)
       }
