@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as GamesRouteImport } from './routes/games'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CulturalsRouteImport } from './routes/culturals'
@@ -36,6 +35,7 @@ import { Route as Wch1925LayoutParticipantsRouteImport } from './routes/wch1925/
 import { Route as Wch1925LayoutLeaderboardRouteImport } from './routes/wch1925/_layout/leaderboard'
 import { Route as Wch1925LayoutHousesRouteImport } from './routes/wch1925/_layout/houses'
 import { Route as Wch1925LayoutEventsRouteImport } from './routes/wch1925/_layout/events'
+import { Route as Wch1925LayoutDevelopersRouteImport } from './routes/wch1925/_layout/developers'
 import { Route as Wch1925LayoutDepartmentLeaderboardRouteImport } from './routes/wch1925/_layout/department-leaderboard'
 import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
 import { Route as Wch1925LayoutCulturalsRouteImport } from './routes/wch1925/_layout/culturals'
@@ -51,11 +51,6 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GamesRoute = GamesRouteImport.update({
-  id: '/games',
-  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -182,6 +177,11 @@ const Wch1925LayoutEventsRoute = Wch1925LayoutEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => Wch1925LayoutRoute,
 } as any)
+const Wch1925LayoutDevelopersRoute = Wch1925LayoutDevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => Wch1925LayoutRoute,
+} as any)
 const Wch1925LayoutDepartmentLeaderboardRoute =
   Wch1925LayoutDepartmentLeaderboardRouteImport.update({
     id: '/department-leaderboard',
@@ -220,7 +220,6 @@ export interface FileRoutesByFullPath {
   '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
-  '/games': typeof GamesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -238,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
+  '/wch1925/developers': typeof Wch1925LayoutDevelopersRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -253,7 +253,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/culturals': typeof CulturalsRoute
-  '/games': typeof GamesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -269,6 +268,7 @@ export interface FileRoutesByTo {
   '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
+  '/wch1925/developers': typeof Wch1925LayoutDevelopersRoute
   '/wch1925/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -287,7 +287,6 @@ export interface FileRoutesById {
   '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
-  '/games': typeof GamesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -305,6 +304,7 @@ export interface FileRoutesById {
   '/wch1925/_layout/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/_layout/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
+  '/wch1925/_layout/developers': typeof Wch1925LayoutDevelopersRoute
   '/wch1925/_layout/events': typeof Wch1925LayoutEventsRoute
   '/wch1925/_layout/houses': typeof Wch1925LayoutHousesRoute
   '/wch1925/_layout/leaderboard': typeof Wch1925LayoutLeaderboardRoute
@@ -324,7 +324,6 @@ export interface FileRouteTypes {
     | '/culturals'
     | '/dashboard'
     | '/events'
-    | '/games'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -342,6 +341,7 @@ export interface FileRouteTypes {
     | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
+    | '/wch1925/developers'
     | '/wch1925/events'
     | '/wch1925/houses'
     | '/wch1925/leaderboard'
@@ -357,7 +357,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/culturals'
-    | '/games'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -373,6 +372,7 @@ export interface FileRouteTypes {
     | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
+    | '/wch1925/developers'
     | '/wch1925/events'
     | '/wch1925/houses'
     | '/wch1925/leaderboard'
@@ -390,7 +390,6 @@ export interface FileRouteTypes {
     | '/culturals'
     | '/dashboard'
     | '/events'
-    | '/games'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -408,6 +407,7 @@ export interface FileRouteTypes {
     | '/wch1925/_layout/culturals'
     | '/wch1925/_layout/data-entry'
     | '/wch1925/_layout/department-leaderboard'
+    | '/wch1925/_layout/developers'
     | '/wch1925/_layout/events'
     | '/wch1925/_layout/houses'
     | '/wch1925/_layout/leaderboard'
@@ -426,7 +426,6 @@ export interface RootRouteChildren {
   CulturalsRoute: typeof CulturalsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EventsRoute: typeof EventsRouteWithChildren
-  GamesRoute: typeof GamesRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -450,13 +449,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games': {
-      id: '/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -627,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutEventsRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
+    '/wch1925/_layout/developers': {
+      id: '/wch1925/_layout/developers'
+      path: '/developers'
+      fullPath: '/wch1925/developers'
+      preLoaderRoute: typeof Wch1925LayoutDevelopersRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
+    }
     '/wch1925/_layout/department-leaderboard': {
       id: '/wch1925/_layout/department-leaderboard'
       path: '/department-leaderboard'
@@ -731,6 +730,7 @@ interface Wch1925LayoutRouteChildren {
   Wch1925LayoutCulturalsRoute: typeof Wch1925LayoutCulturalsRoute
   Wch1925LayoutDataEntryRoute: typeof Wch1925LayoutDataEntryRoute
   Wch1925LayoutDepartmentLeaderboardRoute: typeof Wch1925LayoutDepartmentLeaderboardRoute
+  Wch1925LayoutDevelopersRoute: typeof Wch1925LayoutDevelopersRoute
   Wch1925LayoutEventsRoute: typeof Wch1925LayoutEventsRoute
   Wch1925LayoutHousesRoute: typeof Wch1925LayoutHousesRoute
   Wch1925LayoutLeaderboardRoute: typeof Wch1925LayoutLeaderboardRoute
@@ -748,6 +748,7 @@ const Wch1925LayoutRouteChildren: Wch1925LayoutRouteChildren = {
   Wch1925LayoutDataEntryRoute: Wch1925LayoutDataEntryRoute,
   Wch1925LayoutDepartmentLeaderboardRoute:
     Wch1925LayoutDepartmentLeaderboardRoute,
+  Wch1925LayoutDevelopersRoute: Wch1925LayoutDevelopersRoute,
   Wch1925LayoutEventsRoute: Wch1925LayoutEventsRoute,
   Wch1925LayoutHousesRoute: Wch1925LayoutHousesRoute,
   Wch1925LayoutLeaderboardRoute: Wch1925LayoutLeaderboardRoute,
@@ -768,7 +769,6 @@ const rootRouteChildren: RootRouteChildren = {
   CulturalsRoute: CulturalsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EventsRoute: EventsRouteWithChildren,
-  GamesRoute: GamesRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   AuthCallbackRoute: AuthCallbackRoute,
