@@ -60,6 +60,11 @@ const MENU_ITEMS = {
   ],
   developer_admin: [
     {
+      title: 'Developers',
+      href: '/wch1925/developers',
+      icon: Users,
+    },
+    {
       title: 'Events',
       href: '/wch1925/events',
       icon: CalendarDays,
