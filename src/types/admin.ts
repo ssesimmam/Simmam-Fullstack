@@ -35,6 +35,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     { resource: 'announcements', actions: ['read', 'create', 'delete'] },
     { resource: 'rules', actions: ['read', 'create', 'delete'] },
     { resource: 'registrations', actions: ['read', 'update', 'delete', 'export'] },
+    { resource: 'developers', actions: ['read', 'update'] },
   ],
 }
 
@@ -53,4 +54,5 @@ export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/wch1925/announcements': [{ resource: 'announcements', actions: ['read'] }],
   '/wch1925/rules': [{ resource: 'rules', actions: ['read'] }],
   '/wch1925/culturals': [{ resource: 'settings', actions: ['read'] }],
+  '/wch1925/developers': [{ resource: 'developers', actions: ['read'] }],
 }
