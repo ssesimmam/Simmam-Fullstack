@@ -385,7 +385,6 @@ function CertificatePage() {
             <canvas
               ref={previewCanvasRef}
               className="w-full h-auto block"
-              style={{ imageRendering: 'high-quality' }}
             />
           </div>
 
