@@ -2,7 +2,7 @@ const CERT_CONFIG = {
   templatePath: '/Simmam-Certificate.png',
   name: {
     xPct: 0.500,
-    yPct: 0.435,
+    yPct: 0.480,
     fontSizePx: 84,
     fontFamily: 'Georgia, "Times New Roman", serif',
     color: '#1a1a1a',
@@ -11,7 +11,7 @@ const CERT_CONFIG = {
   },
   event: {
     xPct: 0.500,
-    yPct: 0.540,
+    yPct: 0.585,
     fontSizePx: 84,
     fontFamily: 'Georgia, "Times New Roman", serif',
     color: '#1a1a1a',
