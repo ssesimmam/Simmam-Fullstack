@@ -39,9 +39,9 @@ export async function getDevelopers(): Promise<DeveloperStatus[]> {
 
   return (data || []).map((admin: any) => ({
     id: admin.id,
-    user_id: admin.users.id,
-    name: admin.users.name,
-    email: admin.users.email,
+    user_id: admin.users?.id || '',
+    name: admin.users?.name || 'Unknown User',
+    email: admin.users?.email || 'Unknown Email',
     is_logged_in: admin.is_logged_in,
     role: admin.role,
   }))
@@ -72,6 +72,14 @@ export async function toggleDeveloperLogin(adminId: string, currentStatus: boole
     }
     return // Skip email when logging out
   }
+
+  // Insert a login log record
+  const { error: loginLogError } = await supabase
+    .from('developer_login_logs')
+    .insert({
+      admin_id: adminId
+    })
+  if (loginLogError) console.error('Failed to log login:', loginLogError)
 
   // Send Email using EmailJS REST API (Only when logging IN)
   const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
@@ -127,11 +135,22 @@ export async function addDeveloperTask(adminId: string, title: string): Promise<
   const { data: userAuth } = await supabase.auth.getUser()
   if (!userAuth.user) throw new Error('Not authenticated')
 
+  // Get the app user ID by email since auth.users.id is different from public.users.id
+  const { data: appUser, error: appUserError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', userAuth.user.email)
+    .single()
+
+  if (appUserError || !appUser) {
+    throw new Error('Failed to find app user')
+  }
+
   // We need the admin ID of the creator (sasvanthu)
   const { data: adminCreator, error: adminError } = await supabase
     .from('admins')
     .select('id')
-    .eq('user_id', userAuth.user.id)
+    .eq('user_id', appUser.id)
     .single()
     
   if (adminError || !adminCreator) {
