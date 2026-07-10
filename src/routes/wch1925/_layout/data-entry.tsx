@@ -580,7 +580,7 @@ function DataEntryPage() {
 
                 {isExpanded && (
                   <div className="border-t border-[#333] p-4">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                       <div className="bg-black border border-[#333] rounded-lg p-3">
                         <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Event Name</div>
                         <div className="text-white text-sm">{event.name}</div>
@@ -626,7 +626,7 @@ function DataEntryPage() {
                         </DialogHeader>
                         {editingEvent && (
                           <form onSubmit={handleUpdateEvent} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label className="text-gray-300">Event Name</Label>
                                 <Input 
@@ -874,7 +874,7 @@ function DataEntryPage() {
                                           </DialogHeader>
                                           {editingParticipant && (
                                             <form onSubmit={handleUpdateParticipant} className="space-y-4">
-                                              <div className="grid grid-cols-2 gap-4">
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                   <Label className="text-gray-300">Name</Label>
                                                   <Input
@@ -1089,7 +1089,7 @@ function DataEntryPage() {
                             </DialogHeader>
                             {editingEvent && (
                               <form onSubmit={handleUpdateEvent} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div className="space-y-2">
                                     <Label className="text-gray-300">Result Day</Label>
                                     <Input 

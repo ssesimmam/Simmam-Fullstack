@@ -207,7 +207,7 @@ function LeaderboardManagement() {
                       </Select>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-black border border-[#333] p-3 rounded-lg">
+                    <div className="flex flex-wrap items-center gap-3 bg-black border border-[#333] p-3 rounded-lg justify-center sm:justify-start">
                       <Button 
                         variant="ghost" 
                         size="icon" 
