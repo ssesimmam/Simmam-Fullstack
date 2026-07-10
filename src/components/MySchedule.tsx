@@ -4,6 +4,7 @@ import { Calendar, CheckCircle2, Clock, Hourglass, Info, LogOut, MapPin, Sparkle
 import { toast } from 'sonner'
 
 import { clearUser, getUser, getUserRegistrations, syncUserRegistrations, type Registration } from '@/lib/registrationStore'
+import { downloadCertificate } from '@/lib/certificate'
 import { formatIstDateTime, formatIstDayLabel } from '@/lib/dateTime'
 
 function RegistrationCard({ reg }: { reg: Registration }) {
@@ -82,11 +83,17 @@ function RegistrationCard({ reg }: { reg: Registration }) {
                   Checked In<br />(OD Eligible)
                 </span>
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    toast.success('Certificate download starting...')
-                    // TODO: Implement actual certificate download logic
+                    toast.promise(
+                      downloadCertificate(getUser()!.name, reg.eventName),
+                      {
+                        loading: 'Generating certificate...',
+                        success: 'Certificate downloaded successfully!',
+                        error: 'Failed to generate certificate',
+                      }
+                    )
                   }}
                   className="mt-1 flex items-center gap-1.5 rounded-lg bg-[#D4AF37]/10 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 transition-all"
                 >
