@@ -39,6 +39,7 @@ import { Route as Wch1925LayoutDevelopersRouteImport } from './routes/wch1925/_l
 import { Route as Wch1925LayoutDepartmentLeaderboardRouteImport } from './routes/wch1925/_layout/department-leaderboard'
 import { Route as Wch1925LayoutDataEntryRouteImport } from './routes/wch1925/_layout/data-entry'
 import { Route as Wch1925LayoutCulturalsRouteImport } from './routes/wch1925/_layout/culturals'
+import { Route as Wch1925LayoutCertificatesRouteImport } from './routes/wch1925/_layout/certificates'
 import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925/_layout/announcements'
 import { Route as Reg1925LayoutCheckinRouteImport } from './routes/reg1925/_layout/checkin'
 import { Route as Reg1925LayoutCheckinNewRouteImport } from './routes/reg1925/_layout/checkin.new'
@@ -198,6 +199,12 @@ const Wch1925LayoutCulturalsRoute = Wch1925LayoutCulturalsRouteImport.update({
   path: '/culturals',
   getParentRoute: () => Wch1925LayoutRoute,
 } as any)
+const Wch1925LayoutCertificatesRoute =
+  Wch1925LayoutCertificatesRouteImport.update({
+    id: '/certificates',
+    path: '/certificates',
+    getParentRoute: () => Wch1925LayoutRoute,
+  } as any)
 const Wch1925LayoutAnnouncementsRoute =
   Wch1925LayoutAnnouncementsRouteImport.update({
     id: '/announcements',
@@ -234,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/certificates': typeof Wch1925LayoutCertificatesRoute
   '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsIndexRoute
   '/reg1925/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/certificates': typeof Wch1925LayoutCertificatesRoute
   '/wch1925/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -301,6 +310,7 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/reg1925/_layout/checkin': typeof Reg1925LayoutCheckinRouteWithChildren
   '/wch1925/_layout/announcements': typeof Wch1925LayoutAnnouncementsRoute
+  '/wch1925/_layout/certificates': typeof Wch1925LayoutCertificatesRoute
   '/wch1925/_layout/culturals': typeof Wch1925LayoutCulturalsRoute
   '/wch1925/_layout/data-entry': typeof Wch1925LayoutDataEntryRoute
   '/wch1925/_layout/department-leaderboard': typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/reg1925/checkin'
     | '/wch1925/announcements'
+    | '/wch1925/certificates'
     | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/reg1925/checkin'
     | '/wch1925/announcements'
+    | '/wch1925/certificates'
     | '/wch1925/culturals'
     | '/wch1925/data-entry'
     | '/wch1925/department-leaderboard'
@@ -404,6 +416,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/reg1925/_layout/checkin'
     | '/wch1925/_layout/announcements'
+    | '/wch1925/_layout/certificates'
     | '/wch1925/_layout/culturals'
     | '/wch1925/_layout/data-entry'
     | '/wch1925/_layout/department-leaderboard'
@@ -647,6 +660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Wch1925LayoutCulturalsRouteImport
       parentRoute: typeof Wch1925LayoutRoute
     }
+    '/wch1925/_layout/certificates': {
+      id: '/wch1925/_layout/certificates'
+      path: '/certificates'
+      fullPath: '/wch1925/certificates'
+      preLoaderRoute: typeof Wch1925LayoutCertificatesRouteImport
+      parentRoute: typeof Wch1925LayoutRoute
+    }
     '/wch1925/_layout/announcements': {
       id: '/wch1925/_layout/announcements'
       path: '/announcements'
@@ -727,6 +747,7 @@ const Reg1925LayoutRouteWithChildren = Reg1925LayoutRoute._addFileChildren(
 
 interface Wch1925LayoutRouteChildren {
   Wch1925LayoutAnnouncementsRoute: typeof Wch1925LayoutAnnouncementsRoute
+  Wch1925LayoutCertificatesRoute: typeof Wch1925LayoutCertificatesRoute
   Wch1925LayoutCulturalsRoute: typeof Wch1925LayoutCulturalsRoute
   Wch1925LayoutDataEntryRoute: typeof Wch1925LayoutDataEntryRoute
   Wch1925LayoutDepartmentLeaderboardRoute: typeof Wch1925LayoutDepartmentLeaderboardRoute
@@ -744,6 +765,7 @@ interface Wch1925LayoutRouteChildren {
 
 const Wch1925LayoutRouteChildren: Wch1925LayoutRouteChildren = {
   Wch1925LayoutAnnouncementsRoute: Wch1925LayoutAnnouncementsRoute,
+  Wch1925LayoutCertificatesRoute: Wch1925LayoutCertificatesRoute,
   Wch1925LayoutCulturalsRoute: Wch1925LayoutCulturalsRoute,
   Wch1925LayoutDataEntryRoute: Wch1925LayoutDataEntryRoute,
   Wch1925LayoutDepartmentLeaderboardRoute:

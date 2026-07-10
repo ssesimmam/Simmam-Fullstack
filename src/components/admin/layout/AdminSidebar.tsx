@@ -11,6 +11,7 @@ import {
   Database,
   UsersRound,
   Music2,
+  Award,
 } from 'lucide-react'
 
 import { Link } from '@tanstack/react-router'
@@ -118,6 +119,11 @@ const MENU_ITEMS = {
       title: 'Registrations',
       href: '/wch1925/registrations',
       icon: Shield,
+    },
+    {
+      title: 'Certificates',
+      href: '/wch1925/certificates',
+      icon: Award,
     },
     {
       title: 'Settings',

@@ -1,15 +1,18 @@
 import {
-    CalendarDays,
-    LayoutDashboard,
-    Menu,
-    Settings,
-    Shield,
-    Trophy,
-    Users,
-    CheckCircle,
-    Database,
-    UsersRound,
-    Music2,
+  CalendarDays,
+  LayoutDashboard,
+  Menu,
+  Settings,
+  Shield,
+  Trophy,
+  Users,
+  CheckCircle,
+  Database,
+  UsersRound,
+  Music2,
+  Bell,
+  BookOpen,
+  Award,
 } from 'lucide-react'
 
 import { Link } from '@tanstack/react-router'
@@ -18,6 +21,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet'
 
 const MENU_ITEMS = {
@@ -30,14 +34,19 @@ const MENU_ITEMS = {
   ],
   core_team: [
     {
-      title: 'Participants',
-      href: '/wch1925/participants',
-      icon: Users,
-    },
-    {
       title: 'Leaderboard',
       href: '/wch1925/leaderboard',
       icon: Trophy,
+    },
+    {
+      title: 'Department Analytics',
+      href: '/wch1925/department-leaderboard',
+      icon: Database,
+    },
+    {
+      title: 'Participants',
+      href: '/wch1925/participants',
+      icon: Users,
     },
     {
       title: 'Registrations',
@@ -59,6 +68,11 @@ const MENU_ITEMS = {
   ],
   developer_admin: [
     {
+      title: 'Developers',
+      href: '/wch1925/developers',
+      icon: Users,
+    },
+    {
       title: 'Events',
       href: '/wch1925/events',
       icon: CalendarDays,
@@ -69,6 +83,16 @@ const MENU_ITEMS = {
       icon: Music2,
     },
     {
+      title: 'Notifications',
+      href: '/wch1925/announcements',
+      icon: Bell,
+    },
+    {
+      title: 'Rules & Regulations',
+      href: '/wch1925/rules',
+      icon: BookOpen,
+    },
+    {
       title: 'Data Entry',
       href: '/wch1925/data-entry',
       icon: Database,
@@ -77,6 +101,11 @@ const MENU_ITEMS = {
       title: 'Leaderboard',
       href: '/wch1925/leaderboard',
       icon: Trophy,
+    },
+    {
+      title: 'Department Analytics',
+      href: '/wch1925/department-leaderboard',
+      icon: Database,
     },
     {
       title: 'Participants',
@@ -97,6 +126,11 @@ const MENU_ITEMS = {
       title: 'Registrations',
       href: '/wch1925/registrations',
       icon: Shield,
+    },
+    {
+      title: 'Certificates',
+      href: '/wch1925/certificates',
+      icon: Award,
     },
     {
       title: 'Settings',
@@ -129,9 +163,9 @@ export default function AdminMobileNav() {
 
       <SheetContent
         side="left"
-        className="border-[#333] bg-[#111] p-6"
+        className="border-[#333] bg-[#111] p-6 overflow-y-auto"
       >
-        <div className="border-b border-[#333] pb-6 mb-6">
+        <div className="border-b border-[#333] pb-6 mb-6 mt-4">
           <h1 className="font-display text-2xl font-bold text-white tracking-widest">
             SIMMAM
           </h1>
@@ -147,31 +181,40 @@ export default function AdminMobileNav() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-1 pb-8">
           {menuItems.map((item) => {
             const Icon = item.icon
 
             return (
-              <Link
-                key={item.title}
-                to={item.href}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-black hover:text-white"
-              >
-                <Icon className="h-5 w-5" />
-                {item.title}
-              </Link>
+              <SheetClose asChild key={item.title}>
+                <Link
+                  to={item.href}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-black hover:text-white"
+                  activeProps={{
+                    className:
+                      'bg-black text-white border border-[#333]',
+                  }}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {item.title}
+                </Link>
+              </SheetClose>
             )
           })}
 
-          <button
-            onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-black hover:text-white"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
+          <div className="pt-4 mt-4 border-t border-[#333]">
+            <SheetClose asChild>
+              <button
+                onClick={logout}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-black hover:text-white"
+              >
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </SheetClose>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
