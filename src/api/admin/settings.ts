@@ -23,6 +23,7 @@ export interface Award {
   achievement?: string
   posterSrc?: string
   revealed?: boolean
+  revealAt?: string
   order?: number
 }
 

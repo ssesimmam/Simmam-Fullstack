@@ -249,18 +249,38 @@ function AwardCard({
           )}
         </div>
 
-        {/* Reveal toggle */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#1a1a1a]">
-          <div>
-            <p className="text-xs font-medium text-white">Publish to Public Page</p>
-            <p className="text-[10px] text-gray-600 mt-0.5">
-              ON = The award will show up on the Hall of Fame page
-            </p>
+        {/* Reveal Schedule & Publish Settings */}
+        <div className="flex flex-col gap-4 pt-4 border-t border-[#1a1a1a]">
+          {/* Publish Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-white">Publish to Public Page</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">
+                If enabled, the card will appear on the Hall of Fame grid (as a mystery card until the reveal time).
+              </p>
+            </div>
+            <Switch
+              checked={award.revealed}
+              onCheckedChange={(checked) => onChange({ ...award, revealed: checked })}
+              className="data-[state=checked]:bg-[#D4AF37]"
+            />
           </div>
-          <Switch
-            checked={award.revealed ?? false}
-            onCheckedChange={(v) => onChange({ ...award, revealed: v })}
-          />
+
+          {/* Reveal Time */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-white">Reveal Date & Time *</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">
+                The exact time when the countdown finishes and the award reveals automatically.
+              </p>
+            </div>
+            <Input
+              type="datetime-local"
+              value={award.revealAt || ''}
+              onChange={(e) => onChange({ ...award, revealAt: e.target.value })}
+              className="w-auto bg-black border-[#2a2a2a] text-white text-sm placeholder:text-gray-700"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -289,7 +309,7 @@ function AwardsAdminPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (!hasPermission('events', 'read')) {
+  if (!hasPermission('settings', 'read')) {
     return <AccessDenied />
   }
 
@@ -304,6 +324,7 @@ function AwardsAdminPage() {
       achievement: '',
       posterSrc: '',
       revealed: false,
+      revealAt: '',
       order: awards.length,
     }
     setAwards((prev) => [...prev, newAward])
@@ -325,9 +346,9 @@ function AwardsAdminPage() {
 
   const handleSave = async () => {
     if (!settings) return
-    const named = awards.filter((a) => a.awardTitle.trim() && a.winnerName.trim())
-    if (awards.length > 0 && named.length < awards.length) {
-      toast.error('All awards must have a title and winner name before saving')
+    const invalidAwards = awards.filter((a) => !a.awardTitle.trim() || !a.winnerName.trim() || !a.revealAt)
+    if (awards.length > 0 && invalidAwards.length > 0) {
+      toast.error('All awards must have a title, winner name, and a Reveal Date & Time before saving')
       return
     }
     setSaving(true)
@@ -460,11 +481,14 @@ function AwardsAdminPage() {
                   <div key={a.id} className="flex items-center gap-3 text-xs">
                     <span className="text-gray-600 font-mono w-6">#{i + 1}</span>
                     <span className="text-white flex-1 truncate">{a.awardTitle || '— untitled —'}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${a.revealed ? 'border-blue-500/25 bg-blue-500/10 text-blue-400' : 'border-gray-700 text-gray-600'}`}>
+                      {a.revealed ? 'Published' : 'Hidden'}
+                    </span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${a.posterSrc ? 'border-green-500/25 bg-green-500/10 text-green-400' : 'border-gray-700 text-gray-600'}`}>
                       {a.posterSrc ? 'Image ✓' : 'No image'}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${a.revealed ? 'border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-gray-700 text-gray-600'}`}>
-                      {a.revealed ? '🔓 Published' : '🔒 Hidden'}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${a.revealAt ? 'border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-red-500/25 bg-red-500/10 text-red-500'}`}>
+                      {a.revealAt ? '⏳ Scheduled' : '⚠️ Missing Time'}
                     </span>
                   </div>
                 ))}

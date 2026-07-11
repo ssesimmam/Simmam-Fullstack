@@ -1,153 +1,377 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { type Award } from '@/api/admin/settings';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, Trophy } from 'lucide-react';
 
 interface HallOfFameCardProps {
   entry: Award;
-  isActive: boolean;
 }
 
-export function HallOfFameCard({ entry, isActive }: HallOfFameCardProps) {
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [tiltStyle, setTiltStyle] = useState({ transform: 'rotateX(0deg) rotateY(0deg)' });
+// Custom physics spring updater
+const updateSpring = (spring: { val: number; vel: number }, target: number, stiffness = 0.04, damping = 0.8) => {
+  const force = (target - spring.val) * stiffness;
+  spring.vel += force;
+  spring.vel *= damping;
+  spring.val += spring.vel;
+  // Snap to target if very close to prevent endless micro-jitter
+  if (Math.abs(spring.vel) < 0.001 && Math.abs(target - spring.val) < 0.001) {
+    spring.val = target;
+    spring.vel = 0;
+  }
+};
 
-  // Reset state when entry changes or card becomes inactive
+export function HallOfFameCard({ entry }: HallOfFameCardProps) {
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  
+  // Element Refs
+  const cardWrapperRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const borderRef = useRef<HTMLDivElement>(null);
+  const foilRef = useRef<HTMLDivElement>(null);
+  const specularRef = useRef<HTMLDivElement>(null);
+  const shadowRef = useRef<HTMLDivElement>(null);
+  
+  const rafId = useRef<number | null>(null);
+
+  // Targets (mouse position / interaction state)
+  const isHovered = useRef(false);
+  const targetTilt = useRef({ x: 0, y: 0 });
+  const targetPos = useRef({ x: 50, y: 50 });
+  const targetLift = useRef(0);
+
+  // Current (Interpolated) State
+  const currentTilt = useRef({ x: 0, y: 0, velX: 0, velY: 0 });
+  const currentPos = useRef({ x: 50, y: 50, velX: 0, velY: 0 });
+  const currentLift = useRef({ val: 0, vel: 0 });
+
+  // Handle countdown timer for mystery reveal
   useEffect(() => {
     setIsRevealed(false);
-  }, [entry.id, isActive]);
+    setTimeLeft('');
+
+    if (!entry.revealAt) {
+      setIsRevealed(false);
+      setTimeLeft('');
+      return;
+    }
+
+    const targetTime = new Date(entry.revealAt).getTime();
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const distance = targetTime - now;
+
+      if (distance <= 0) {
+        setIsRevealed(true);
+        setTimeLeft('');
+      } else {
+        setIsRevealed(false);
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        const parts = [];
+        if (days > 0) parts.push(`${days}d`);
+        if (hours > 0 || days > 0) parts.push(`${hours}h`);
+        parts.push(`${minutes}m`);
+        parts.push(`${seconds}s`);
+        setTimeLeft(parts.join(' '));
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [entry.id, entry.revealAt]);
+
+  // Main 60FPS render loop
+  const updateFrame = () => {
+    if (!containerRef.current) return;
+
+    // Physics constants (tuned for premium weight)
+    const stiffness = 0.05;
+    const damping = 0.75;
+
+    // Run spring physics
+    const tiltSpringX = { val: currentTilt.current.x, vel: currentTilt.current.velX };
+    const tiltSpringY = { val: currentTilt.current.y, vel: currentTilt.current.velY };
+    updateSpring(tiltSpringX, targetTilt.current.x, stiffness, damping);
+    updateSpring(tiltSpringY, targetTilt.current.y, stiffness, damping);
+    currentTilt.current.x = tiltSpringX.val;
+    currentTilt.current.velX = tiltSpringX.vel;
+    currentTilt.current.y = tiltSpringY.val;
+    currentTilt.current.velY = tiltSpringY.vel;
+
+    const posSpringX = { val: currentPos.current.x, vel: currentPos.current.velX };
+    const posSpringY = { val: currentPos.current.y, vel: currentPos.current.velY };
+    updateSpring(posSpringX, targetPos.current.x, stiffness, damping);
+    updateSpring(posSpringY, targetPos.current.y, stiffness, damping);
+    currentPos.current.x = posSpringX.val;
+    currentPos.current.velX = posSpringX.vel;
+    currentPos.current.y = posSpringY.val;
+    currentPos.current.velY = posSpringY.vel;
+
+    updateSpring(currentLift.current, targetLift.current, 0.06, 0.75);
+
+    const l = currentLift.current.val; // 0 to 1
+    const tx = currentTilt.current.x; // max +/- 10
+    const ty = currentTilt.current.y; // max +/- 10
+    const px = currentPos.current.x; // 0 to 100
+    const py = currentPos.current.y; // 0 to 100
+
+    // 1. Container: 3D Rotation & Lift
+    const translateY = l * -10;
+    containerRef.current.style.transform = `translateY(${translateY}px) rotateX(${tx}deg) rotateY(${ty}deg)`;
+
+    // 2. Image Layer: Deep Parallax (approx 8-12px)
+    if (imageRef.current) {
+      // Opposite to tilt for depth, scaled to about 10px max movement
+      imageRef.current.style.transform = `translateX(${ty * -1.2}px) translateY(${tx * 1.2}px) scale(1.05)`;
+    }
+
+    // 3. Content Layer: Medium Parallax (approx 4px)
+    if (contentRef.current) {
+      contentRef.current.style.transform = `translateX(${ty * -0.4}px) translateY(${tx * 0.4}px)`;
+    }
+
+    // 4. Border & Foil Layer (Animated Iridescent Reflection)
+    if (borderRef.current) {
+      borderRef.current.style.transform = `translateX(${ty * -0.2}px) translateY(${tx * 0.2}px)`;
+      // Mix of soft gold, cyan, violet depending on mouse X/Y
+      borderRef.current.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.6) 0%, rgba(218,165,32,0.5) 15%, rgba(176,224,230,0.3) 30%, rgba(238,130,238,0.2) 45%, transparent 60%)`;
+      borderRef.current.style.opacity = `${l}`;
+    }
+
+    // 5. Foil Layer (Holographic Sheen)
+    if (foilRef.current) {
+      // Subtle conic sweep
+      foilRef.current.style.background = `conic-gradient(from ${px * 3.6}deg at ${px}% ${py}%, rgba(218,165,32,0.06) 0deg, rgba(176,224,230,0.04) 120deg, rgba(238,130,238,0.05) 240deg, rgba(218,165,32,0.06) 360deg)`;
+      foilRef.current.style.opacity = `${l * 0.8}`;
+    }
+
+    // 6. Specular Highlight (Glossy laminated plastic)
+    if (specularRef.current) {
+      specularRef.current.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 45%)`;
+      specularRef.current.style.opacity = `${l}`;
+    }
+
+    // 7. Dynamic Shadow (Stretches based on rotation and lift)
+    if (shadowRef.current) {
+      // Shadow moves opposite to the card's tilt
+      const shadowX = ty * 2;
+      const shadowY = (tx * -2) + (l * 15);
+      shadowRef.current.style.transform = `translateX(${shadowX}px) translateY(${shadowY}px)`;
+      shadowRef.current.style.opacity = `${(l * 0.4) + 0.1}`; // Base 0.1, up to 0.5
+      shadowRef.current.style.filter = `blur(${15 + (l * 15)}px)`; // Blurs out as it lifts
+    }
+
+    rafId.current = requestAnimationFrame(updateFrame);
+  };
+
+  useEffect(() => {
+    rafId.current = requestAnimationFrame(updateFrame);
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isActive) return;
-    const rect = e.currentTarget.getBoundingClientRect();
+    if (!cardWrapperRef.current) return;
+    const rect = cardWrapperRef.current.getBoundingClientRect();
+    
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    
+    // Percentage 0-100
+    const px = (x / rect.width) * 100;
+    const py = (y / rect.height) * 100;
+    
+    // Center based coords (-1 to 1)
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -8; // max 8deg tilt
-    const rotateY = ((x - centerX) / centerX) * 8;
-    setTiltStyle({ transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)` });
+    
+    // Max rotation 10 degrees. X tilt is based on Y mouse pos.
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+    
+    targetTilt.current = { x: rotateX, y: rotateY };
+    targetPos.current = { x: px, y: py };
+    targetLift.current = 1;
+    isHovered.current = true;
   };
 
   const handleMouseLeave = () => {
-    setTiltStyle({ transform: 'rotateX(0deg) rotateY(0deg)' });
+    targetTilt.current = { x: 0, y: 0 };
+    targetPos.current = { x: 50, y: 50 };
+    targetLift.current = 0;
+    isHovered.current = false;
   };
 
-  const handleReveal = () => {
-    if (!isRevealed && isActive) {
+  const handleManualReveal = () => {
+    if (!entry.revealAt && !isRevealed) {
       setIsRevealed(true);
     }
   };
 
+  const clickProps = !entry.revealAt && !isRevealed ? { onClick: handleManualReveal, style: { cursor: 'pointer' } } : {};
+
   return (
     <div
-      className="relative w-full max-w-[400px] aspect-[3/4] mx-auto cursor-pointer group"
-      style={{ perspective: '1200px' }}
+      ref={cardWrapperRef}
+      className={`relative w-full max-w-[360px] aspect-[4/5] mx-auto z-10 ${!entry.revealAt && !isRevealed ? 'cursor-pointer' : ''}`}
+      style={{
+        perspective: '1200px',
+        transformStyle: 'preserve-3d',
+        ...clickProps.style
+      }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={handleReveal}
+      onClick={clickProps.onClick}
     >
-      {/* 3D Container */}
+      {/* 7. Shadow Layer (Moves opposite to card tilt) */}
       <div
-        className="w-full h-full relative transition-all duration-[1500ms]"
+        ref={shadowRef}
+        className="absolute inset-4 -z-20 rounded-[20px] bg-black"
+        style={{
+          willChange: 'transform, opacity, filter',
+        }}
+      />
+
+      {/* Main 3D Transform Container */}
+      <div
+        ref={containerRef}
+        className="relative w-full h-full rounded-[20px] bg-[#0a0a0a] overflow-hidden"
         style={{
           transformStyle: 'preserve-3d',
-          transform: `${tiltStyle.transform} ${isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)'}`,
-          transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)', // elegant ease-out
+          willChange: 'transform',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
         }}
       >
-        {/* === FRONT FACING (Unrevealed) === */}
-        <div
-          className="absolute inset-0 w-full h-full glass rounded-[1.5rem] p-8 flex flex-col items-center justify-center text-center backface-hidden overflow-hidden"
-          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-        >
-          {/* Subtle inner grid/texture */}
-          <div className="absolute inset-0 grid-bg opacity-30" />
+        {/* 4. Border Layer (Animated Iridescent Reflection) */}
+        <div 
+          ref={borderRef}
+          className="absolute inset-[-1px] rounded-[20px] pointer-events-none"
+          style={{ willChange: 'transform, opacity, background' }}
+        />
+        
+        {/* Inner clip for images to not spill over rounded border edge */}
+        <div className="absolute inset-[1px] rounded-[19px] overflow-hidden bg-[#050505]">
           
-          <div className="relative z-10 flex flex-col items-center justify-center gap-6 h-full w-full">
-            <span className="font-display text-sm tracking-[0.2em] text-gold/70 uppercase">
-              Mystery Category
-            </span>
-            <div className="text-6xl my-4 animate-float-slow">
-              {entry.mysteryIcon}
-            </div>
-            <h3 className="font-display text-2xl text-gradient-gold px-4">
-              {entry.category}
-            </h3>
+          {/* 2. Image Layer (Deep Parallax) */}
+          <div 
+            ref={imageRef}
+            className="absolute inset-[-15px] pointer-events-none"
+            style={{ willChange: 'transform' }}
+          >
+            {entry.posterSrc ? (
+              <img 
+                src={entry.posterSrc} 
+                alt={entry.winnerName}
+                loading="lazy"
+                className={`w-full h-full object-cover transition-all duration-[1500ms] ease-out ${!isRevealed ? 'blur-3xl opacity-20' : 'opacity-90'}`}
+              />
+            ) : (
+              <div className={`w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#000] transition-all ${!isRevealed ? 'opacity-50' : 'opacity-100'}`} />
+            )}
             
-            <div className="mt-auto pt-8 flex items-center gap-2 text-gold/80 text-sm tracking-widest uppercase hover:text-gold transition-colors">
-              <Sparkles size={16} />
-              <span>Click to Reveal</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-          
-          {/* Hover Glow Effect */}
-          <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none shadow-[inset_0_0_40px_rgba(218,165,32,0.2)]" />
-        </div>
-
-        {/* === BACK FACING (Revealed) === */}
-        <div
-          className="absolute inset-0 w-full h-full glass rounded-[1.5rem] overflow-hidden backface-hidden neon-border"
-          style={{ 
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)'
-          }}
-        >
-          {/* Poster Image */}
-          <div className="absolute inset-0 w-full h-full">
-            <img 
-              src={entry.posterSrc || ''} 
-              alt={entry.winnerName}
-              loading="lazy"
-              className="w-full h-full object-cover opacity-60 mix-blend-luminosity scale-[1.15] transition-transform duration-[2000ms] ease-out"
-              style={{ transform: isRevealed ? 'scale(1)' : 'scale(1.15)' }}
-            />
-            {/* Gradient overlay to make text readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none opacity-90" />
           </div>
 
-          {/* Winner Information */}
-          <div className="absolute inset-0 flex flex-col justify-end p-8 z-10">
+          {/* 5. Holographic Foil Layer */}
+          <div 
+            ref={foilRef}
+            className="absolute inset-0 pointer-events-none mix-blend-color-dodge"
+            style={{ willChange: 'opacity, background' }}
+          />
+
+          {/* 6. Specular Highlight Layer (Glossy laminate) */}
+          <div 
+            ref={specularRef}
+            className="absolute inset-0 pointer-events-none mix-blend-screen"
+            style={{ willChange: 'opacity, background' }}
+          />
+
+          {/* 3. Content Layer (Medium Parallax) */}
+          <div 
+            ref={contentRef}
+            className="absolute inset-0 flex flex-col justify-end p-6 z-10 pointer-events-none"
+            style={{ willChange: 'transform' }}
+          >
+            {/* Revealed State Content */}
             <div 
-              className="flex flex-col gap-2 transform transition-all duration-[1200ms] delay-500 ease-out"
+              className="flex flex-col gap-1.5 transition-all duration-700 ease-out"
               style={{ 
                 opacity: isRevealed ? 1 : 0, 
-                transform: isRevealed ? 'translateY(0)' : 'translateY(30px)' 
+                transform: isRevealed ? 'translateY(0)' : 'translateY(20px)',
+                pointerEvents: isRevealed ? 'auto' : 'none',
               }}
             >
-              <div className="inline-block px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs tracking-widest uppercase w-fit mb-2 backdrop-blur-md">
-                {entry.awardTitle}
-              </div>
-              <h2 className="font-display text-3xl text-white drop-shadow-lg leading-tight">
+              {/* Badge */}
+              {entry.awardTitle && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-2 rounded-full bg-black/40 border border-[#D4AF37]/30 backdrop-blur-md w-fit shadow-lg shadow-black/50">
+                  <Trophy className="w-3 h-3 text-[#D4AF37]" />
+                  <span className="text-[#D4AF37] text-[10px] tracking-widest uppercase font-bold drop-shadow-md">
+                    {entry.awardTitle}
+                  </span>
+                </div>
+              )}
+              
+              <h2 className="font-display text-2xl sm:text-3xl text-white drop-shadow-lg leading-tight mb-1">
                 {entry.winnerName}
               </h2>
+              
+              {entry.category && (
+                <p className="text-[#D4AF37] text-sm font-medium tracking-wide drop-shadow-md">
+                  {entry.category}
+                </p>
+              )}
+              
               {entry.department && (
-                <p className="text-white/70 text-sm tracking-wide">
+                <p className="text-white/70 text-[11px] tracking-wider uppercase mt-1 drop-shadow-md font-semibold">
                   {entry.department}
                 </p>
               )}
-              {entry.achievement && (
-                <p className="text-gold/90 text-sm mt-3 font-medium border-l-2 border-gold pl-3">
-                  {entry.achievement}
-                </p>
-              )}
             </div>
+            
+            {/* Unrevealed State Content */}
+            {!isRevealed && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 pointer-events-auto">
+                <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center mb-6 text-4xl shadow-[0_0_30px_rgba(218,165,32,0.15)] backdrop-blur-sm">
+                  {entry.mysteryIcon || '🏆'}
+                </div>
+                <h3 className="font-display text-xl text-[#D4AF37] px-2 mb-8 drop-shadow-md">
+                  {entry.category || 'Mystery Award'}
+                </h3>
+                
+                <div className="mt-auto flex flex-col items-center gap-2 text-[#D4AF37]/80 text-sm tracking-widest uppercase">
+                  {entry.revealAt ? (
+                    timeLeft ? (
+                      <>
+                        <span className="text-[10px] opacity-70 mb-1">Revealing in</span>
+                        <span className="font-mono text-[#D4AF37] font-bold text-xl drop-shadow-[0_0_15px_rgba(218,165,32,0.4)] tracking-normal">{timeLeft}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={16} />
+                        <span className="animate-pulse">Revealed</span>
+                      </>
+                    )
+                  ) : (
+                    <div className="flex items-center gap-2 hover:text-[#D4AF37] transition-colors bg-black/40 px-4 py-2 rounded-full border border-white/10 backdrop-blur-md">
+                      <Sparkles size={14} />
+                      <span className="text-[10px] font-bold">Click to Reveal</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-          
-          {/* Spotlight Effect after reveal */}
-          <div className="absolute inset-0 spotlight opacity-0 mix-blend-overlay transition-opacity duration-[2000ms] delay-700" style={{ opacity: isRevealed ? 0.8 : 0 }} />
         </div>
       </div>
-      
-      {/* Outer Shadow/Glow transition */}
-      <div 
-        className="absolute inset-[-20px] -z-10 rounded-[2rem] blur-xl opacity-0 transition-opacity duration-[1500ms] pointer-events-none"
-        style={{ 
-          background: 'radial-gradient(circle, oklch(0.82 0.17 82 / 0.4) 0%, transparent 70%)',
-          opacity: (isActive && isRevealed) ? 1 : 0 
-        }}
-      />
     </div>
   );
 }
