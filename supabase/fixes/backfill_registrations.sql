@@ -1,5 +1,12 @@
 -- Run this in the Supabase SQL Editor to backfill missing denormalized data for old registrations.
 
+ALTER TABLE public.registrations
+  ADD COLUMN IF NOT EXISTS user_name text,
+  ADD COLUMN IF NOT EXISTS user_email text,
+  ADD COLUMN IF NOT EXISTS register_number text,
+  ADD COLUMN IF NOT EXISTS house_name text,
+  ADD COLUMN IF NOT EXISTS event_name text;
+
 UPDATE public.registrations r
 SET 
   user_name = u.name,
@@ -17,3 +24,4 @@ WHERE r.user_id = u.id
     r.house_name IS NULL OR 
     r.event_name IS NULL
   );
+

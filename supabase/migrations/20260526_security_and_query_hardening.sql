@@ -196,7 +196,7 @@ end;
 $$;
 
 -- Keep function grants aligned with server-only execution for the safer RPC.
-revoke execute on function create_registration_safe(uuid, uuid, text) from public, anon, authenticated;
-grant execute on function create_registration_safe(uuid, uuid, text) to service_role;
+revoke execute on function create_registration_safe(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function create_registration_safe(uuid, uuid, text, text) to service_role;
 
 commit;
