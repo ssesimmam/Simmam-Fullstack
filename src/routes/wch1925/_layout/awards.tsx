@@ -278,7 +278,7 @@ function AwardCard({
               type="datetime-local"
               value={award.revealAt || ''}
               onChange={(e) => onChange({ ...award, revealAt: e.target.value })}
-              className="w-auto bg-black border-[#2a2a2a] text-white text-sm placeholder:text-gray-700"
+              className="w-auto bg-black border-[#2a2a2a] text-white text-sm placeholder:text-gray-700 [color-scheme:dark]"
             />
           </div>
         </div>
