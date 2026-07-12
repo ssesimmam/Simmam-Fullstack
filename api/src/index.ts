@@ -447,6 +447,7 @@ const DEFAULT_ADMIN_SETTINGS = {
   culturals_title: '',
   culturals_artist_revealed: false,
   culturals_artists: [],
+  awards: [],
 }
 
 let adminSettingsTableMissing = false
@@ -705,13 +706,14 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists,awards')
       .limit(1)
       .single()
 
@@ -730,6 +732,7 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
         })
       }
@@ -745,6 +748,7 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
         culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
         culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
+        awards: data?.awards || DEFAULT_ADMIN_SETTINGS.awards,
       },
     })
   } catch (err: any) {
@@ -948,6 +952,7 @@ let inMemoryAdminSettings = {
   culturals_title: '',
   culturals_artist_revealed: false,
   culturals_artists: [] as any[],
+  awards: [] as any[],
 }
 
 app.get('/api/wch1925/settings', async (_req, res) => {
@@ -962,13 +967,14 @@ app.get('/api/wch1925/settings', async (_req, res) => {
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
       })
     }
 
     const { data, error } = await supabase
       .from('admin_settings')
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists,awards')
       .limit(1)
       .single()
 
@@ -983,10 +989,10 @@ app.get('/api/wch1925/settings', async (_req, res) => {
             festivalStatus: inMemoryAdminSettings.festival_status,
             registrationsOpen: inMemoryAdminSettings.registrations_open,
             coordinatorAssignments: inMemoryAdminSettings.coordinator_assignments,
-            houseOfTheDay: inMemoryAdminSettings.house_of_the_day,
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
         })
       }
@@ -1002,6 +1008,7 @@ app.get('/api/wch1925/settings', async (_req, res) => {
         culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
         culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
+        awards: data?.awards || DEFAULT_ADMIN_SETTINGS.awards,
       },
     })
   } catch (err: any) {
@@ -1017,7 +1024,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay, culturalsTitle, culturalsArtistRevealed, culturalsArtists } = parsedBody.data
+    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay, culturalsTitle, culturalsArtistRevealed, culturalsArtists, awards } = parsedBody.data || (req.body as any)
 
     const payload = {
       id: 'singleton',
@@ -1028,6 +1035,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       culturals_title: culturalsTitle || '',
       culturals_artist_revealed: culturalsArtistRevealed ?? false,
       culturals_artists: culturalsArtists || [],
+      awards: awards || [],
     }
 
     if (adminSettingsTableMissing) {
@@ -1039,6 +1047,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           culturals_title: culturalsTitle || '',
           culturals_artist_revealed: culturalsArtistRevealed ?? false,
           culturals_artists: culturalsArtists || [],
+          awards: awards || [],
         }
       return res.json({
         settings: {
@@ -1049,6 +1058,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
       })
     }
@@ -1056,7 +1066,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
     const { data, error } = await supabase
       .from('admin_settings')
       .upsert(payload, { onConflict: 'id' })
-      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists')
+      .select('festival_status,registrations_open,coordinator_assignments,house_of_the_day,culturals_title,culturals_artist_revealed,culturals_artists,awards')
       .single()
 
     if (error) {
@@ -1070,6 +1080,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           culturals_title: culturalsTitle || '',
           culturals_artist_revealed: culturalsArtistRevealed ?? false,
           culturals_artists: culturalsArtists || [],
+          awards: awards || [],
         }
         return res.json({
           settings: {
@@ -1080,6 +1091,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
             culturalsTitle: inMemoryAdminSettings.culturals_title,
             culturalsArtistRevealed: inMemoryAdminSettings.culturals_artist_revealed,
             culturalsArtists: inMemoryAdminSettings.culturals_artists,
+            awards: inMemoryAdminSettings.awards,
           },
         })
       }
@@ -1095,6 +1107,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
         culturalsTitle: data?.culturals_title || '',
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? false,
         culturalsArtists: data?.culturals_artists || [],
+        awards: data?.awards || [],
       },
     })
   } catch (err: any) {
