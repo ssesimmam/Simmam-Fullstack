@@ -33,6 +33,12 @@ export function HallOfFameCard({ entry }: HallOfFameCardProps) {
     setIsRevealed(false);
     setTimeLeft('');
 
+    // If admin explicitly revealed and no revealAt time, show immediately
+    if (entry.revealed && !entry.revealAt) {
+      setIsRevealed(true);
+      return;
+    }
+
     if (!entry.revealAt) {
       setIsRevealed(false);
       setTimeLeft('');
@@ -67,7 +73,7 @@ export function HallOfFameCard({ entry }: HallOfFameCardProps) {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [entry.id, entry.revealAt]);
+  }, [entry.id, entry.revealAt, entry.revealed]);
 
   const updateSpring = (spring: { val: number, vel: number, target: number }, stiffness = 0.06, damping = 0.75) => {
     const force = (spring.target - spring.val) * stiffness;

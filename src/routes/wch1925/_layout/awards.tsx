@@ -38,6 +38,7 @@ function AwardCard({
   onRemove,
   onMoveUp,
   onMoveDown,
+  onSave,
 }: {
   award: Award
   index: number
@@ -46,6 +47,7 @@ function AwardCard({
   onRemove: () => void
   onMoveUp: () => void
   onMoveDown: () => void
+  onSave?: (updated: Award) => Promise<void>
 }) {
   const [uploading, setUploading] = useState(false)
   const [deletingImg, setDeletingImg] = useState(false)
@@ -71,8 +73,15 @@ function AwardCard({
     setUploading(true)
     try {
       const url = await uploadAwardImage(file)
-      onChange({ ...award, posterSrc: url })
-      toast.success('Image uploaded to Supabase Storage ✓')
+      const updated = { ...award, posterSrc: url }
+      onChange(updated)
+      // Auto-save so the image URL is persisted to the database immediately
+      if (onSave) {
+        await onSave(updated)
+        toast.success('Image uploaded & saved ✓')
+      } else {
+        toast.success('Image uploaded — click Save All Changes to persist ✓')
+      }
     } catch (err: any) {
       toast.error(`Upload failed: ${err.message}`)
     } finally {
@@ -435,6 +444,12 @@ function AwardsAdminPage() {
                     onRemove={() => removeAward(award.id)}
                     onMoveUp={() => moveAward(i, 'up')}
                     onMoveDown={() => moveAward(i, 'down')}
+                    onSave={async (updated) => {
+                      if (!settings) return
+                      const updatedAwards = awards.map((a) => a.id === updated.id ? updated : a)
+                      const saved = await saveAdminSettings({ ...settings, awards: updatedAwards.map((a, idx) => ({ ...a, order: idx })) })
+                      setSettings(saved)
+                    }}
                   />
                 ))}
               </div>
