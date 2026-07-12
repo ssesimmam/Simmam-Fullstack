@@ -1024,7 +1024,8 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       return respondValidationError(res, parsedBody.error)
     }
 
-    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay, culturalsTitle, culturalsArtistRevealed, culturalsArtists, awards } = parsedBody.data || (req.body as any)
+    const { festivalStatus, registrationsOpen, coordinatorAssignments, houseOfTheDay, culturalsTitle, culturalsArtistRevealed, culturalsArtists } = parsedBody.data
+    const awards: any[] = (parsedBody.data as any).awards ?? (req.body as any).awards ?? []
 
     const payload = {
       id: 'singleton',
@@ -1035,7 +1036,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
       culturals_title: culturalsTitle || '',
       culturals_artist_revealed: culturalsArtistRevealed ?? false,
       culturals_artists: culturalsArtists || [],
-      awards: awards || [],
+      awards: awards,
     }
 
     if (adminSettingsTableMissing) {
@@ -1047,7 +1048,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           culturals_title: culturalsTitle || '',
           culturals_artist_revealed: culturalsArtistRevealed ?? false,
           culturals_artists: culturalsArtists || [],
-          awards: awards || [],
+          awards: (awards as any[]) || [],
         }
       return res.json({
         settings: {
@@ -1080,7 +1081,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
           culturals_title: culturalsTitle || '',
           culturals_artist_revealed: culturalsArtistRevealed ?? false,
           culturals_artists: culturalsArtists || [],
-          awards: awards || [],
+          awards: (awards as any[]) || [],
         }
         return res.json({
           settings: {
