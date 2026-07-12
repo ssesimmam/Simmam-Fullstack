@@ -65,11 +65,34 @@ export async function getPublicSettings(): Promise<{ awards?: Award[] }> {
   try {
     const result = await fetch(`${apiBase}/settings`)
     const json = await result.json()
-    return json?.settings || {}
+    const settings = json?.settings || {}
+
+    // If the backend API doesn't return awards (old deployment), fetch directly from Supabase
+    if (!settings.awards) {
+      const { data } = await supabase
+        .from('admin_settings')
+        .select('awards')
+        .limit(1)
+        .single()
+      settings.awards = (data as any)?.awards || []
+    }
+
+    return settings
   } catch {
-    return {}
+    // Final fallback: try to read awards directly from Supabase
+    try {
+      const { data } = await supabase
+        .from('admin_settings')
+        .select('awards')
+        .limit(1)
+        .single()
+      return { awards: (data as any)?.awards || [] }
+    } catch {
+      return {}
+    }
   }
 }
+
 
 // ─── Supabase Storage Image Upload ────────────────────────────────────────────
 
