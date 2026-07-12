@@ -15,12 +15,15 @@ function HallOfFame() {
 
   useEffect(() => {
     getPublicSettings().then((res) => {
-      // Only show published awards, and sort by order
-      const published = (res.awards || [])
-        .filter((a) => a.revealed)
+      console.log('[Awards] API response:', res);
+      console.log('[Awards] awards array:', res.awards);
+      // Show all awards that have been saved (sorted by order)
+      const allAwards = (res.awards || [])
         .sort((a, b) => (a.order || 0) - (b.order || 0));
-      setAwards(published);
-    }).catch(() => {
+      console.log('[Awards] filtered awards:', allAwards);
+      setAwards(allAwards);
+    }).catch((err) => {
+      console.error('[Awards] Failed to load:', err);
       setAwards([]);
     }).finally(() => {
       setLoading(false);
