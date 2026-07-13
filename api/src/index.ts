@@ -748,7 +748,7 @@ app.get('/api/settings', publicLimiter, async (_req, res) => {
         culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
         culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
-        awards: data?.awards || DEFAULT_ADMIN_SETTINGS.awards,
+        awards: data?.awards ?? DEFAULT_ADMIN_SETTINGS.awards,
       },
     })
   } catch (err: any) {
@@ -1008,7 +1008,7 @@ app.get('/api/wch1925/settings', async (_req, res) => {
         culturalsTitle: data?.culturals_title || DEFAULT_ADMIN_SETTINGS.culturals_title,
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? DEFAULT_ADMIN_SETTINGS.culturals_artist_revealed,
         culturalsArtists: data?.culturals_artists || DEFAULT_ADMIN_SETTINGS.culturals_artists,
-        awards: data?.awards || DEFAULT_ADMIN_SETTINGS.awards,
+        awards: data?.awards ?? DEFAULT_ADMIN_SETTINGS.awards,
       },
     })
   } catch (err: any) {
@@ -1108,7 +1108,7 @@ app.post('/api/wch1925/settings', adminLimiter, async (req, res) => {
         culturalsTitle: data?.culturals_title || '',
         culturalsArtistRevealed: data?.culturals_artist_revealed ?? false,
         culturalsArtists: data?.culturals_artists || [],
-        awards: data?.awards || [],
+        awards: data?.awards ?? [],
       },
     })
   } catch (err: any) {

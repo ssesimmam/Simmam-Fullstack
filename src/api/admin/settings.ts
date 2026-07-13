@@ -67,14 +67,15 @@ export async function getPublicSettings(): Promise<{ awards?: Award[] }> {
     const json = await result.json()
     const settings = json?.settings || {}
 
-    // If the backend API doesn't return awards (old deployment), fetch directly from Supabase
-    if (!settings.awards) {
+    // Only fall back to Supabase if awards is truly absent (undefined/null) from the API
+    // response. An empty array [] means admin cleared all awards intentionally — respect that.
+    if (settings.awards == null) {
       const { data } = await supabase
         .from('admin_settings')
         .select('awards')
         .limit(1)
         .single()
-      settings.awards = (data as any)?.awards || []
+      settings.awards = (data as any)?.awards ?? []
     }
 
     return settings
@@ -86,9 +87,9 @@ export async function getPublicSettings(): Promise<{ awards?: Award[] }> {
         .select('awards')
         .limit(1)
         .single()
-      return { awards: (data as any)?.awards || [] }
+      return { awards: (data as any)?.awards ?? [] }
     } catch {
-      return {}
+      return { awards: [] }
     }
   }
 }
