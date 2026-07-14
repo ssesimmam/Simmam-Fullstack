@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "image": "/reveal/1.webp"
+  },
+  {
+    "id": 2,
+    "image": "/reveal/2.webp"
+  },
+  {
+    "id": 3,
+    "image": "/reveal/3.webp"
+  },
+  {
+    "id": 4,
+    "image": "/reveal/4.webp"
+  },
+  {
+    "id": 5,
+    "image": "/reveal/5.webp"
+  },
+  {
+    "id": 6,
+    "image": "/reveal/6.webp"
+  },
+  {
+    "id": 7,
+    "image": "/reveal/7.webp"
+  }
+]
