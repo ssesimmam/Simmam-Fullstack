@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { GalleryCard, type GalleryEntry } from '@/components/GalleryCard';
 import { LightRaysBackground } from '@/components/LightRaysBackground';
 
-export const Route = createFileRoute('/gallery')({
+export const Route = createFileRoute('/reveal')({
   component: Gallery,
 });
 
@@ -56,14 +56,24 @@ function Gallery() {
       <main className="relative z-10 flex-1 flex flex-col items-center w-full px-6 sm:px-12 py-24 pb-32">
         {/* Header */}
         <div className="text-center mb-16 flex flex-col items-center max-w-2xl mx-auto w-full">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gold/5 border border-gold/10 mb-6 animate-rise-in" style={{ animationDelay: '0ms' }}>
-            <Sparkles className="w-6 h-6 text-gold" />
+          {/* Glowing Icon Badge */}
+          <div className="relative inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-b from-gold/10 to-transparent border border-gold/20 mb-6 shadow-[0_0_30px_rgba(218,165,32,0.15)] animate-rise-in backdrop-blur-sm" style={{ animationDelay: '0ms' }}>
+            <div className="absolute inset-0 rounded-full border border-gold/20 animate-[pulse_3s_ease-in-out_infinite] opacity-30" />
+            <Sparkles className="w-6 h-6 text-gold drop-shadow-[0_0_10px_rgba(218,165,32,0.5)]" />
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-6 tracking-widest uppercase animate-rise-in" style={{ animationDelay: '100ms' }}>
-            Gallery
-          </h1>
-          <p className="text-white/60 tracking-wider text-sm sm:text-base font-light max-w-lg leading-relaxed animate-rise-in" style={{ animationDelay: '200ms' }}>
-            A premium collection of memorable moments.
+          
+          {/* Majestic Title with Flankers */}
+          <div className="flex items-center gap-4 mb-6 animate-rise-in" style={{ animationDelay: '100ms' }}>
+            <div className="h-[1px] w-8 sm:w-16 bg-gradient-to-r from-transparent to-gold/40" />
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold tracking-widest uppercase drop-shadow-[0_2px_15px_rgba(218,165,32,0.3)]">
+              Awards
+            </h1>
+            <div className="h-[1px] w-8 sm:w-16 bg-gradient-to-l from-transparent to-gold/40" />
+          </div>
+          
+          {/* Elegant Subtitle */}
+          <p className="text-transparent bg-clip-text bg-gradient-to-r from-white/60 via-gold/70 to-white/60 tracking-wider uppercase text-xs sm:text-sm font-medium max-w-lg leading-relaxed animate-rise-in" style={{ animationDelay: '200ms' }}>
+            A premium collection of memorable moments
           </p>
         </div>
 
