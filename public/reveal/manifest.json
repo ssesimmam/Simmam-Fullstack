@@ -1,30 +1,42 @@
 [
   {
     "id": 1,
-    "image": "/reveal/1.webp"
+    "image": "/reveal/active_dept.webp"
   },
   {
     "id": 2,
-    "image": "/reveal/2.webp"
+    "image": "/reveal/best_nontech.webp"
   },
   {
     "id": 3,
-    "image": "/reveal/3.webp"
+    "image": "/reveal/best_sports.webp"
   },
   {
     "id": 4,
-    "image": "/reveal/4.webp"
+    "image": "/reveal/best_student.webp"
   },
   {
     "id": 5,
-    "image": "/reveal/5.webp"
+    "image": "/reveal/best_tech.webp"
   },
   {
     "id": 6,
-    "image": "/reveal/6.webp"
+    "image": "/reveal/cultural.webp"
   },
   {
     "id": 7,
-    "image": "/reveal/7.webp"
+    "image": "/reveal/enthusiastic_team.webp"
+  },
+  {
+    "id": 8,
+    "image": "/reveal/max_participation.webp"
+  },
+  {
+    "id": 9,
+    "image": "/reveal/overall_runner.webp"
+  },
+  {
+    "id": 10,
+    "image": "/reveal/overall_winner.webp"
   }
 ]
