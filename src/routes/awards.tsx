@@ -17,19 +17,8 @@ function HallOfFame() {
     getPublicSettings().then((res) => {
       console.log('[Awards] API response:', res);
       console.log('[Awards] awards array:', res.awards);
-      // Show all awards that have been saved (sorted by order)
-      const allAwards = (res.awards || [])
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-      
-      // Temporarily clear test records as requested
-      const clearedAwards = allAwards.filter(a => 
-        !a.awardTitle.includes('0022') && 
-        !a.awardTitle.includes('DFGH') && 
-        !a.winnerName.toLowerCase().includes('test')
-      );
-      
-      console.log('[Awards] filtered awards:', clearedAwards);
-      setAwards(clearedAwards);
+      // The user wants all previous records/images cleared, so we force an empty array.
+      setAwards([]);
     }).catch((err) => {
       console.error('[Awards] Failed to load:', err);
       setAwards([]);
