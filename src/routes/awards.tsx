@@ -20,8 +20,16 @@ function HallOfFame() {
       // Show all awards that have been saved (sorted by order)
       const allAwards = (res.awards || [])
         .sort((a, b) => (a.order || 0) - (b.order || 0));
-      console.log('[Awards] filtered awards:', allAwards);
-      setAwards(allAwards);
+      
+      // Temporarily clear test records as requested
+      const clearedAwards = allAwards.filter(a => 
+        !a.awardTitle.includes('0022') && 
+        !a.awardTitle.includes('DFGH') && 
+        !a.winnerName.toLowerCase().includes('test')
+      );
+      
+      console.log('[Awards] filtered awards:', clearedAwards);
+      setAwards(clearedAwards);
     }).catch((err) => {
       console.error('[Awards] Failed to load:', err);
       setAwards([]);
