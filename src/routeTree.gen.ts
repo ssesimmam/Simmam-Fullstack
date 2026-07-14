@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CulturalsRouteImport } from './routes/culturals'
@@ -54,6 +55,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
+  '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -276,6 +283,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/awards': typeof AwardsRoute
   '/culturals': typeof CulturalsRoute
+  '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -313,6 +321,7 @@ export interface FileRoutesById {
   '/culturals': typeof CulturalsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/events': typeof EventsRouteWithChildren
+  '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -353,6 +362,7 @@ export interface FileRouteTypes {
     | '/culturals'
     | '/dashboard'
     | '/events'
+    | '/gallery'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/'
     | '/awards'
     | '/culturals'
+    | '/gallery'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/culturals'
     | '/dashboard'
     | '/events'
+    | '/gallery'
     | '/profile'
     | '/register'
     | '/auth/callback'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   CulturalsRoute: typeof CulturalsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EventsRoute: typeof EventsRouteWithChildren
+  GalleryRoute: typeof GalleryRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -487,6 +500,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   CulturalsRoute: CulturalsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EventsRoute: EventsRouteWithChildren,
+  GalleryRoute: GalleryRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   AuthCallbackRoute: AuthCallbackRoute,
