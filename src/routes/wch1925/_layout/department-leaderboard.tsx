@@ -146,12 +146,12 @@ function DepartmentLeaderboard() {
 
       {!loading && !error && rows.length > 0 && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total registrations</p>
               <p className="mt-2 text-3xl font-bold text-white">{totals.totalRegistrations.toLocaleString()}</p>
             </div>
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total checked in</p>
               <p className="mt-2 text-3xl font-bold text-emerald-400">{totals.totalCheckedIn.toLocaleString()}</p>
               <p className="mt-1 text-xs text-gray-500">
@@ -160,54 +160,58 @@ function DepartmentLeaderboard() {
                   : 'No registrations yet'}
               </p>
             </div>
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Departments tracked</p>
               <p className="mt-2 text-3xl font-bold text-white">{totals.departmentsTracked}</p>
             </div>
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Houses represented</p>
               <p className="mt-2 text-3xl font-bold text-white">{totals.housesTracked}</p>
             </div>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5 overflow-hidden">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Top departments</h3>
                   <p className="text-sm text-gray-500">Registrations vs checked-in across all houses</p>
                 </div>
-                <Badge variant="outline" className="border-[#333] bg-black text-gray-300">
+                <Badge variant="outline" className="w-fit border-[#333] bg-black text-gray-300">
                   Top 8
                 </Badge>
               </div>
 
-              <ChartContainer
-                config={{
-                  registrations: { label: 'Registrations', color: '#D4AF37' },
-                  checkedIn: { label: 'Checked In', color: '#34d399' },
-                }}
-                className="h-[320px] w-full"
-              >
-                <BarChart data={departmentChartData} margin={{ left: 4, right: 4, top: 16 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#2b2b2b" />
-                  <XAxis dataKey="department" tickLine={false} axisLine={false} stroke="#8b8b8b" tick={{ fontSize: 11 }} />
-                  <YAxis tickLine={false} axisLine={false} stroke="#8b8b8b" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '12px', color: '#9ca3af' }} />
-                  <Bar dataKey="registrations" name="Registrations" fill="#D4AF37" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="checkedIn" name="Checked In" fill="#34d399" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
+              <div className="overflow-x-auto pb-2">
+                <div className="min-w-[500px]">
+                  <ChartContainer
+                    config={{
+                      registrations: { label: 'Registrations', color: '#D4AF37' },
+                      checkedIn: { label: 'Checked In', color: '#34d399' },
+                    }}
+                    className="h-[320px] w-full"
+                  >
+                    <BarChart data={departmentChartData} margin={{ left: 4, right: 4, top: 16 }}>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#2b2b2b" />
+                      <XAxis dataKey="department" tickLine={false} axisLine={false} stroke="#8b8b8b" tick={{ fontSize: 11 }} />
+                      <YAxis tickLine={false} axisLine={false} stroke="#8b8b8b" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '12px', color: '#9ca3af' }} />
+                      <Bar dataKey="registrations" name="Registrations" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="checkedIn" name="Checked In" fill="#34d399" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">House distribution</h3>
                   <p className="text-sm text-gray-500">Share of registrations by house</p>
                 </div>
-                <Badge variant="outline" className="border-[#333] bg-black text-gray-300">
+                <Badge variant="outline" className="w-fit border-[#333] bg-black text-gray-300">
                   {totals.housesTracked} houses
                 </Badge>
               </div>
@@ -241,8 +245,8 @@ function DepartmentLeaderboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="rounded-2xl border border-[#333] bg-[#111] p-4 sm:p-5">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">Detailed breakdown</h3>
                 <p className="text-sm text-gray-500">Department, house, registrations and share of total</p>
