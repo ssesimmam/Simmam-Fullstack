@@ -44,6 +44,7 @@ export interface DepartmentAnalyticsDTO {
   department: string
   house_name: string
   total_registrations: number
+  checked_in_count: number
   percentage: number
 }
 

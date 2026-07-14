@@ -5,6 +5,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Pie,
   PieChart,
   Tooltip,
@@ -27,6 +28,7 @@ type Row = {
   house_name: string
   department: string
   total_registrations: number
+  checked_in_count: number
   percentage: number
 }
 
@@ -65,18 +67,24 @@ function DepartmentLeaderboard() {
   const { data: houseList = [] } = useHouses()
 
   const totals = useMemo(() => {
-    const departmentMap = new Map<string, number>()
+    const departmentMap = new Map<string, { registrations: number; checkedIn: number }>()
     const houseMap = new Map<string, number>()
 
     for (const row of rows) {
-      departmentMap.set(row.department, (departmentMap.get(row.department) || 0) + Number(row.total_registrations))
+      const prev = departmentMap.get(row.department) ?? { registrations: 0, checkedIn: 0 }
+      departmentMap.set(row.department, {
+        registrations: prev.registrations + Number(row.total_registrations),
+        checkedIn: prev.checkedIn + Number(row.checked_in_count ?? 0),
+      })
       houseMap.set(row.house_name, (houseMap.get(row.house_name) || 0) + Number(row.total_registrations))
     }
 
     const totalRegistrations = [...rows].reduce((sum, row) => sum + Number(row.total_registrations), 0)
+    const totalCheckedIn = [...rows].reduce((sum, row) => sum + Number(row.checked_in_count ?? 0), 0)
 
     return {
       totalRegistrations,
+      totalCheckedIn,
       departmentsTracked: departmentMap.size,
       housesTracked: houseMap.size,
       departmentTotals: departmentMap,
@@ -86,7 +94,7 @@ function DepartmentLeaderboard() {
 
   const departmentChartData = useMemo(() => {
     return [...totals.departmentTotals.entries()]
-      .map(([department, total]) => ({ department, registrations: total }))
+      .map(([department, { registrations, checkedIn }]) => ({ department, registrations, checkedIn }))
       .sort((a, b) => b.registrations - a.registrations)
       .slice(0, 8)
   }, [totals.departmentTotals])
@@ -144,18 +152,21 @@ function DepartmentLeaderboard() {
               <p className="mt-2 text-3xl font-bold text-white">{totals.totalRegistrations.toLocaleString()}</p>
             </div>
             <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total checked in</p>
+              <p className="mt-2 text-3xl font-bold text-emerald-400">{totals.totalCheckedIn.toLocaleString()}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {totals.totalRegistrations > 0
+                  ? `${Math.round((totals.totalCheckedIn / totals.totalRegistrations) * 100)}% check-in rate`
+                  : 'No registrations yet'}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Departments tracked</p>
               <p className="mt-2 text-3xl font-bold text-white">{totals.departmentsTracked}</p>
             </div>
             <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Houses represented</p>
               <p className="mt-2 text-3xl font-bold text-white">{totals.housesTracked}</p>
-            </div>
-            <div className="rounded-2xl border border-[#333] bg-[#111] p-5">
-              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Top department share</p>
-              <p className="mt-2 text-3xl font-bold text-white">
-                {departmentChartData[0] ? `${Math.round((departmentChartData[0].registrations / totals.totalRegistrations) * 100)}%` : '0%'}
-              </p>
             </div>
           </div>
 
@@ -164,7 +175,7 @@ function DepartmentLeaderboard() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Top departments</h3>
-                  <p className="text-sm text-gray-500">Aggregated registrations across all houses</p>
+                  <p className="text-sm text-gray-500">Registrations vs checked-in across all houses</p>
                 </div>
                 <Badge variant="outline" className="border-[#333] bg-black text-gray-300">
                   Top 8
@@ -172,15 +183,20 @@ function DepartmentLeaderboard() {
               </div>
 
               <ChartContainer
-                config={{ registrations: { label: 'Registrations', color: '#D4AF37' } }}
+                config={{
+                  registrations: { label: 'Registrations', color: '#D4AF37' },
+                  checkedIn: { label: 'Checked In', color: '#34d399' },
+                }}
                 className="h-[320px] w-full"
               >
                 <BarChart data={departmentChartData} margin={{ left: 4, right: 4, top: 16 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#2b2b2b" />
-                  <XAxis dataKey="department" tickLine={false} axisLine={false} stroke="#8b8b8b" />
+                  <XAxis dataKey="department" tickLine={false} axisLine={false} stroke="#8b8b8b" tick={{ fontSize: 11 }} />
                   <YAxis tickLine={false} axisLine={false} stroke="#8b8b8b" />
-                  <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
-                  <Bar dataKey="registrations" fill="var(--color-registrations)" radius={[8, 8, 0, 0]} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '12px', color: '#9ca3af' }} />
+                  <Bar dataKey="registrations" name="Registrations" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="checkedIn" name="Checked In" fill="#34d399" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -234,20 +250,42 @@ function DepartmentLeaderboard() {
             </div>
 
             <div className="space-y-2">
-              {rowSummary.map((row) => (
-                <div key={`${row.house_name}-${row.department}`} className="flex flex-col gap-3 rounded-xl border border-[#222] bg-black p-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{row.department}</p>
-                    <p className="text-xs text-gray-500">{row.house_name}</p>
+              {rowSummary.map((row) => {
+                const checkedIn = Number(row.checked_in_count ?? 0)
+                const total = Number(row.total_registrations)
+                const checkInRate = total > 0 ? Math.round((checkedIn / total) * 100) : 0
+                return (
+                  <div key={`${row.house_name}-${row.department}`} className="flex flex-col gap-3 rounded-xl border border-[#222] bg-black p-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{row.department}</p>
+                      <p className="text-xs text-gray-500">{row.house_name}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm">
+                      <span className="text-gray-300">
+                        {total.toLocaleString()} <span className="text-gray-500">registered</span>
+                      </span>
+                      <span className="text-emerald-400 font-medium">
+                        {checkedIn.toLocaleString()} <span className="text-emerald-600 font-normal">checked in</span>
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={`border-[#333] bg-black ${
+                          checkInRate >= 75
+                            ? 'text-emerald-400 border-emerald-800'
+                            : checkInRate >= 40
+                            ? 'text-yellow-400 border-yellow-800'
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {checkInRate}% check-in
+                      </Badge>
+                      <Badge variant="outline" className="border-[#333] bg-black text-gray-500">
+                        {Number(row.percentage).toFixed(2)}% of total
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-6 text-sm text-gray-300">
-                    <span>{Number(row.total_registrations).toLocaleString()} registrations</span>
-                    <Badge variant="outline" className="border-[#333] bg-black text-gray-300">
-                      {Number(row.percentage).toFixed(2)}%
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </>

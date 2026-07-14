@@ -1410,10 +1410,11 @@ create index if not exists users_department_idx on public.users(department);
 
 create or replace function public.get_department_analytics()
 returns table (
-  department text,
-  house_name text,
+  department       text,
+  house_name       text,
   total_registrations bigint,
-  percentage numeric
+  checked_in_count    bigint,
+  percentage       numeric
 )
 language sql
 stable
@@ -1423,10 +1424,12 @@ as $$
   with department_counts as (
     select
       coalesce(nullif(trim(u.department), ''), 'Unassigned') as department,
-      coalesce(nullif(trim(u.house), ''), 'Unassigned') as house_name,
-      count(*)::bigint as total_registrations
+      coalesce(nullif(trim(u.house), ''),       'Unassigned') as house_name,
+      count(*)::bigint                                         as total_registrations,
+      count(c.id)::bigint                                      as checked_in_count
     from public.registrations r
     join public.users u on u.id = r.user_id
+    left join public.checkins c on c.registration_id = r.id
     group by 1, 2
   ),
   totals as (
@@ -1437,8 +1440,10 @@ as $$
     dc.department,
     dc.house_name,
     dc.total_registrations,
+    dc.checked_in_count,
     case
-      when totals.grand_total > 0 then round((dc.total_registrations::numeric * 100) / totals.grand_total, 2)
+      when totals.grand_total > 0
+        then round((dc.total_registrations::numeric * 100) / totals.grand_total, 2)
       else 0
     end as percentage
   from department_counts dc
