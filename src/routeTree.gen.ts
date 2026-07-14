@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as EventsRouteImport } from './routes/events'
@@ -47,11 +46,6 @@ import { Route as Wch1925LayoutAnnouncementsRouteImport } from './routes/wch1925
 import { Route as Reg1925LayoutCheckinRouteImport } from './routes/reg1925/_layout/checkin'
 import { Route as Reg1925LayoutCheckinNewRouteImport } from './routes/reg1925/_layout/checkin.new'
 
-const RevealRoute = RevealRouteImport.update({
-  id: '/reveal',
-  path: '/reveal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -248,7 +242,6 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/reveal': typeof RevealRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -285,7 +278,6 @@ export interface FileRoutesByTo {
   '/culturals': typeof CulturalsRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/reveal': typeof RevealRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -323,7 +315,6 @@ export interface FileRoutesById {
   '/events': typeof EventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
-  '/reveal': typeof RevealRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/my-schedule': typeof DashboardMyScheduleRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -364,7 +355,6 @@ export interface FileRouteTypes {
     | '/events'
     | '/profile'
     | '/register'
-    | '/reveal'
     | '/auth/callback'
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
@@ -401,7 +391,6 @@ export interface FileRouteTypes {
     | '/culturals'
     | '/profile'
     | '/register'
-    | '/reveal'
     | '/auth/callback'
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
@@ -438,7 +427,6 @@ export interface FileRouteTypes {
     | '/events'
     | '/profile'
     | '/register'
-    | '/reveal'
     | '/auth/callback'
     | '/dashboard/my-schedule'
     | '/dashboard/profile'
@@ -478,7 +466,6 @@ export interface RootRouteChildren {
   EventsRoute: typeof EventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
-  RevealRoute: typeof RevealRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   Reg1925LayoutRoute: typeof Reg1925LayoutRouteWithChildren
   Reg1925LoginRoute: typeof Reg1925LoginRoute
@@ -488,13 +475,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reveal': {
-      id: '/reveal'
-      path: '/reveal'
-      fullPath: '/reveal'
-      preLoaderRoute: typeof RevealRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -855,7 +835,6 @@ const rootRouteChildren: RootRouteChildren = {
   EventsRoute: EventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
-  RevealRoute: RevealRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   Reg1925LayoutRoute: Reg1925LayoutRouteWithChildren,
   Reg1925LoginRoute: Reg1925LoginRoute,

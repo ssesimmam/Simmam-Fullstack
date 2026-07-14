@@ -1,30 +1,34 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Trophy } from 'lucide-react';
-import { HallOfFameCard } from '@/components/HallOfFameCard';
+import { Sparkles } from 'lucide-react';
+import { GalleryCard, type GalleryEntry } from '@/components/GalleryCard';
 import { LightRaysBackground } from '@/components/LightRaysBackground';
-import { getPublicSettings, type Award } from '@/api/admin/settings';
 
 export const Route = createFileRoute('/awards')({
-  component: HallOfFame,
+  component: Gallery,
 });
 
-function HallOfFame() {
-  const [awards, setAwards] = useState<Award[]>([]);
+function Gallery() {
+  const [items, setItems] = useState<GalleryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    getPublicSettings().then((res) => {
-      console.log('[Awards] API response:', res);
-      console.log('[Awards] awards array:', res.awards);
-      // The user wants all previous records/images cleared, so we force an empty array.
-      setAwards([]);
-    }).catch((err) => {
-      console.error('[Awards] Failed to load:', err);
-      setAwards([]);
-    }).finally(() => {
-      setLoading(false);
-    });
+    fetch('/reveal/manifest.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch manifest');
+        return res.json();
+      })
+      .then((data) => {
+        setItems(data);
+      })
+      .catch((err) => {
+        console.error('[Gallery] Failed to load:', err);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -52,36 +56,50 @@ function HallOfFame() {
       <main className="relative z-10 flex-1 flex flex-col items-center w-full px-6 sm:px-12 py-24 pb-32">
         {/* Header */}
         <div className="text-center mb-16 flex flex-col items-center max-w-2xl mx-auto w-full">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gold/5 border border-gold/10 mb-6 animate-rise-in" style={{ animationDelay: '0ms' }}>
-            <Trophy className="w-6 h-6 text-gold" />
+          {/* Glowing Icon Badge */}
+          <div className="relative inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-b from-gold/10 to-transparent border border-gold/20 mb-6 shadow-[0_0_30px_rgba(218,165,32,0.15)] animate-rise-in backdrop-blur-sm" style={{ animationDelay: '0ms' }}>
+            <div className="absolute inset-0 rounded-full border border-gold/20 animate-[pulse_3s_ease-in-out_infinite] opacity-30" />
+            <Sparkles className="w-6 h-6 text-gold drop-shadow-[0_0_10px_rgba(218,165,32,0.5)]" />
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-6 tracking-widest uppercase animate-rise-in" style={{ animationDelay: '100ms' }}>
-            Hall of Fame
-          </h1>
-          <p className="text-white/60 tracking-wider text-sm sm:text-base font-light max-w-lg leading-relaxed animate-rise-in" style={{ animationDelay: '200ms' }}>
-            A premium collection honoring outstanding achievements and extraordinary talent.
+          
+          {/* Majestic Title with Flankers */}
+          <div className="flex items-center gap-4 mb-6 animate-rise-in" style={{ animationDelay: '100ms' }}>
+            <div className="h-[1px] w-8 sm:w-16 bg-gradient-to-r from-transparent to-gold/40" />
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold tracking-widest uppercase drop-shadow-[0_2px_15px_rgba(218,165,32,0.3)]">
+              Awards
+            </h1>
+            <div className="h-[1px] w-8 sm:w-16 bg-gradient-to-l from-transparent to-gold/40" />
+          </div>
+          
+          {/* Elegant Subtitle */}
+          <p className="text-transparent bg-clip-text bg-gradient-to-r from-white/60 via-gold/70 to-white/60 tracking-wider uppercase text-xs sm:text-sm font-medium max-w-lg leading-relaxed animate-rise-in" style={{ animationDelay: '200ms' }}>
+            A premium collection of memorable moments
           </p>
         </div>
 
         {/* Interactive Grid */}
-        {awards.length === 0 ? (
+        {error || items.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 text-gold/40 animate-rise-in" style={{ animationDelay: '300ms' }}>
             <p className="tracking-widest uppercase text-sm font-medium border border-gold/20 px-6 py-3 rounded-full bg-gold/5">
-              The collection is currently empty
+              The gallery is currently empty
             </p>
           </div>
         ) : (
           <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 justify-items-center">
-            {awards.map((award, index) => (
+            {items.map((item, index) => (
               <div 
-                key={award.id} 
-                className="animate-rise-in w-full flex justify-center"
+                key={item.id} 
+                className={`animate-rise-in w-full flex justify-center ${
+                  index === items.length - 1 && items.length % 3 === 1 ? 'lg:col-start-2' : ''
+                } ${
+                  index === items.length - 1 && items.length % 2 === 1 ? 'md:col-span-2 lg:col-span-1' : ''
+                }`}
                 style={{ 
                   animationDelay: `${300 + (index * 80)}ms`,
                   animationFillMode: 'forwards' 
                 }}
               >
-                <HallOfFameCard entry={award} />
+                <GalleryCard entry={item} />
               </div>
             ))}
           </div>
