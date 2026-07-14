@@ -14,21 +14,26 @@ function Gallery() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch('/reveal/manifest.json')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch manifest');
-        return res.json();
-      })
-      .then((data) => {
-        setItems(data);
-      })
-      .catch((err) => {
-        console.error('[Gallery] Failed to load:', err);
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
+    try {
+      // Automatically find all webp files in the public/reveal folder using Vite's glob import
+      const images = import.meta.glob('/public/reveal/*.webp');
+      
+      const loadedItems = Object.keys(images).map((key, index) => {
+        // key will be like '/public/reveal/7.webp'
+        // we need to convert it to the public URL path '/reveal/7.webp'
+        return {
+          id: index + 1,
+          image: key.replace('/public', '')
+        };
       });
+      
+      setItems(loadedItems);
+    } catch (err) {
+      console.error('[Gallery] Failed to load:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   if (loading) {
