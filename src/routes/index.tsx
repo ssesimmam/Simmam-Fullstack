@@ -1,7 +1,7 @@
 import React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
-import { DashboardLiveScores } from "@/components/DashboardLiveScores";
+import { Dashboard } from "@/components/Dashboard";
 import { Footer } from "@/components/Footer";
 import { Loader } from "@/components/Loader";
 import { Particles } from "@/components/Particles";
@@ -39,7 +39,7 @@ function Index() {
       <Navbar />
       <main className="relative">
         <Particles count={20} className="!fixed inset-0 -z-10" />
-        <DashboardLiveScores />
+        <Dashboard />
       </main>
       <Footer />
     </div>
