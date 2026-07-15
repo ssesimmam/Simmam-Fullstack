@@ -15,8 +15,8 @@ const leftLinks: NavLink[] = [
 ];
 
 const rightLinks: NavLink[] = [
-  { href: "/events", label: "Events" },
-  { href: "/culturals", label: "Guests" },
+  { href: "/events", label: "Events", disabled: true },
+  { href: "/culturals", label: "Guests", disabled: true },
 ];
 
 const allLinks = [...leftLinks, ...rightLinks];
