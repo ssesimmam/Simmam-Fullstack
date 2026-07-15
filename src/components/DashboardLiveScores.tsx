@@ -31,7 +31,7 @@ type HouseScore = {
 
 export function DashboardLiveScores() {
   const { houses, events, participants, settings } = useData();
-  const houseOfTheDay = houses.find((h) => h.name === settings?.houseOfTheDay);
+  const houseOfTheDay = houses.find((h) => h.name === (settings as any)?.houseOfTheDay);
   const [expandedHouse, setExpandedHouse] = useState<string | null>(null);
 
   const participationScores = useMemo(() => {

@@ -52,7 +52,7 @@ function LeaderboardManagement() {
 
   const handleHouseOfTheDayChange = async (value: string) => {
     try {
-      await updateSettings({ ...settings, houseOfTheDay: value === 'none' ? '' : value })
+      await updateSettings({ ...(settings as any), houseOfTheDay: value === 'none' ? '' : value })
       toast.success('House of the Day updated')
       await refreshData()
     } catch (e: any) {
@@ -125,7 +125,7 @@ function LeaderboardManagement() {
         <div className="bg-[#111] border border-[#333] rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4">House of the Day</h3>
           <div className="max-w-xs">
-            <Select value={settings?.houseOfTheDay || 'none'} onValueChange={handleHouseOfTheDayChange}>
+            <Select value={(settings as any)?.houseOfTheDay || 'none'} onValueChange={handleHouseOfTheDayChange}>
               <SelectTrigger className="w-full bg-black border-[#333] text-white">
                 <SelectValue placeholder="Select a House" />
               </SelectTrigger>
