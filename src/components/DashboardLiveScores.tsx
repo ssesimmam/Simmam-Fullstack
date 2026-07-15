@@ -93,8 +93,8 @@ export function DashboardLiveScores() {
                     <Activity className="w-8 h-8 text-red-500" />
                   </div>
                 </div>
-                <h3 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight uppercase mb-4">Website Under Maintenance</h3>
-                <p className="text-foreground/80 max-w-2xl mx-auto text-lg">We are currently updating our systems. Please check back later for the latest scores, events and updates.</p>
+                <h3 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight uppercase mb-4">Results Will Be Revealed Soon</h3>
+                <p className="text-foreground/80 max-w-2xl mx-auto text-lg">The final scores are being tallied. Stay tuned for the grand reveal!</p>
               </div>
             </div>
           </Tilt3D>

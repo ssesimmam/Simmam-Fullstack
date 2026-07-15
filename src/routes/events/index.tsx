@@ -41,8 +41,8 @@ function EventsPage() {
                     <Activity className="w-8 h-8 text-red-500" />
                   </div>
                 </div>
-                <h3 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight uppercase mb-4">Website Under Maintenance</h3>
-                <p className="text-foreground/80 max-w-2xl mx-auto text-lg">We are currently updating our systems. Please check back later for the latest scores, events and updates.</p>
+                <h3 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight uppercase mb-4">Events Are Completed</h3>
+                <p className="text-foreground/80 max-w-2xl mx-auto text-lg">All events have successfully concluded. Thank you for participating!</p>
               </div>
             </div>
           </Tilt3D>
