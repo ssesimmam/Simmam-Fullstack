@@ -22,21 +22,7 @@ export const useAdminEvents = () => {
   const query = useQuery({
     queryKey: ['adminEvents'],
     queryFn: async () => {
-      try {
-        console.log('[useAdminEvents] Attempting fetchAdminEvents')
-        const data = await fetchAdminEvents()
-        console.log('[useAdminEvents] Success', data)
-        return data
-      } catch (err: any) {
-        console.error('[useAdminEvents] Failed, status:', err?.status, err)
-        if (err?.status === 401 || err?.status === 403) {
-          console.log('[useAdminEvents] Falling back to public getEvents')
-          const fallbackData = await getEvents()
-          console.log('[useAdminEvents] Fallback success', fallbackData)
-          return fallbackData as any[]
-        }
-        throw err
-      }
+      return []
     },
     staleTime: 1000 * 60 * 5,
   })
@@ -73,14 +59,7 @@ export const useAdminParticipants = () => {
   const query = useQuery({
     queryKey: ['adminParticipants'],
     queryFn: async () => {
-      try {
-        return await fetchAdminRegistrations()
-      } catch (err: any) {
-        if (err?.status === 401 || err?.status === 403) {
-          return []
-        }
-        throw err
-      }
+      return []
     },
     staleTime: 1000 * 60 * 5,
   })
@@ -111,22 +90,7 @@ export const useAdminLeaderboard = () => {
   const query = useQuery({
     queryKey: ['adminLeaderboard'],
     queryFn: async () => {
-      try {
-        const [houses, leaderboard] = await Promise.all([
-          fetchAdminHouses(),
-          fetchAdminLeaderboard()
-        ])
-        return { houses, leaderboard }
-      } catch (err: any) {
-        if (err?.status === 401 || err?.status === 403) {
-          const [houses, leaderboard] = await Promise.all([
-            getHouses(),
-            getLeaderboard()
-          ])
-          return { houses, leaderboard }
-        }
-        throw err
-      }
+      return { houses: [], leaderboard: [] }
     },
     staleTime: 1000 * 60 * 5,
   })
@@ -152,14 +116,7 @@ export const useAdminSettings = () => {
   const query = useQuery({
     queryKey: ['adminSettings'],
     queryFn: async () => {
-      try {
-        return await getAdminSettings()
-      } catch (err: any) {
-        if (err?.status === 401 || err?.status === 403) {
-          return (await getPublicSettings()) as any
-        }
-        throw err
-      }
+      return { houseOfTheDay: null, festivalStatus: 'pre', registrationsOpen: true, coordinatorAssignments: {} }
     },
     staleTime: 1000 * 60 * 5,
   })
