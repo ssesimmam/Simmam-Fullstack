@@ -11,9 +11,9 @@ export function Dashboard() {
   const manualPoints: Record<string, number> = {
     "Agniyas": 44100,
     "Dhronas": 63217,
-    "Marutas": 53511,
-    "Rudras":  58760,
-    "Suryas":  58775,
+    "Marutas": 54261,
+    "Rudras":  59260,
+    "Suryas":  59775,
     "Vajras":  39901,
   };
 
