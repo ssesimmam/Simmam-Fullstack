@@ -82,23 +82,7 @@ export function DashboardLiveScores() {
           subtitle="A real-time pulse of SIMMAM 2026 — teams, talents, total intensity, and house rankings."
         />
 
-        {/* Website Under Maintenance Card */}
-        <div className="mb-12">
-          <Tilt3D max={5}>
-            <div className="relative group glass-strong rounded-3xl p-10 overflow-hidden hover-lift border border-red-500/30 flex flex-col items-center justify-center text-center">
-              <div className="absolute inset-0 bg-red-500/5 group-hover:bg-red-500/10 transition-colors duration-500" />
-              <div className="relative z-10">
-                <div className="flex items-center justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30 backdrop-blur-md animate-pulse">
-                    <Activity className="w-8 h-8 text-red-500" />
-                  </div>
-                </div>
-                <h3 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight uppercase mb-4">Results Will Be Revealed Soon</h3>
-                <p className="text-foreground/80 max-w-2xl mx-auto text-lg">The final scores are being tallied. Stay tuned for the grand reveal!</p>
-              </div>
-            </div>
-          </Tilt3D>
-        </div>
+
 
         {/* Stats Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-16">
