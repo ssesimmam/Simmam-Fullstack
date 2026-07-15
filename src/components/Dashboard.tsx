@@ -1,8 +1,10 @@
-import { Award, Building2, Crown, Flame, Trophy, Users } from "lucide-react";
+import { useState } from "react";
+import { Award, Building2, Crown, Flame, Trophy, Users, Activity, TrendingUp, ChevronDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Counter } from "./Counter";
 import { Tilt3D } from "./Tilt3D";
 import { useData } from "@/lib/store";
+import { HousePointsBreakdown } from "./HousePointsBreakdown";
 
 type Stat = {
   icon: LucideIcon;
@@ -14,7 +16,17 @@ type Stat = {
 };
 
 export function Dashboard() {
+  const [expandedHouse, setExpandedHouse] = useState<string | null>(null);
+
   const { houses, events, participants, settings } = useData();
+  
+  const houseScores = houses.map(h => ({
+    name: h.name,
+    points: 0,
+    color: h.accent,
+    accent: h.accent,
+    gradient: h.gradient || `linear-gradient(135deg, ${h.accent}, #000)`
+  }));
   const leader = [...houses].sort((a, b) => Number(b.points2026 ?? b.points2025 ?? 0) - Number(a.points2026 ?? a.points2025 ?? 0))[0];
   const houseOfTheDay = houses.find((h) => h.name === settings?.houseOfTheDay);
 
@@ -139,6 +151,111 @@ export function Dashboard() {
               </div>
             </Tilt3D>
           ))}
+        </div>
+
+        {/* Live Scores Section with House Logos */}
+        <div className="bg-black/60 border border-white/10 rounded-3xl p-6 md:p-10 relative overflow-hidden mt-16">
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[var(--crimson)]/30 blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[var(--gold)]/30 blur-3xl" />
+
+            <div className="relative flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <span className="relative flex w-2.5 h-2.5">
+                  <span className="absolute inset-0 rounded-full bg-red-500 animate-ping" />
+                  <span className="relative w-2.5 h-2.5 rounded-full bg-red-500" />
+                </span>
+                <span className="text-xs tracking-[0.3em] text-gold/80">LIVE • HOUSE RANKINGS</span>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-foreground/60">
+                <span className="inline-flex items-center gap-1">
+                  <Activity className="w-3.5 h-3.5 text-gold" /> Auto-sync
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-gold" /> Rising
+                </span>
+              </div>
+            </div>
+
+            <div className="relative space-y-4">
+              {houseScores.map((house, i) => {
+                const houseData = houses.find((h: any) => h.name === house.name);
+                const houseId = houseData?.id || '';
+                const isExpanded = expandedHouse === houseId;
+                const max = 1;
+
+                return (
+                  <div 
+                    key={house.name} 
+                    className="relative rounded-xl transition-colors"
+                  >
+                    <div
+                      className="p-2 -mx-2 rounded-xl transition-colors hover:bg-white/5 cursor-pointer select-none"
+                      onClick={() => setExpandedHouse(isExpanded ? null : houseId)}
+                    >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-4">
+                        <span className="font-display text-2xl font-black text-white/20 w-8 tabular-nums italic">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg tracking-tight text-foreground/90 uppercase">{house.name}</span>
+                            {i === 0 && house.points > 0 && <Crown className="w-4 h-4 text-gold animate-bounce" />}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                          <span className="font-display text-3xl font-bold tabular-nums text-gradient-gold leading-none">
+                            {house.points}
+                          </span>
+                          <span className="text-[10px] tracking-[0.2em] text-foreground/30 font-bold uppercase mt-1">Total Score</span>
+                        </div>
+                        {houseId && (
+                          <ChevronDown
+                            className={`w-4 h-4 text-foreground/30 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Total Points Progress Bar */}
+                    <div className="relative group/bar">
+                      <div className="h-4 rounded-full bg-white/5 border border-white/10 overflow-hidden backdrop-blur-sm relative">
+                        <div
+                          className="absolute inset-y-0 left-0 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                          style={{
+                            width: `${max > 0 ? (house.points / max) * 100 : 0}%`,
+                            background: house.gradient,
+                            boxShadow: `inset 0 1px 1px rgba(255,255,255,0.2), 0 0 25px ${house.color}66`,
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,oklch(1_0_0/0.3),transparent)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]" />
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+
+                    {/* Expandable Breakdown */}
+                    {houseId && (
+                      <div className="px-2">
+                        <HousePointsBreakdown
+                          houseId={houseId}
+                          houseName={house.name}
+                          houseAccent={house.accent}
+                          isOpen={isExpanded}
+                          onToggle={() => setExpandedHouse(isExpanded ? null : houseId)}
+                        />
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
+            </div>
+
         </div>
       </div>
     </section>
